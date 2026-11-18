@@ -1,0 +1,11 @@
+*.elf
+*.o
+*.a
+*.erl
+/build/
+/out/
+# BIOS e imagens de console nunca entram no repositório
+*.bin.bios
+bios/
+*.iso
+__pycache__/

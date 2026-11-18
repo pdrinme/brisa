@@ -1,0 +1,3797 @@
+{
+ "ventania_commit": "7864cd7 v1.2.1: corrige paredes com janela/porta invisíveis",
+ "assets": [
+  {
+   "arquivo": "game/assets/armas/ancora_01.glb",
+   "tris": 772,
+   "tris_colisao": 0,
+   "vertices_gltf": 902,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "areia",
+    "dourado",
+    "madeira_clara",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [
+    "cabeca",
+    "centro_cabeca",
+    "grip_l",
+    "grip_r"
+   ],
+   "estimativa_ps2_kb": 14.1,
+   "id": "ancora_01",
+   "categoria": "armas",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/armas/faisca_01.glb",
+   "tris": 128,
+   "tris_colisao": 0,
+   "vertices_gltf": 248,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "laranja",
+    "metal_escuro",
+    "preto"
+   ],
+   "marcadores": [
+    "grip_l",
+    "grip_r",
+    "mag",
+    "muzzle"
+   ],
+   "estimativa_ps2_kb": 3.9,
+   "id": "faisca_01",
+   "categoria": "armas",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/armas/gaviao_01.glb",
+   "tris": 300,
+   "tris_colisao": 0,
+   "vertices_gltf": 544,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "lente",
+    "metal_escuro",
+    "preto",
+    "verde_militar"
+   ],
+   "marcadores": [
+    "grip_l",
+    "grip_r",
+    "mag",
+    "muzzle"
+   ],
+   "estimativa_ps2_kb": 8.5,
+   "id": "gaviao_01",
+   "categoria": "armas",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/armas/picareta_01.glb",
+   "tris": 532,
+   "tris_colisao": 0,
+   "vertices_gltf": 674,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "madeira_media",
+    "metal_claro",
+    "metal_escuro",
+    "teal",
+    "teal_escuro"
+   ],
+   "marcadores": [
+    "cabeca",
+    "centro_cabeca",
+    "grip_l",
+    "grip_r"
+   ],
+   "estimativa_ps2_kb": 10.5,
+   "id": "picareta_01",
+   "categoria": "armas",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/armas/rajada_01.glb",
+   "tris": 272,
+   "tris_colisao": 0,
+   "vertices_gltf": 560,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_escuro",
+    "preto",
+    "teal",
+    "teal_escuro"
+   ],
+   "marcadores": [
+    "grip_l",
+    "grip_r",
+    "mag",
+    "muzzle"
+   ],
+   "estimativa_ps2_kb": 8.8,
+   "id": "rajada_01",
+   "categoria": "armas",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/armas/trovao_01.glb",
+   "tris": 260,
+   "tris_colisao": 0,
+   "vertices_gltf": 488,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "coral",
+    "madeira_escura",
+    "madeira_media",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [
+    "grip_l",
+    "grip_r",
+    "mag",
+    "muzzle"
+   ],
+   "estimativa_ps2_kb": 7.6,
+   "id": "trovao_01",
+   "categoria": "armas",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/armas/zumbido_01.glb",
+   "tris": 184,
+   "tris_colisao": 0,
+   "vertices_gltf": 320,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_escuro",
+    "preto",
+    "roxo"
+   ],
+   "marcadores": [
+    "grip_l",
+    "grip_r",
+    "mag",
+    "muzzle"
+   ],
+   "estimativa_ps2_kb": 5.0,
+   "id": "zumbido_01",
+   "categoria": "armas",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/baus_coletaveis/bau_ventania_01.glb",
+   "tris": 476,
+   "tris_colisao": 12,
+   "vertices_gltf": 726,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [
+    {
+     "nome": "abrir",
+     "duracao_s": 0.667,
+     "canais": 1,
+     "chaves": 20
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "coral",
+    "dourado",
+    "metal_escuro",
+    "teal",
+    "teal_escuro"
+   ],
+   "marcadores": [
+    "alca_tampa"
+   ],
+   "estimativa_ps2_kb": 11.3,
+   "id": "bau_ventania_01",
+   "categoria": "baus_coletaveis",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/baus_coletaveis/caixote_exemplo_01.glb",
+   "tris": 60,
+   "tris_colisao": 12,
+   "vertices_gltf": 120,
+   "materiais": [
+    "M_caixote_exemplo_01"
+   ],
+   "texturas": [
+    "T_caixote_exemplo_01"
+   ],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "cabelo_preto",
+    "cinza_tecido",
+    "couro",
+    "dourado",
+    "madeira_media",
+    "metal_escuro",
+    "pedra_clara",
+    "pedra_escura",
+    "pele_2",
+    "pele_4",
+    "preto",
+    "vazia_41",
+    "vazia_43",
+    "vazia_45",
+    "vazia_47",
+    "vazia_57",
+    "vazia_59",
+    "vazia_61",
+    "vazia_63",
+    "verde_militar"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 1.9,
+   "id": "caixote_exemplo_01",
+   "categoria": "baus_coletaveis",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/baus_coletaveis/celula_escudo_g_01.glb",
+   "tris": 144,
+   "tris_colisao": 0,
+   "vertices_gltf": 168,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "azul_ceu",
+    "metal_escuro",
+    "teal"
+   ],
+   "marcadores": [
+    "mao"
+   ],
+   "estimativa_ps2_kb": 2.6,
+   "id": "celula_escudo_g_01",
+   "categoria": "baus_coletaveis",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/baus_coletaveis/celula_escudo_p_01.glb",
+   "tris": 108,
+   "tris_colisao": 0,
+   "vertices_gltf": 120,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "azul_ceu",
+    "metal_escuro"
+   ],
+   "marcadores": [
+    "mao"
+   ],
+   "estimativa_ps2_kb": 1.9,
+   "id": "celula_escudo_p_01",
+   "categoria": "baus_coletaveis",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/baus_coletaveis/curativo_01.glb",
+   "tris": 84,
+   "tris_colisao": 0,
+   "vertices_gltf": 104,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "branco",
+    "pele_1"
+   ],
+   "marcadores": [
+    "mao"
+   ],
+   "estimativa_ps2_kb": 1.6,
+   "id": "curativo_01",
+   "categoria": "baus_coletaveis",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/baus_coletaveis/kit_cura_01.glb",
+   "tris": 228,
+   "tris_colisao": 0,
+   "vertices_gltf": 232,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "branco",
+    "cinza_tecido",
+    "coral"
+   ],
+   "marcadores": [
+    "mao"
+   ],
+   "estimativa_ps2_kb": 3.6,
+   "id": "kit_cura_01",
+   "categoria": "baus_coletaveis",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/baus_coletaveis/municao_01.glb",
+   "tris": 100,
+   "tris_colisao": 0,
+   "vertices_gltf": 216,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_escuro",
+    "verde_militar"
+   ],
+   "marcadores": [
+    "mao"
+   ],
+   "estimativa_ps2_kb": 3.4,
+   "id": "municao_01",
+   "categoria": "baus_coletaveis",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/arbusto_01.glb",
+   "tris": 60,
+   "tris_colisao": 0,
+   "vertices_gltf": 180,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "folha_clara",
+    "folha_escura",
+    "folha_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 2.8,
+   "id": "arbusto_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/armario_01.glb",
+   "tris": 92,
+   "tris_colisao": 12,
+   "vertices_gltf": 192,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "dourado",
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.0,
+   "id": "armario_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/armario_metal_01.glb",
+   "tris": 276,
+   "tris_colisao": 12,
+   "vertices_gltf": 576,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "azul_tormenta",
+    "metal_claro",
+    "metal_escuro",
+    "teal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 9.0,
+   "id": "armario_metal_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/arvore_redonda_01.glb",
+   "tris": 108,
+   "tris_colisao": 12,
+   "vertices_gltf": 248,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "folha_clara",
+    "folha_escura",
+    "folha_media",
+    "tronco"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.9,
+   "id": "arvore_redonda_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/balcao_caixa_01.glb",
+   "tris": 212,
+   "tris_colisao": 12,
+   "vertices_gltf": 456,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "madeira_media",
+    "metal_claro",
+    "metal_escuro",
+    "pedra_escura",
+    "preto",
+    "teal"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 7.1,
+   "id": "balcao_caixa_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/bancada_01.glb",
+   "tris": 264,
+   "tris_colisao": 24,
+   "vertices_gltf": 552,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "azul_tormenta",
+    "madeira_clara",
+    "madeira_escura",
+    "madeira_media",
+    "metal_claro",
+    "metal_escuro",
+    "vermelho"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 8.6,
+   "id": "bancada_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/banco_01.glb",
+   "tris": 268,
+   "tris_colisao": 12,
+   "vertices_gltf": 576,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_media",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 9.0,
+   "id": "banco_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/barril_01.glb",
+   "tris": 264,
+   "tris_colisao": 12,
+   "vertices_gltf": 288,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_media",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 4.5,
+   "id": "barril_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/cadeira_01.glb",
+   "tris": 136,
+   "tris_colisao": 0,
+   "vertices_gltf": 288,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 4.5,
+   "id": "cadeira_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/caixas_01.glb",
+   "tris": 156,
+   "tris_colisao": 36,
+   "vertices_gltf": 336,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_clara",
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.2,
+   "id": "caixas_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/cama_01.glb",
+   "tris": 264,
+   "tris_colisao": 24,
+   "vertices_gltf": 560,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "azul_tormenta",
+    "branco",
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 8.8,
+   "id": "cama_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/carrinho_01.glb",
+   "tris": 232,
+   "tris_colisao": 12,
+   "vertices_gltf": 416,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "laranja",
+    "metal_claro",
+    "metal_escuro",
+    "pedra_clara",
+    "pedra_media",
+    "preto"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 6.5,
+   "id": "carrinho_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/cerca_01.glb",
+   "tris": 220,
+   "tris_colisao": 12,
+   "vertices_gltf": 480,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_clara",
+    "madeira_escura"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 7.5,
+   "id": "cerca_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/conteiner_01.glb",
+   "tris": 176,
+   "tris_colisao": 12,
+   "vertices_gltf": 360,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "coral",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.6,
+   "id": "conteiner_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/conteiner_02.glb",
+   "tris": 176,
+   "tris_colisao": 12,
+   "vertices_gltf": 360,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "metal_claro",
+    "metal_escuro",
+    "teal"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.6,
+   "id": "conteiner_02",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/conteiner_03.glb",
+   "tris": 176,
+   "tris_colisao": 12,
+   "vertices_gltf": 360,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.6,
+   "id": "conteiner_03",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/escada_concreto_01.glb",
+   "tris": 1428,
+   "tris_colisao": 76,
+   "vertices_gltf": 3018,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "metal_claro",
+    "metal_escuro",
+    "pedra_clara",
+    "pedra_escura",
+    "pedra_media"
+   ],
+   "marcadores": [
+    "nav_entrada",
+    "nav_saida"
+   ],
+   "estimativa_ps2_kb": 47.2,
+   "id": "escada_concreto_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/escada_concreto_topo_01.glb",
+   "tris": 184,
+   "tris_colisao": 24,
+   "vertices_gltf": 384,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 6.0,
+   "id": "escada_concreto_topo_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/escada_madeira_01.glb",
+   "tris": 1260,
+   "tris_colisao": 76,
+   "vertices_gltf": 2682,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_clara",
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [
+    "nav_entrada",
+    "nav_saida"
+   ],
+   "estimativa_ps2_kb": 41.9,
+   "id": "escada_madeira_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/escada_madeira_topo_01.glb",
+   "tris": 256,
+   "tris_colisao": 24,
+   "vertices_gltf": 528,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_clara",
+    "madeira_escura"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 8.2,
+   "id": "escada_madeira_topo_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/escada_metal_01.glb",
+   "tris": 1212,
+   "tris_colisao": 76,
+   "vertices_gltf": 2586,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [
+    "nav_entrada",
+    "nav_saida"
+   ],
+   "estimativa_ps2_kb": 40.4,
+   "id": "escada_metal_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/escada_metal_topo_01.glb",
+   "tris": 208,
+   "tris_colisao": 24,
+   "vertices_gltf": 432,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 6.8,
+   "id": "escada_metal_topo_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/expositor_01.glb",
+   "tris": 148,
+   "tris_colisao": 12,
+   "vertices_gltf": 384,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_ceu",
+    "coral",
+    "dourado",
+    "madeira_clara",
+    "madeira_escura",
+    "teal"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 6.0,
+   "id": "expositor_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/feno_01.glb",
+   "tris": 68,
+   "tris_colisao": 12,
+   "vertices_gltf": 144,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "terra"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 2.2,
+   "id": "feno_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/ferramentas_01.glb",
+   "tris": 164,
+   "tris_colisao": 12,
+   "vertices_gltf": 336,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_clara",
+    "madeira_escura",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.2,
+   "id": "ferramentas_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/fogao_01.glb",
+   "tris": 248,
+   "tris_colisao": 12,
+   "vertices_gltf": 344,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "branco",
+    "metal_claro",
+    "preto",
+    "vermelho"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.4,
+   "id": "fogao_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/geladeira_01.glb",
+   "tris": 92,
+   "tris_colisao": 12,
+   "vertices_gltf": 192,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "branco",
+    "coral",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.0,
+   "id": "geladeira_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/girassol_01.glb",
+   "tris": 104,
+   "tris_colisao": 0,
+   "vertices_gltf": 150,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "folha_clara",
+    "folha_media",
+    "madeira_escura"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 2.3,
+   "id": "girassol_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/gondola_01.glb",
+   "tris": 984,
+   "tris_colisao": 12,
+   "vertices_gltf": 2136,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_ceu",
+    "coral",
+    "laranja",
+    "metal_claro",
+    "metal_escuro",
+    "rosa",
+    "teal",
+    "verde_militar",
+    "vermelho"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 33.4,
+   "id": "gondola_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/lixeira_01.glb",
+   "tris": 152,
+   "tris_colisao": 12,
+   "vertices_gltf": 160,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "teal",
+    "teal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 2.5,
+   "id": "lixeira_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/luminaria_01.glb",
+   "tris": 92,
+   "tris_colisao": 0,
+   "vertices_gltf": 116,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 1.8,
+   "id": "luminaria_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/maquina_01.glb",
+   "tris": 256,
+   "tris_colisao": 12,
+   "vertices_gltf": 448,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_claro",
+    "metal_escuro",
+    "teal",
+    "verde_militar",
+    "vermelho"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 7.0,
+   "id": "maquina_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/mesa_01.glb",
+   "tris": 152,
+   "tris_colisao": 12,
+   "vertices_gltf": 308,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_ceu",
+    "branco",
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 4.8,
+   "id": "mesa_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/onibus_01.glb",
+   "tris": 908,
+   "tris_colisao": 0,
+   "vertices_gltf": 1444,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "coral",
+    "lente",
+    "metal_claro",
+    "metal_escuro",
+    "preto",
+    "roxo",
+    "teal",
+    "teal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 22.6,
+   "id": "onibus_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/pedra_01.glb",
+   "tris": 40,
+   "tris_colisao": 40,
+   "vertices_gltf": 120,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "pedra_clara",
+    "pedra_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 1.9,
+   "id": "pedra_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/pia_cozinha_01.glb",
+   "tris": 168,
+   "tris_colisao": 12,
+   "vertices_gltf": 348,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "azul_ceu",
+    "madeira_clara",
+    "madeira_media",
+    "metal_claro",
+    "pedra_clara"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.4,
+   "id": "pia_cozinha_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/pinheiro_01.glb",
+   "tris": 92,
+   "tris_colisao": 12,
+   "vertices_gltf": 120,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "folha_escura",
+    "folha_media",
+    "tronco"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 1.9,
+   "id": "pinheiro_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/placa_01.glb",
+   "tris": 84,
+   "tris_colisao": 12,
+   "vertices_gltf": 158,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "branco",
+    "metal_claro",
+    "teal"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 2.5,
+   "id": "placa_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/planador_01.glb",
+   "tris": 68,
+   "tris_colisao": 0,
+   "vertices_gltf": 136,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_escuro",
+    "teal"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 2.1,
+   "id": "planador_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/planador_arraia_01.glb",
+   "tris": 668,
+   "tris_colisao": 0,
+   "vertices_gltf": 554,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "azul_ceu",
+    "azul_tormenta",
+    "branco",
+    "metal_escuro",
+    "preto"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 8.7,
+   "id": "planador_arraia_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/planador_folha_01.glb",
+   "tris": 188,
+   "tris_colisao": 0,
+   "vertices_gltf": 348,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "folha_escura",
+    "folha_media",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.4,
+   "id": "planador_folha_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/poste_01.glb",
+   "tris": 124,
+   "tris_colisao": 12,
+   "vertices_gltf": 208,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.2,
+   "id": "poste_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/prateleira_01.glb",
+   "tris": 300,
+   "tris_colisao": 12,
+   "vertices_gltf": 600,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_tormenta",
+    "coral",
+    "madeira_clara",
+    "madeira_escura",
+    "madeira_media",
+    "roxo",
+    "teal",
+    "verde_militar",
+    "vermelho"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 9.4,
+   "id": "prateleira_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/sacos_01.glb",
+   "tris": 96,
+   "tris_colisao": 12,
+   "vertices_gltf": 252,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "areia",
+    "terra"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.9,
+   "id": "sacos_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/silo_01.glb",
+   "tris": 428,
+   "tris_colisao": 44,
+   "vertices_gltf": 376,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "coral",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.9,
+   "id": "silo_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/sofa_01.glb",
+   "tris": 308,
+   "tris_colisao": 12,
+   "vertices_gltf": 672,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "coral",
+    "teal",
+    "teal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 10.5,
+   "id": "sofa_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/tambores_01.glb",
+   "tris": 396,
+   "tris_colisao": 12,
+   "vertices_gltf": 432,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_tormenta",
+    "metal_escuro",
+    "vermelho"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 6.8,
+   "id": "tambores_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/tapete_01.glb",
+   "tris": 36,
+   "tris_colisao": 0,
+   "vertices_gltf": 72,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "coral"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 1.1,
+   "id": "tapete_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/tenda_01.glb",
+   "tris": 48,
+   "tris_colisao": 8,
+   "vertices_gltf": 96,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "coral",
+    "madeira_escura",
+    "teal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 1.5,
+   "id": "tenda_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/tronco_01.glb",
+   "tris": 100,
+   "tris_colisao": 12,
+   "vertices_gltf": 126,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_clara",
+    "tronco"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 2.0,
+   "id": "tronco_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/cenario/tv_01.glb",
+   "tris": 148,
+   "tris_colisao": 12,
+   "vertices_gltf": 312,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_ceu",
+    "coral",
+    "madeira_escura",
+    "metal_escuro",
+    "preto",
+    "teal"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 4.9,
+   "id": "tv_01",
+   "categoria": "cenario",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/parede_madeira.glb",
+   "tris": 108,
+   "tris_colisao": 12,
+   "vertices_gltf": 216,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_clara",
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.4,
+   "id": "parede_madeira",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/parede_metal.glb",
+   "tris": 192,
+   "tris_colisao": 12,
+   "vertices_gltf": 384,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 6.0,
+   "id": "parede_metal",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/parede_pedra.glb",
+   "tris": 180,
+   "tris_colisao": 12,
+   "vertices_gltf": 360,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "pedra_clara",
+    "pedra_escura",
+    "pedra_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.6,
+   "id": "parede_pedra",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/piso_madeira.glb",
+   "tris": 96,
+   "tris_colisao": 20,
+   "vertices_gltf": 192,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_clara",
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.0,
+   "id": "piso_madeira",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/piso_metal.glb",
+   "tris": 192,
+   "tris_colisao": 20,
+   "vertices_gltf": 384,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 6.0,
+   "id": "piso_metal",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/piso_pedra.glb",
+   "tris": 180,
+   "tris_colisao": 20,
+   "vertices_gltf": 360,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "pedra_clara",
+    "pedra_escura",
+    "pedra_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.6,
+   "id": "piso_pedra",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/rampa_madeira.glb",
+   "tris": 96,
+   "tris_colisao": 12,
+   "vertices_gltf": 192,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_clara",
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.0,
+   "id": "rampa_madeira",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/rampa_metal.glb",
+   "tris": 192,
+   "tris_colisao": 12,
+   "vertices_gltf": 384,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 6.0,
+   "id": "rampa_metal",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/rampa_pedra.glb",
+   "tris": 180,
+   "tris_colisao": 12,
+   "vertices_gltf": 360,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "pedra_clara",
+    "pedra_escura",
+    "pedra_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 5.6,
+   "id": "rampa_pedra",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/teto_madeira.glb",
+   "tris": 30,
+   "tris_colisao": 14,
+   "vertices_gltf": 64,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "madeira_escura",
+    "madeira_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 1.0,
+   "id": "teto_madeira",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/teto_metal.glb",
+   "tris": 30,
+   "tris_colisao": 14,
+   "vertices_gltf": 64,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "metal_claro",
+    "metal_escuro"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 1.0,
+   "id": "teto_metal",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/construcoes/teto_pedra.glb",
+   "tris": 30,
+   "tris_colisao": 14,
+   "vertices_gltf": 64,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "pedra_escura",
+    "pedra_media"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 1.0,
+   "id": "teto_pedra",
+   "categoria": "construcoes",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/mochilas_acessorios/peixe_amarelo_01.glb",
+   "tris": 174,
+   "tris_colisao": 0,
+   "vertices_gltf": 200,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_ceu",
+    "preto"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.1,
+   "id": "peixe_amarelo_01",
+   "categoria": "mochilas_acessorios",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/mochilas_acessorios/peixe_laranja_01.glb",
+   "tris": 174,
+   "tris_colisao": 0,
+   "vertices_gltf": 200,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 0,
+   "max_influencias": 0,
+   "skinning_rigido": null,
+   "animacoes": [],
+   "celulas_paleta": [
+    "branco",
+    "laranja",
+    "preto"
+   ],
+   "marcadores": [],
+   "estimativa_ps2_kb": 3.1,
+   "id": "peixe_laranja_01",
+   "categoria": "mochilas_acessorios",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/astronomo_01.glb",
+   "tris": 2788,
+   "tris_colisao": 0,
+   "vertices_gltf": 2458,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_tormenta",
+    "branco",
+    "dourado",
+    "lente",
+    "pele_2",
+    "preto",
+    "roxo",
+    "teal"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 38.4,
+   "id": "astronomo_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/botanico_01.glb",
+   "tris": 3184,
+   "tris_colisao": 0,
+   "vertices_gltf": 2956,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "branco",
+    "coral",
+    "folha_clara",
+    "folha_escura",
+    "folha_media",
+    "madeira_clara",
+    "madeira_escura",
+    "metal_claro",
+    "preto",
+    "rosa",
+    "tronco"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 46.2,
+   "id": "botanico_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/capitao_mare_01.glb",
+   "tris": 4072,
+   "tris_colisao": 0,
+   "vertices_gltf": 4900,
+   "materiais": [
+    "M_agua_ventania",
+    "M_paleta_ventania",
+    "M_vidro_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "areia",
+    "branco",
+    "coral",
+    "dourado",
+    "folha_clara",
+    "folha_media",
+    "metal_claro",
+    "metal_escuro",
+    "pedra_clara",
+    "pedra_media",
+    "preto",
+    "teal",
+    "vermelho"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 76.6,
+   "id": "capitao_mare_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/entregador_01.glb",
+   "tris": 2740,
+   "tris_colisao": 0,
+   "vertices_gltf": 3072,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_ceu",
+    "branco",
+    "cinza_tecido",
+    "laranja",
+    "metal_claro",
+    "metal_escuro",
+    "pele_3",
+    "preto",
+    "vermelho"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 48.0,
+   "id": "entregador_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/escafandro_01.glb",
+   "tris": 3504,
+   "tris_colisao": 0,
+   "vertices_gltf": 3462,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "areia",
+    "couro",
+    "dourado",
+    "lente",
+    "metal_escuro",
+    "preto",
+    "vermelho"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 54.1,
+   "id": "escafandro_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/espantalho_01.glb",
+   "tris": 2308,
+   "tris_colisao": 0,
+   "vertices_gltf": 2626,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "areia",
+    "azul_ceu",
+    "branco",
+    "couro",
+    "dourado",
+    "folha_media",
+    "jeans",
+    "madeira_clara",
+    "madeira_media",
+    "preto",
+    "vermelho"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 41.0,
+   "id": "espantalho_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/explorador_01.glb",
+   "tris": 2956,
+   "tris_colisao": 0,
+   "vertices_gltf": 2958,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_ceu",
+    "branco",
+    "couro",
+    "dourado",
+    "lente",
+    "madeira_clara",
+    "madeira_media",
+    "metal_claro",
+    "metal_escuro",
+    "pele_2",
+    "pele_3",
+    "preto",
+    "terra",
+    "vermelho"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 46.2,
+   "id": "explorador_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/faz_tudo_01.glb",
+   "tris": 2128,
+   "tris_colisao": 0,
+   "vertices_gltf": 2754,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_ceu",
+    "couro",
+    "folha_clara",
+    "laranja",
+    "metal_claro",
+    "metal_escuro",
+    "preto",
+    "vermelho"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 43.0,
+   "id": "faz_tudo_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/guardiao_01.glb",
+   "tris": 2660,
+   "tris_colisao": 0,
+   "vertices_gltf": 2708,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "azul_ceu",
+    "azul_tormenta",
+    "branco",
+    "cinza_tecido",
+    "metal_escuro",
+    "preto"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 42.3,
+   "id": "guardiao_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/recruta_base_01.glb",
+   "tris": 2790,
+   "tris_colisao": 0,
+   "vertices_gltf": 2398,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "branco",
+    "cabelo_castanho",
+    "cinza_tecido",
+    "coral",
+    "couro",
+    "dourado",
+    "jeans",
+    "lente",
+    "metal_escuro",
+    "pele_2",
+    "pele_3",
+    "preto",
+    "teal"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 37.5,
+   "id": "recruta_base_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  },
+  {
+   "arquivo": "game/assets/personagens/recruta_brisa_01.glb",
+   "tris": 3500,
+   "tris_colisao": 0,
+   "vertices_gltf": 3010,
+   "materiais": [
+    "M_paleta_ventania"
+   ],
+   "texturas": [],
+   "ossos": 20,
+   "max_influencias": 1,
+   "skinning_rigido": true,
+   "animacoes": [
+    {
+     "nome": "idle-loop",
+     "duracao_s": 4.033,
+     "canais": 60,
+     "chaves": 1429
+    },
+    {
+     "nome": "andar-loop",
+     "duracao_s": 1.1,
+     "canais": 60,
+     "chaves": 585
+    },
+    {
+     "nome": "correr-loop",
+     "duracao_s": 0.7,
+     "canais": 60,
+     "chaves": 405
+    },
+    {
+     "nome": "agachado-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 238
+    },
+    {
+     "nome": "agachado_andar-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 470
+    },
+    {
+     "nome": "pular",
+     "duracao_s": 0.367,
+     "canais": 60,
+     "chaves": 228
+    },
+    {
+     "nome": "queda-loop",
+     "duracao_s": 0.833,
+     "canais": 60,
+     "chaves": 235
+    },
+    {
+     "nome": "aterrissar",
+     "duracao_s": 0.433,
+     "canais": 60,
+     "chaves": 285
+    },
+    {
+     "nome": "preparar-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "saltar",
+     "duracao_s": 0.633,
+     "canais": 60,
+     "chaves": 290
+    },
+    {
+     "nome": "queda_livre-loop",
+     "duracao_s": 1.633,
+     "canais": 60,
+     "chaves": 684
+    },
+    {
+     "nome": "mergulho-loop",
+     "duracao_s": 1.233,
+     "canais": 60,
+     "chaves": 365
+    },
+    {
+     "nome": "planador_abrir",
+     "duracao_s": 0.5,
+     "canais": 60,
+     "chaves": 354
+    },
+    {
+     "nome": "planador-loop",
+     "duracao_s": 2.033,
+     "canais": 60,
+     "chaves": 415
+    },
+    {
+     "nome": "aterrissar_pesado",
+     "duracao_s": 1.033,
+     "canais": 60,
+     "chaves": 555
+    },
+    {
+     "nome": "acenar",
+     "duracao_s": 1.533,
+     "canais": 60,
+     "chaves": 252
+    }
+   ],
+   "celulas_paleta": [
+    "amarelo_sol",
+    "branco",
+    "cabelo_castanho",
+    "cinza_tecido",
+    "coral",
+    "couro",
+    "dourado",
+    "lente",
+    "metal_escuro",
+    "pele_1",
+    "preto",
+    "roxo",
+    "teal",
+    "verde_militar"
+   ],
+   "marcadores": [
+    "LeftFoot",
+    "RightFoot",
+    "LeftHand",
+    "Head",
+    "RightHand"
+   ],
+   "estimativa_ps2_kb": 47.0,
+   "id": "recruta_brisa_01",
+   "categoria": "personagens",
+   "origem": "original",
+   "licenca": "Original",
+   "autor": "Projeto Ventania",
+   "no_catalogo": true
+  }
+ ]
+}

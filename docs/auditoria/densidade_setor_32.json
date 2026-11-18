@@ -1,0 +1,152 @@
+{
+ "setor_m": 32.0,
+ "pecas_mapa": 646,
+ "tris_pecas": 88782,
+ "props": 1219,
+ "tris_props": 147232,
+ "tris_relevo_lod0": 80000,
+ "setores_ocupados": 174,
+ "top10": [
+  {
+   "setor": [
+    -4,
+    2
+   ],
+   "centro_m": [
+    -112.0,
+    80.0
+   ],
+   "tris": 24024,
+   "objetos": 127,
+   "pecas": 70,
+   "props": 57
+  },
+  {
+   "setor": [
+    6,
+    0
+   ],
+   "centro_m": [
+    208.0,
+    16.0
+   ],
+   "tris": 11664,
+   "objetos": 61,
+   "pecas": 37,
+   "props": 24
+  },
+  {
+   "setor": [
+    -6,
+    1
+   ],
+   "centro_m": [
+    -176.0,
+    48.0
+   ],
+   "tris": 10460,
+   "objetos": 64,
+   "pecas": 35,
+   "props": 29
+  },
+  {
+   "setor": [
+    -5,
+    2
+   ],
+   "centro_m": [
+    -144.0,
+    80.0
+   ],
+   "tris": 10136,
+   "objetos": 72,
+   "pecas": 46,
+   "props": 26
+  },
+  {
+   "setor": [
+    -4,
+    1
+   ],
+   "centro_m": [
+    -112.0,
+    48.0
+   ],
+   "tris": 9548,
+   "objetos": 58,
+   "pecas": 38,
+   "props": 20
+  },
+  {
+   "setor": [
+    4,
+    0
+   ],
+   "centro_m": [
+    144.0,
+    16.0
+   ],
+   "tris": 8224,
+   "objetos": 43,
+   "pecas": 27,
+   "props": 16
+  },
+  {
+   "setor": [
+    -5,
+    1
+   ],
+   "centro_m": [
+    -144.0,
+    48.0
+   ],
+   "tris": 7876,
+   "objetos": 58,
+   "pecas": 35,
+   "props": 23
+  },
+  {
+   "setor": [
+    -6,
+    2
+   ],
+   "centro_m": [
+    -176.0,
+    80.0
+   ],
+   "tris": 7648,
+   "objetos": 52,
+   "pecas": 29,
+   "props": 23
+  },
+  {
+   "setor": [
+    1,
+    -6
+   ],
+   "centro_m": [
+    48.0,
+    -176.0
+   ],
+   "tris": 7260,
+   "objetos": 36,
+   "pecas": 24,
+   "props": 12
+  },
+  {
+   "setor": [
+    -2,
+    4
+   ],
+   "centro_m": [
+    -48.0,
+    144.0
+   ],
+   "tris": 6820,
+   "objetos": 52,
+   "pecas": 32,
+   "props": 20
+  }
+ ],
+ "mediana_tris_setor": 420
+}
