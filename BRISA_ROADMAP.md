@@ -113,7 +113,16 @@ problemas e próxima etapa).
 - `make testes`: 25 testes, 0 falhas. Os 9 novos cobrem perspectiva, câmera e inversa, frustum, normais para fora em todos os geradores, normal empacotada, luz toon, faces traseiras (6 de 12 num canto do cubo e 0 por dentro), recorte no plano perto, Z "maior ou igual" e neblina no rasterizador, e os níveis e o benchmark da cena.
 - `make emulador` (Play!, GS real em OpenGL): `EMULADOR_OK` nas duas execuções, a da cena (VU1 e EE) e a do controle.
 - **Os dois caminhos geram a mesma imagem:** na mesma cena parada (11.238 triângulos), as capturas do VU1 e do EE diferem em **8 de 170.240 pixels** (bordas). O EE do emulador comparado com a referência do PC difere em 0,28% dos pixels (regras de borda). Capturas em `docs/etapa2/`.
-- `make emulador-completo` (AutoTest, benchmark reduzido): ver o resultado abaixo.
+- `make emulador-completo` (AutoTest, benchmark reduzido a 3+6 quadros por configuração): `EMULADOR_OK`. Roteiro VU1 e EE, as **24 medições** e o fim do programa sem travar.
+
+  | Configuração | Triângulos | 3D pelo EE (emulador) | 3D pelo VU1 (emulador) |
+  |---|---|---|---|
+  | Cena nível 1 | ~3.300 | 23 ms | 12 ms |
+  | Cena nível 4 | ~11.000 | 87 ms | 13 ms |
+  | Cena nível 7 | ~76.000–79.000 | 646 ms | 20 ms |
+  | Carga nível 5 | 34.048 | 295 ms | 14 ms |
+
+  No emulador, o VU1 quase não varia com a carga: o Play! não cronometra o VU1 nem o GS de forma realista. **Estes números não servem para decidir nada**; servem só para mostrar que o benchmark mede e termina.
 
 **Medido no emulador (NÃO vale como desempenho de console):** na cena de
 11.238 triângulos (121 objetos visíveis, 361 lotes), o 3D levou 13,1 ms pelo
