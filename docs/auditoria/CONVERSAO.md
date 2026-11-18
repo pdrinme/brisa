@@ -1,6 +1,6 @@
 # Conversão Ventania → Brisa (gerado)
 
-Ventania `7864cd7`. 125 arquivos, 4874 KB no total. Tempo: 10.4 s.
+Ventania `7864cd7`. 125 arquivos, 3401 KB no total. Tempo: 10.4 s.
 
 | id | categoria | resultado |
 |---|---|---|
@@ -110,5 +110,5 @@ Ventania `7864cd7`. 125 arquivos, 4874 KB no total. Tempo: 10.4 s.
 | tipo | KB |
 |---|---|
 | animacao | 228 |
-| modelo | 4590 |
+| modelo | 3117 |
 | textura | 56 |

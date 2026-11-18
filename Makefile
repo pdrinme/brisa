@@ -60,9 +60,13 @@ build/%/conteudo_embutido.o: src/plataforma/ps2/conteudo_embutido.S $(PAK)
 	@mkdir -p $(@D)
 	$(EE_CC) -D_EE -G0 '-DBRISA_PAK_CAMINHO="$(PAK)"' -c $< -o $@
 
-build/%.vu.o:
+# O microprograma depende do .vsm (antes não dependia e não era remontado).
+build/ps2/%.vu.o: src/%.vsm
 	@mkdir -p $(@D)
-	$(DVP_AS) $(patsubst build/ps2/%.vu.o,src/%.vsm,$(patsubst build/autoteste/%.vu.o,src/%.vsm,$@)) -o $@
+	$(DVP_AS) $< -o $@
+build/autoteste/%.vu.o: src/%.vsm
+	@mkdir -p $(@D)
+	$(DVP_AS) $< -o $@
 
 build/ps2/%.o: src/%.cpp
 	@mkdir -p $(@D)
@@ -114,17 +118,21 @@ previa: build/host/brisa_previa
 # Ferramenta: tools/emulador/captura_play (ver docs/FERRAMENTAS_PS2DEV.md).
 CAPTURA ?= /opt/brisa-captura/brisa_captura
 AUTOTEST ?= /opt/play-autotest/tools/AutoTest/autotest
-emulador: autoteste
+emulador: autoteste build/host/brisa_previa
 	@rm -rf build/emulador
 	@mkdir -p build/emulador
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
-	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 200,700,1250
+	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 200,680,1250
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
 	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/controle 150 botoes
 	python3 tools/emulador/ppm_para_png.py --todos build/emulador
 	@echo "--- saída do ELF no emulador (cena) ---"
 	@cat build/emulador/cena.log
 	tools/emulador/verificar_saida.sh build/emulador/cena.log --cena
+	@# Imagem: o quadro 680 do emulador (parado no topo da torre, passo ~338, VU1)
+	@# contra a prévia do PC no mesmo passo. Pega o "VU1 não desenhou" que a contagem de lotes não pega.
+	./build/host/brisa_previa --roteiro=1 --png=build/emulador/pc_338.png --png-quadro=338 > /dev/null
+	python3 tools/emulador/comparar_quadros.py build/emulador/cena_680.png build/emulador/pc_338.png
 	tools/emulador/verificar_saida.sh build/emulador/controle.log --controle
 
 # emulador-completo: os 600 quadros até o fim do programa (AutoTest: GS nulo, sem controle).

@@ -1,6 +1,7 @@
 // Malha estática em lista de triângulos, guardada em arrays separados (SoA) no
 // formato que o VU1 recebe sem conversão (BRISA_ARCHITECTURE §5):
-//   pos:    4×f32 por vértice (x, y, z, 1)        → UNPACK V4-32
+//   pos:    4×i16 por vértice (x, y, z, 0)/escala → UNPACK V4-16 com sinal
+//           (o VU1 converte com ITOF0 e a escala entra na matriz)
 //   normal: 4×i8  por vértice (nx, ny, nz, 0)·127 → UNPACK V4-8 com sinal
 //   cor:    4×u8  por vértice (r, g, b, 255)      → UNPACK V4-8 sem sinal
 // Os arrays têm 4 vértices de folga zerados: o VIF lê de 16 em 16 bytes.
@@ -12,13 +13,30 @@
 
 struct Malha {
     u32 n = 0;            // vértices (múltiplo de 3)
-    f32* pos = nullptr;   // 4 por vértice
+    i16* pos = nullptr;   // 4 por vértice, em unidades de `escala` metros
+    f32 escala = 1.0f;
     u32* normal = nullptr;
     u32* cor = nullptr;
     Vec3 centro;          // esfera envolvente (espaço do objeto)
     f32 raio = 0;
     u32 triangulos() const { return n / 3; }
+    Vec3 posicao(u32 i) const { return Vec3(pos[i * 4] * escala, pos[i * 4 + 1] * escala, pos[i * 4 + 2] * escala); }
 };
+
+// Posição → int16 na escala dada (devolve false se não couber).
+inline bool quantizar_posicao(Vec3 p, f32 escala, i16* saida) {
+    f32 inv = 1.0f / escala;
+    f32 v[3] = {p.x * inv, p.y * inv, p.z * inv};
+    bool ok = true;
+    for (int k = 0; k < 3; k++) {
+        f32 a = v[k] + (v[k] >= 0 ? 0.5f : -0.5f);
+        if (a > 32767.0f) { a = 32767.0f; ok = false; }
+        if (a < -32767.0f) { a = -32767.0f; ok = false; }
+        saida[k] = static_cast<i16>(a);
+    }
+    saida[3] = 0;
+    return ok;
+}
 
 inline u32 empacotar_normal(Vec3 n) {
     auto q = [](f32 v) -> u32 {
@@ -42,7 +60,8 @@ inline Cor desempacotar_cor(u32 v) {
 // "low-poly" como o kit do Ventania). Faces em sentido anti-horário vistas de fora.
 class ConstrutorMalha {
 public:
-    ConstrutorMalha(Arena& arena, u32 max_triangulos);
+    // `extensao`: maior |coordenada| esperada (metros); define a escala das posições int16.
+    ConstrutorMalha(Arena& arena, u32 max_triangulos, f32 extensao = 64.0f);
     bool ok() const { return pos_ != nullptr; }
     void triangulo(Vec3 a, Vec3 b, Vec3 c, Cor cor);
     void quad(Vec3 a, Vec3 b, Vec3 c, Vec3 d, Cor cor);  // a,b,c,d anti-horário
@@ -62,7 +81,8 @@ public:
     bool estourou() const { return estourou_; }
 private:
     void vertice(Vec3 p, u32 normal, u32 cor);
-    f32* pos_ = nullptr;
+    i16* pos_ = nullptr;
+    f32 escala_ = 1.0f;
     u32* nrm_ = nullptr;
     u32* cor_ = nullptr;
     u32 n_ = 0, max_ = 0;

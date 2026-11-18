@@ -3,21 +3,21 @@
 #include <math.h>
 #include <string.h>
 
-ConstrutorMalha::ConstrutorMalha(Arena& arena, u32 max_triangulos) {
+ConstrutorMalha::ConstrutorMalha(Arena& arena, u32 max_triangulos, f32 extensao) {
     max_ = max_triangulos * 3;
+    escala_ = extensao / 32767.0f;
     u32 com_folga = max_ + 4;
-    pos_ = arena.alocar_n<f32>(com_folga * 4);
+    pos_ = arena.alocar_n<i16>(com_folga * 4);
     nrm_ = arena.alocar_n<u32>(com_folga);
     cor_ = arena.alocar_n<u32>(com_folga);
     if (!pos_ || !nrm_ || !cor_) { pos_ = nullptr; return; }
-    memset(pos_, 0, sizeof(f32) * com_folga * 4);
+    memset(pos_, 0, sizeof(i16) * com_folga * 4);
     memset(nrm_, 0, sizeof(u32) * com_folga);
     memset(cor_, 0, sizeof(u32) * com_folga);
 }
 
 void ConstrutorMalha::vertice(Vec3 p, u32 normal, u32 cor) {
-    f32* d = pos_ + n_ * 4;
-    d[0] = p.x; d[1] = p.y; d[2] = p.z; d[3] = 1.0f;
+    if (!quantizar_posicao(p, escala_, pos_ + n_ * 4)) estourou_ = true;
     nrm_[n_] = normal;
     cor_[n_] = cor;
     n_++;
@@ -115,20 +115,20 @@ Malha ConstrutorMalha::terminar() {
     Malha m;
     m.n = n_;
     m.pos = pos_;
+    m.escala = escala_;
     m.normal = nrm_;
     m.cor = cor_;
     if (n_ == 0) return m;
     Vec3 mn(1e30f, 1e30f, 1e30f), mx(-1e30f, -1e30f, -1e30f);
     for (u32 i = 0; i < n_; i++) {
-        const f32* p = pos_ + i * 4;
-        mn = Vec3(fminf(mn.x, p[0]), fminf(mn.y, p[1]), fminf(mn.z, p[2]));
-        mx = Vec3(fmaxf(mx.x, p[0]), fmaxf(mx.y, p[1]), fmaxf(mx.z, p[2]));
+        Vec3 p = m.posicao(i);
+        mn = Vec3(fminf(mn.x, p.x), fminf(mn.y, p.y), fminf(mn.z, p.z));
+        mx = Vec3(fmaxf(mx.x, p.x), fmaxf(mx.y, p.y), fmaxf(mx.z, p.z));
     }
     m.centro = (mn + mx) * 0.5f;
     f32 r2 = 0;
     for (u32 i = 0; i < n_; i++) {
-        const f32* p = pos_ + i * 4;
-        Vec3 d = Vec3(p[0], p[1], p[2]) - m.centro;
+        Vec3 d = m.posicao(i) - m.centro;
         if (ponto(d, d) > r2) r2 = ponto(d, d);
     }
     m.raio = sqrtf(r2);

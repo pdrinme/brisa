@@ -68,7 +68,7 @@ bool Treino::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
     char e[96];
     const u8* d = pak.arquivo("animacoes/humanoide.bani", &tam);
     if (!d || !anims_.carregar(d, tam, e, sizeof e) || !anim_.iniciar(anims_)) { snprintf(erro, ne, "animações do personagem: %s", d ? e : "ausente"); return false; }
-    ConstrutorMalha chao(arena, 12 * 12 * 2);
+    ConstrutorMalha chao(arena, 12 * 12 * 2, LIMITE * 1.1f + 1.0f);
     chao.grade(-LIMITE * 1.1f, -LIMITE * 1.1f, LIMITE * 2.2f, 12, rgb(0x6cc24a), rgb(0x6cc24a), chao_plano);
     chao_ = chao.terminar();
     TexturaBrisa tex;

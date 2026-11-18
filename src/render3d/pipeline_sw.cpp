@@ -51,8 +51,7 @@ u32 pipeline_objeto(const Cena3D& cena, const Objeto3D& obj, const ConfigTela& t
         VClip v[3];
         bool todos_atras = true;
         for (int i = 0; i < 3; i++) {
-            const f32* p = m.pos + (t + i) * 4;
-            Vec4 c = transformar(mvp, Vec3(p[0], p[1], p[2]));
+            Vec4 c = transformar(mvp, m.posicao(t + i));
             Cor cor = sombrear_toon(desempacotar_cor(m.cor[t + i]), ponto(desempacotar_normal(m.normal[t + i]), l),
                                     cena.luz, k);
             v[i] = {c.x, c.y, c.z, c.w, static_cast<f32>(cor.r), static_cast<f32>(cor.g), static_cast<f32>(cor.b)};

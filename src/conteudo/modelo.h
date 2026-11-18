@@ -37,7 +37,7 @@ static_assert(sizeof(ColisaoBMOD) == 32, "ColisaoBMOD");
 
 class ModeloBrisa {
 public:
-    static const u32 VERSAO = 2;
+    static const u32 VERSAO = 3;
     static const int MAX_PARTES = 40;
     static const int MAX_NOS = 32;
     bool carregar(const u8* dados, u32 tamanho, char* erro, int n_erro);

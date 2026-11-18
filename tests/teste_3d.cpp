@@ -24,8 +24,7 @@ alignas(16) u8 g_mem[256 * 1024];
 // Normal de cada face aponta para fora do centro da malha.
 bool normais_para_fora(const Malha& m) {
     for (u32 t = 0; t < m.n; t += 3) {
-        const f32* p = m.pos + t * 4;
-        Vec3 c((p[0] + p[4] + p[8]) / 3, (p[1] + p[5] + p[9]) / 3, (p[2] + p[6] + p[10]) / 3);
+        Vec3 c = (m.posicao(t) + m.posicao(t + 1) + m.posicao(t + 2)) * (1.0f / 3.0f);
         Vec3 n = desempacotar_normal(m.normal[t]);
         if (ponto(n, c - m.centro) <= 0) return false;
     }
@@ -96,6 +95,19 @@ TESTE(geradores_com_normais_para_fora) {
         m.caixa(Vec3(0, 0, 0), Vec3(1, 1, 1), c);  // 10 triângulos não cabem em 2
         VERIFICA(m.estourou() && m.triangulos() == 2);
     }
+}
+
+TESTE(posicao_int16_escala_e_extensao) {
+    alignas(16) static u8 mem[64 * 1024];
+    Arena a(mem, sizeof mem);
+    ConstrutorMalha m(a, 2, 10.0f);
+    m.triangulo(Vec3(0, 0, 0), Vec3(9.99f, 0, 0), Vec3(0, -9.5f, 3.25f), Cor{255, 255, 255, 255});
+    VERIFICA(!m.estourou());
+    Malha k = m.terminar();
+    VERIFICA(fabsf(k.posicao(1).x - 9.99f) < k.escala && fabsf(k.posicao(2).y + 9.5f) < k.escala && fabsf(k.posicao(2).z - 3.25f) < k.escala);
+    VERIFICA(k.escala < 0.001f);
+    m.triangulo(Vec3(0, 0, 0), Vec3(12, 0, 0), Vec3(0, 1, 0), Cor{255, 255, 255, 255});  // passa dos 10 m
+    VERIFICA(m.estourou());
 }
 
 TESTE(normal_empacotada_ida_e_volta) {

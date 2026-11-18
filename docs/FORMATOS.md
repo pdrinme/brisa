@@ -26,7 +26,7 @@ Cabeçalho de 128 bytes:
 | Offset | Tipo | Campo |
 |---|---|---|
 | 0 | char[4] | `BMOD` |
-| 4 | u32 | versão (2) |
+| 4 | u32 | versão (3) |
 | 8 | u32 | n de vértices (com a folga entre partes) |
 | 12 | u32 | n de partes (≤ 40) |
 | 16 | u32 | n de nós (≤ 32) |
@@ -34,7 +34,7 @@ Cabeçalho de 128 bytes:
 | 24 | u32 | n de colisões |
 | 28 | u32 | flags (bit 0: esquelético) |
 | 32 | f32[4] | esfera envolvente (centro, raio) |
-| 48 | f32[3]+4 | AABB mínimo |
+| 48 | f32[3], f32 | AABB mínimo; escala das posições (v3) |
 | 64 | f32[3]+4 | AABB máximo |
 | 80 | u32[7] | offsets: partes, nós, marcadores, colisões, posições, normais, cores |
 
@@ -46,11 +46,11 @@ Blocos:
 | Nós | 144 B | `nome[24]`, `pai i32`, `flags u32` (bit 0 animado, bit 1 osso), `t f32[3]+4`, `r f32[4]` (quaternion x,y,z,w), `s f32[3]+4`, `inv_bind f32[16]` (coluna principal). Pais vêm antes dos filhos |
 | Marcadores | 48 B | `nome[24]`, `no i32` (pai), `pos f32[3]` (local ao pai), 8 B |
 | Colisões | 32 B | `min f32[3]`, `tipo u32`, `max f32[3]`, `espessura f32`, no espaço do modelo. Tipo 0 = caixa; 1–4 = rampa (laje inclinada) que sobe para +x, −x, +z ou −z, com o topo indo de `min.y + espessura` na ponta baixa até `max.y` na alta (v2; na v1 era só a AABB) |
-| Posições | 16 B/vértice | `x, y, z, 1` (f32) → UNPACK V4-32 |
+| Posições | 8 B/vértice | `x, y, z, 0` em i16 (× escala do cabeçalho) → UNPACK V4-16 com sinal; o VU1 converte com ITOF0 e a escala vai na matriz (v3; até a v2 eram 4 f32) |
 | Normais | 4 B/vértice | `nx, ny, nz, 0` em i8 (×127) → UNPACK V4-8 com sinal |
 | Cores | 4 B/vértice | `r, g, b, 255` → UNPACK V4-8 sem sinal |
 
-Normais e cores têm folga zerada até o múltiplo de 4 (+4). Posição final de um
+Posições, normais e cores têm folga zerada até o múltiplo de 4 (+4). Posição final de um
 vértice: `instância · mundo(nó) · inv_bind(nó) · p` (parte com nó) ou
 `instância · p` (parte estática).
 

@@ -97,6 +97,7 @@ void desenhar(const Cena3D& cena, SaidaTriangulos& ee, Estatisticas3D& est) {
         f32* h = cab[n_vu++];
         Mat4 mvp = cam.vp * o.modelo;
         memcpy(h, mvp.m, 16 * sizeof(f32));
+        for (int k = 0; k < 12; k++) h[k] *= m.escala;  // posições int16: a escala entra nas colunas x, y, z
         Vec3 l = normalizar(transformar_direcao(inversa_rigida(o.modelo), normalizar(cena.luz.direcao))) * (1.0f / 127.0f);
         f32* q = h + 16;
         q[0] = l.x; q[1] = l.y; q[2] = l.z; q[3] = k.a;                                     // 5
@@ -115,7 +116,10 @@ void desenhar(const Cena3D& cena, SaidaTriangulos& ee, Estatisticas3D& est) {
             u32 n = m.n - ini < static_cast<u32>(MAX_VERTS_LOTE) ? m.n - ini : MAX_VERTS_LOTE;
             unpack_ref(p, g_contagens[n / 3], 1, P2_UNPACK_V4_32, 0, 1, false);
             unpack_ref(p, h, QW_CABECALHO, P2_UNPACK_V4_32, 1, QW_CABECALHO, false);
-            unpack_ref(p, m.pos + ini * 4, n, P2_UNPACK_V4_32, 13, n, false);
+            // V4-16: 2 vértices por qword; com n ímpar, o vetor a mais cai no início
+            // das normais, que vêm depois e o sobrescrevem.
+            u32 qw16 = (n + 1) / 2;
+            unpack_ref(p, m.pos + ini * 4, qw16, P2_UNPACK_V4_16, 13, qw16 * 2, false);
             // V4-8: o VIF consome qwords inteiros (4 vetores). Desempacota até o
             // múltiplo de 4: os 1 a 3 vetores a mais caem no início da área seguinte,
             // que é sobrescrita depois (cores, e a saída do VU1). Sem isso, os bytes

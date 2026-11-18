@@ -10,7 +10,7 @@ struct Cabecalho {
     char magia[4];
     u32 versao, n_vertices, n_partes, n_nos, n_marcadores, n_colisoes, flags;
     f32 centro[3], raio;
-    f32 mn[3], _a;
+    f32 mn[3], escala;  // v3: escala das posições int16
     f32 mx[3], _b;
     u32 off_partes, off_nos, off_marcadores, off_colisoes, off_pos, off_normal, off_cor, _c;
 };
@@ -34,9 +34,9 @@ bool ModeloBrisa::carregar(const u8* d, u32 t, char* erro, int ne) {
         return false;
     }
     u32 nv_pad = (c->n_vertices + 4 + 3) / 4 * 4;
-    if (c->off_cor + nv_pad * 4 > t || c->off_pos + c->n_vertices * 16 > t) { snprintf(erro, ne, "modelo truncado"); return false; }
+    if (c->off_cor + nv_pad * 4 > t || c->off_pos + nv_pad * 8 > t) { snprintf(erro, ne, "modelo truncado"); return false; }
     const ParteBMOD* partes = reinterpret_cast<const ParteBMOD*>(d + c->off_partes);
-    const f32* pos = reinterpret_cast<const f32*>(d + c->off_pos);
+    const i16* pos = reinterpret_cast<const i16*>(d + c->off_pos);
     const u32* nrm = reinterpret_cast<const u32*>(d + c->off_normal);
     const u32* cor = reinterpret_cast<const u32*>(d + c->off_cor);
     n_partes_ = static_cast<int>(c->n_partes);
@@ -49,7 +49,8 @@ bool ModeloBrisa::carregar(const u8* d, u32 t, char* erro, int ne) {
         // O conversor alinha cada parte a 4 vértices (o VIF lê de 16 em 16 bytes).
         Malha& m = malhas_[i];
         m.n = p.n;
-        m.pos = const_cast<f32*>(pos + p.inicio * 4);
+        m.pos = const_cast<i16*>(pos + p.inicio * 4);
+        m.escala = c->escala;
         m.normal = const_cast<u32*>(nrm + p.inicio);
         m.cor = const_cast<u32*>(cor + p.inicio);
         m.centro = Vec3(p.centro[0], p.centro[1], p.centro[2]);

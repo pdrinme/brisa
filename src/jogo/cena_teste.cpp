@@ -104,7 +104,7 @@ const char* nome_caminho(Caminho3D c) { return c == Caminho3D::VU1 ? "VU1" : "EE
 
 bool CenaTeste::iniciar(Arena& a) {
     struct Gerador { void (*f)(ConstrutorMalha&); u32 max_tris; };
-    ConstrutorMalha chao(a, 32 * 32 * 2);
+    ConstrutorMalha chao(a, 32 * 32 * 2, AREA * 0.6f + 1.0f);
     chao.grade(-AREA * 0.6f, -AREA * 0.6f, AREA * 1.2f, 32, GRAMA, GRAMA_2, relevo);
     malhas_[CHAO] = chao.terminar();
     const Gerador g[] = {{casa, 300}, {torre, 200}, {galpao, 120}, {pinheiro, 80}, {arvore, 120}, {bau, 60}, {pedra, 30}, {gerar_carga, 1400}};

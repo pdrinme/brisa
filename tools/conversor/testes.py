@@ -201,12 +201,32 @@ class TesteColisao(unittest.TestCase):
         self.assertEqual(d[:4], b"BMOD")
         versao, n_col = struct.unpack_from("<I", d, 4)[0], struct.unpack_from("<I", d, 24)[0]
         off_col = struct.unpack_from("<7I", d, 80)[3]
-        self.assertEqual(versao, 2)
+        self.assertEqual(versao, formatos.VERSAO_MODELO)
         self.assertEqual(n_col, 1)
         x0, y0, z0, tipo, x1, y1, z1, esp = struct.unpack_from("<3fI3ff", d, off_col)
         self.assertEqual(tipo, 4)  # sobe para −z, como no campo de treino
         self.assertAlmostEqual(esp, 0.141, places=2)
         self.assertAlmostEqual(y1, 4.1, places=1)
+
+    def test_posicoes_int16_dentro_da_aabb(self):
+        # v3: posições int16 × escala do cabeçalho; erro de no máximo meia unidade.
+        for nome in ("rampa_pedra", "recruta_base_01", "pinheiro_01"):
+            d = open(os.path.join(RAIZ, "assets", "modelos", nome + ".bmod"), "rb").read()
+            nv = struct.unpack_from("<I", d, 8)[0]
+            mn = struct.unpack_from("<3f", d, 48)
+            escala = struct.unpack_from("<f", d, 60)[0]
+            mx = struct.unpack_from("<3f", d, 64)
+            off_pos = struct.unpack_from("<7I", d, 80)[4]
+            self.assertGreater(escala, 0)
+            self.assertLess(escala, 0.001)  # < 1 mm para modelos de até 32 m
+            for k in range(nv):
+                x, y, z, w = struct.unpack_from("<4h", d, off_pos + 8 * k)
+                if (x, y, z) == (0, 0, 0):
+                    continue  # folga entre partes
+                for c, a, b in ((x, mn[0], mx[0]), (y, mn[1], mx[1]), (z, mn[2], mx[2])):
+                    self.assertGreaterEqual(c * escala, a - escala)
+                    self.assertLessEqual(c * escala, b + escala)
+                self.assertEqual(w, 0)
 
 
 class TesteEmpacotador(unittest.TestCase):

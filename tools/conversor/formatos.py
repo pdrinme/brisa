@@ -5,7 +5,7 @@ import math
 import struct
 import zlib
 
-VERSAO_MODELO = 2  # v2: colisões com tipo (caixa/rampa) e espessura
+VERSAO_MODELO = 3  # v2: colisões com tipo e espessura; v3: posições int16 com escala
 VERSAO_ANIM = 1
 VERSAO_TEXTURA = 1
 VERSAO_PAK = 1
@@ -68,7 +68,13 @@ def escrever_modelo(m):
     b_marc = b"".join(_nome(k["nome"], 24) + struct.pack("<i3f4x4x", k["no"], *k["pos"]) for k in m.marcadores)
     b_col = b"".join(struct.pack("<3fI3ff", *a, tipo, *b, esp) for a, b, tipo, esp in m.colisoes)
     nv_pad = (nv + 4 + 3) // 4 * 4  # folga zerada: o VIF lê de 16 em 16 bytes
-    b_pos = b"".join(struct.pack("<4f", *v, 1.0) for v in pos)
+    # v3: posições em int16 com uma escala por modelo (o VU1 converte com ITOF0
+    # e a escala vai na matriz). Folga zerada como nas normais.
+    maior = max((abs(c) for v in pos for c in v), default=1.0)
+    escala = max(maior, 1e-3) / 32767.0
+    def q(c):
+        return max(-32767, min(32767, int(round(c / escala))))
+    b_pos = b"".join(struct.pack("<4h", q(v[0]), q(v[1]), q(v[2]), 0) for v in pos) + b"\0" * 8 * (nv_pad - nv)
     b_nrm = struct.pack(f"<{nv}I", *nrm) + b"\0" * 4 * (nv_pad - nv)
     b_cor = struct.pack(f"<{nv}I", *cor) + b"\0" * 4 * (nv_pad - nv)
     corpo = b""
@@ -81,7 +87,7 @@ def escrever_modelo(m):
         off += len(bloco)
     cab = b"BMOD" + struct.pack("<IIIIIII", VERSAO_MODELO, nv, len(partes), len(m.nos), len(m.marcadores),
                                 len(m.colisoes), 1 if m.esqueletico else 0)
-    cab += struct.pack("<3ff", *centro, raio) + struct.pack("<3ff", *mn, 0.0) + struct.pack("<3ff", *mx, 0.0)
+    cab += struct.pack("<3ff", *centro, raio) + struct.pack("<3ff", *mn, escala) + struct.pack("<3ff", *mx, 0.0)
     cab += struct.pack("<7I", *offs) + b"\0" * 4
     assert len(cab) == 112, len(cab)
     cab = _alinhar(cab + b"\0" * 16, 128)[:128]

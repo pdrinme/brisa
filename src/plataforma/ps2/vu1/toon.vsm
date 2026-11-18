@@ -15,7 +15,8 @@
 ;   10      x = −k, y = fim·k (neblina), z = 255, w = 0,25 (faixa de guarda)
 ;   11      x = 255, w = 128
 ;   12      GIFtag (NLOOP corrigido aqui)
-;   13      posições [n] (V4-32), normais [n] (V4-8 com sinal), cores [n] (V4-8 sem sinal)
+;   13      posições [n] (V4-16 com sinal: inteiros, a escala está na MVP),
+;           normais [n] (V4-8 com sinal), cores [n] (V4-8 sem sinal)
 ;   13+3n   saída: GIFtag + n × (RGBAQ, XYZF2)
         .vu
         .align 4
@@ -50,6 +51,7 @@ brisa_vu1_toon_inicio:
         NOP                                     iadd VI09,VI00,VI03
 laco:
         NOP                                     lq VF13,0(VI04)
+        itof0 VF13,VF13                         NOP
         mulax ACC,VF01,VF13x                    lq VF17,0(VI05)
         madday ACC,VF02,VF13y                   lq VF18,0(VI06)
         maddaz ACC,VF03,VF13z                   NOP
