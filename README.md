@@ -12,15 +12,15 @@ código, motor, pipeline, build e documentação são próprios.
 
 ## Status
 
-**Etapa 2 (motor gráfico): pronta e testada no emulador; falta o benchmark no
-console.** Há dois caminhos de renderização 3D: o do EE e o do VU1 (com
-microprograma próprio). Os dois usam a luz toon de 2 faixas do Ventania,
-Z-buffer e neblina. A cena de teste vem com benchmark automático (▲). O teste
-da Etapa 1 no console também continua pendente. Veja
-[docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md) e
+**Etapa 3 (pipeline Ventania → Brisa): pronta e testada no emulador; falta
+ver no console.** Os modelos, as animações e os ícones originais do Ventania
+são convertidos para os formatos do Brisa (com LODs e redução de polígonos) e
+empacotados com catálogo de licenças. A vitrine do kit do Ventania roda no PS2
+com os assets convertidos. Os testes no console das Etapas 1 a 3 continuam
+pendentes ([docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md)). Veja
 [BRISA_ROADMAP.md](BRISA_ROADMAP.md).
 
-![Cena de teste no emulador Play!, pelo VU1](docs/etapa2/emulador_vu1.png)
+![Vitrine do Ventania (esquerda) e do Brisa no emulador (direita)](docs/etapa3/ventania_x_brisa_emulador.png)
 
 ## Compilar e testar
 
@@ -46,7 +46,8 @@ make emulador
 
 | Alvo | Resultado |
 |---|---|
-| `make` | `build/ps2/brisa.elf` (o que vai para o console) |
+| `make` | `build/ps2/brisa.elf` (o que vai para o console, com o pacote de conteúdo embutido) |
+| `make conteudo-ventania VENTANIA=../ventania` | Reconverte os assets a partir do Ventania (só ao sincronizar) |
 | `make testes` | Testes do núcleo no PC (`TESTES_OK`) |
 | `make previa` | Cena renderizada no PC (referência) em `build/previa/*.png` |
 | `make emulador` | O ELF no Play! (sem BIOS) com vídeo: a cena pelo VU1 e pelo EE, e o controle simulado; quadros em `build/emulador/` (`EMULADOR_OK`) |
@@ -65,6 +66,7 @@ As ferramentas de emulador são instaladas por `tools/ambiente/instalar_emulador
 | [ASSET_LICENSES.md](ASSET_LICENSES.md) | Política, reaproveitamento arquivo a arquivo, dependências |
 | [docs/PIPELINE_ASSETS.md](docs/PIPELINE_ASSETS.md) | Conversão Ventania → Brisa (modelos, texturas, mapa, dados, áudio) |
 | [docs/ESTILO_VISUAL_PS2.md](docs/ESTILO_VISUAL_PS2.md) | A identidade visual do Ventania traduzida para o PS2 |
+| [docs/FORMATOS.md](docs/FORMATOS.md) | Formatos binários do Brisa (pacote, modelo, animação, textura) |
 | [docs/FERRAMENTAS_PS2DEV.md](docs/FERRAMENTAS_PS2DEV.md) | Toolchain validado, versões, emulador Play! e como testar |
 | [docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md) | Roteiro do teste no PS2 real e o que reportar |
 | [docs/SINCRONIA_VENTANIA.md](docs/SINCRONIA_VENTANIA.md) | Versão de referência do Ventania e o processo de sincronia |
@@ -107,14 +109,16 @@ brisa-ps2/
 │   ├── plataforma/ps2/      ✅ IOP/IRX, gsKit, libpad, relógio, caminho EE (GIF), caminho VU1 (VIF1 + vu1/toon.vsm)
 │   ├── plataforma/host/     ✅ PC: rasterizador de software, PNG, controle por roteiro
 │   ├── main.cpp             ✅
-│   └── (planejado) conteudo/ mundo/ personagem/ armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
+│   ├── conteudo/            ✅ pacote, modelos, animações, texturas
+│   └── (planejado) mundo/ personagem/ armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
 ├── data/                    JSON de conteúdo (armas, itens, cosméticos, temporadas, loja)
-├── assets/                  catálogo do Brisa e saídas convertidas
+├── assets/                  ✅ assets convertidos (modelos, animações, texturas) + catalogo_brisa.json
 ├── tools/
 │   ├── ambiente/            ✅ instalar e verificar o toolchain (+ sonda)
 │   ├── auditoria/           ✅ leitor GLB, auditoria, extrator da ilha, densidade, reuso
 │   ├── emulador/            ✅ capturador no Play!, verificação da saída, PPM→PNG
-│   ├── conversor_modelos/  conversor_texturas/  conversor_mapa/  compilador_dados/  empacotador/   (Etapa 3+)
+│   ├── conversor/           ✅ GLB → BMOD/BANI, PNG → BTEX, QEM, catálogo, empacotador, testes
+│   ├── (planejado) conversor_mapa/ compilador_dados/
 ├── tests/                   ✅ testes do núcleo no PC
 ├── docs/
 ├── Makefile                 ✅

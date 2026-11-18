@@ -2,6 +2,7 @@
 // testes. Imita o GS no essencial: sprites, quads em tira, Gouraud e alfa.
 #pragma once
 #include "nucleo/desenho2d.h"
+#include "conteudo/textura.h"
 #include "render3d/pipeline_sw.h"
 
 class Rasterizador : public SaidaTriangulos {
@@ -13,7 +14,12 @@ public:
     // neblina por vértice, como o GS (TEST.ZTST = GEQUAL, PRIM.FGE = 1).
     void iniciar_3d(Cor fundo, Cor neblina, f32 perto);
     void triangulo(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c) override;
+    void triangulo_textura(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c, int textura) override;
     u32 z(int x, int y) const { return z_[y * L + x]; }
+    // Texturas registradas (a plataforma do PC preenche).
+    static const int MAX_TEXTURAS = 64;
+    TexturaBrisa texturas[MAX_TEXTURAS];
+    int n_texturas = 0;
     u32 pixel(int x, int y) const { return px_[y * L + x]; }  // 0xRRGGBB
     bool salvar_png(const char* caminho) const;
 private:

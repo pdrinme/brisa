@@ -116,9 +116,13 @@ void desenhar(const Cena3D& cena, SaidaTriangulos& ee, Estatisticas3D& est) {
             unpack_ref(p, g_contagens[n / 3], 1, P2_UNPACK_V4_32, 0, 1, false);
             unpack_ref(p, h, QW_CABECALHO, P2_UNPACK_V4_32, 1, QW_CABECALHO, false);
             unpack_ref(p, m.pos + ini * 4, n, P2_UNPACK_V4_32, 13, n, false);
+            // V4-8: o VIF consome qwords inteiros (4 vetores). Desempacota até o
+            // múltiplo de 4: os 1 a 3 vetores a mais caem no início da área seguinte,
+            // que é sobrescrita depois (cores, e a saída do VU1). Sem isso, os bytes
+            // que sobram no qword seriam lidos como comandos do VIF.
             u32 qw8 = (n + 3) / 4;
-            unpack_ref(p, m.normal + ini, qw8, P2_UNPACK_V4_8, 13 + n, n, false);
-            unpack_ref(p, m.cor + ini, qw8, P2_UNPACK_V4_8, 13 + 2 * n, n, true);
+            unpack_ref(p, m.normal + ini, qw8, P2_UNPACK_V4_8, 13 + n, qw8 * 4, false);
+            unpack_ref(p, m.cor + ini, qw8, P2_UNPACK_V4_8, 13 + 2 * n, qw8 * 4, true);
             packet2_chain_open_cnt(p, 0, 0, 0);
             packet2_vif_mscal(p, 0, 0);
             packet2_vif_nop(p, 0);

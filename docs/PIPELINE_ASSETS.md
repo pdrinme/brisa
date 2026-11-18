@@ -20,6 +20,39 @@ mapa) e produzem arquivos binários no formato do Brisa
                                    empacotador ─► BRISA.PAK (+ BRISAPnn.PAK)
 ```
 
+## 0. Como rodar (Etapa 3)
+
+```bash
+make conteudo-ventania VENTANIA=../ventania
+```
+
+Esse alvo reconverte tudo do Ventania para `assets/` (cerca de 13 s) e monta
+`build/conteudo/BRISA.PAK`. O build comum (`make`) só precisa de `assets/`
+(versionado no Brisa); ele **não depende do Ventania**. Testes do pipeline:
+
+```bash
+python3 tools/conversor/testes.py
+```
+
+Implementado na Etapa 3:
+- leitura do GLB;
+- partes rígidas (o conversor recusa skinning com mais de um osso por vértice);
+- cor pela célula da paleta (recusa UV em célula vazia);
+- normais do GLB;
+- colisões em AABB a partir dos nós `-colonly`;
+- marcadores;
+- animações amostradas a 30 Hz;
+- partes alinhadas a 4 vértices (exigência do VIF);
+- orçamento de LOD0 com redução automática;
+- LOD1/LOD2 dos trajes por QEM;
+- texturas PNG → PSMT8/PSMT4 com CLUT CSM1;
+- sombra blob original;
+- catálogo e pacote.
+
+Ainda **não** feitos: tiras de triângulos, posições int16, LOD dos props, o
+compilador de dados de jogo (`data/*.json` → BIN, que entra com o primeiro
+sistema que usa esses dados, na Etapa 6) e o conversor de mapa (Etapa 5).
+
 ## 1. Ferramentas da Etapa 0 (prontas e testadas)
 
 | Ferramenta | O que faz | Resultado medido |
@@ -30,7 +63,7 @@ mapa) e produzem arquivos binários no formato do Brisa
 | `tools/auditoria/densidade_mapa.py` | Triângulos por setor (64 m e 32 m) | Setor de 64 m mais denso: 25,2 mil; mediana: 2,0 mil |
 | `tools/auditoria/lista_reuso.py` | Classifica cada GLB para reaproveitamento | `docs/auditoria/REUSO_GLB.md` |
 
-## 2. Conversor de modelos (Etapa 3)
+## 2. Conversor de modelos (Etapa 3 — implementado em `tools/conversor/`)
 
 **Entrada:** o GLB exportado pelo Ventania (não o `.blend`; assim não é preciso
 ter o Blender para converter).
@@ -57,7 +90,7 @@ ter o Blender para converter).
 | Baú / coletável | 500 | 120 | — |
 | Mochila / acessório | 400 | 120 | — |
 
-## 3. Conversor de texturas (Etapa 3)
+## 3. Conversor de texturas (Etapa 3 — implementado em `tools/conversor/textura.py`)
 
 Poucas texturas: fonte, ícones do HUD, sombra blob, faixas da Tormenta, céu,
 minimapa e cartões da loja. Entrada PNG → quantização para 16 ou 256 cores →

@@ -89,6 +89,51 @@ void Rasterizador::triangulo(const VerticeTela& a, const VerticeTela& b, const V
         }
 }
 
+// Textura com modulação do GS (TFX = MODULATE): C = Ct·Cv/128, A = At·Av/128.
+static void amostrar(const TexturaBrisa& t, f32 s, f32 u, u32 mod, f32* rgba) {
+    int x = static_cast<int>(s * t.largura), y = static_cast<int>(u * t.altura);
+    x = x < 0 ? 0 : (x >= t.largura ? t.largura - 1 : x);
+    y = y < 0 ? 0 : (y >= t.altura ? t.altura - 1 : y);
+    u32 c = t.rgba(x, y);
+    f32 m[4] = {static_cast<f32>(mod & 255), static_cast<f32>((mod >> 8) & 255), static_cast<f32>((mod >> 16) & 255),
+                static_cast<f32>(mod >> 24)};
+    for (int k = 0; k < 4; k++) rgba[k] = static_cast<f32>((c >> (8 * k)) & 255) * m[k] / 128.0f;
+    // alfa da textura já está em 0..128; leva para 0..255 (a mistura usa 0..255)
+    rgba[3] = rgba[3] * 255.0f / 128.0f;
+}
+
+void Rasterizador::triangulo_textura(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c, int tex) {
+    if (tex < 0 || tex >= n_texturas) return;
+    const TexturaBrisa& t = texturas[tex];
+    const VerticeTela* v[3] = {&a, &b, &c};
+    f32 xs[3] = {a.x, b.x, c.x}, ys[3] = {a.y, b.y, c.y};
+    f32 area = aresta(xs[0], ys[0], xs[1], ys[1], xs[2], ys[2]);
+    if (fabsf(area) < 1e-6f) return;
+    int x0 = static_cast<int>(floorf(fminf(xs[0], fminf(xs[1], xs[2])))), x1 = static_cast<int>(ceilf(fmaxf(xs[0], fmaxf(xs[1], xs[2]))));
+    int y0 = static_cast<int>(floorf(fminf(ys[0], fminf(ys[1], ys[2])))), y1 = static_cast<int>(ceilf(fmaxf(ys[0], fmaxf(ys[1], ys[2]))));
+    x0 = x0 < 0 ? 0 : x0; y0 = y0 < 0 ? 0 : y0; x1 = x1 > L ? L : x1; y1 = y1 > A ? A : y1;
+    f32 zs[3];
+    for (int i = 0; i < 3; i++) zs[i] = static_cast<f32>(gs3d::z_de(v[i]->q, perto_));
+    for (int y = y0; y < y1; y++)
+        for (int x = x0; x < x1; x++) {
+            f32 px = x + 0.5f, py = y + 0.5f;
+            f32 w0 = aresta(xs[1], ys[1], xs[2], ys[2], px, py) / area;
+            f32 w1 = aresta(xs[2], ys[2], xs[0], ys[0], px, py) / area;
+            f32 w2 = 1.0f - w0 - w1;
+            if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+            u32 zp = static_cast<u32>(w0 * zs[0] + w1 * zs[1] + w2 * zs[2]);
+            if (zp < z_[y * L + x]) continue;
+            // perspectiva correta: interpola s·q, t·q e q (STQ do GS)
+            f32 q = w0 * a.q + w1 * b.q + w2 * c.q;
+            f32 s = (w0 * a.s * a.q + w1 * b.s * b.q + w2 * c.s * c.q) / q;
+            f32 u = (w0 * a.t * a.q + w1 * b.t * b.q + w2 * c.t * c.q) / q;
+            f32 rgba[4];
+            amostrar(t, s, u, 0x80808080u, rgba);
+            misturar(x, y, rgba[0], rgba[1], rgba[2], rgba[3]);
+            z_[y * L + x] = zp;
+        }
+}
+
 void Rasterizador::desenhar(const ListaDesenho2D& l, bool limpar) {
     Cor f = l.fundo();
     u32 fundo = (static_cast<u32>(f.r) << 16) | (static_cast<u32>(f.g) << 8) | f.b;
@@ -96,7 +141,19 @@ void Rasterizador::desenhar(const ListaDesenho2D& l, bool limpar) {
         for (u32& p : px_) p = fundo;
     for (int i = 0; i < l.tamanho(); i++) {
         const Prim& p = l[i];
-        if (p.tipo == TipoPrim::RETANGULO) {
+        if (p.tipo == TipoPrim::SPRITE_TEX) {
+            if (p.textura < 0 || p.textura >= n_texturas) continue;
+            const TexturaBrisa& t = texturas[p.textura];
+            int xa = static_cast<int>(p.x[0] + 0.5f), xb = static_cast<int>(p.x[1] + 0.5f);
+            int ya = static_cast<int>(p.y[0] + 0.5f), yb = static_cast<int>(p.y[1] + 0.5f);
+            u32 mod = p.cor[0].r | (p.cor[0].g << 8) | (p.cor[0].b << 16) | (static_cast<u32>(p.cor[0].a) << 24);
+            for (int y = ya; y < yb; y++)
+                for (int x = xa; x < xb; x++) {
+                    f32 rgba[4];
+                    amostrar(t, (x - p.x[0] + 0.5f) / (p.x[1] - p.x[0]), (y - p.y[0] + 0.5f) / (p.y[1] - p.y[0]), mod, rgba);
+                    misturar(x, y, rgba[0], rgba[1], rgba[2], rgba[3]);
+                }
+        } else if (p.tipo == TipoPrim::RETANGULO) {
             int xa = static_cast<int>(p.x[0] + 0.5f), xb = static_cast<int>(p.x[1] + 0.5f);
             int ya = static_cast<int>(p.y[0] + 0.5f), yb = static_cast<int>(p.y[1] + 0.5f);
             for (int y = ya; y < yb; y++)

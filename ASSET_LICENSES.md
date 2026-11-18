@@ -20,11 +20,12 @@ Ventania"** (90 de 90 GLB no `assets_catalog.json`, conferidos pela auditoria).
 Por serem originais do mesmo dono, o uso no Brisa depende só da autorização
 dele.
 
-> **Pendente:** confirmação explícita do titular de que os assets originais do
-> Ventania (modelos, geradores de modelo, paleta, sons sintetizados, ícones e
-> lista de nomes) podem ser redistribuídos dentro do Brisa. O pedido do projeto
-> indica que sim ("priorize os assets originais criados para o Ventania"), mas
-> isso fica registrado aqui na Etapa 1 com data.
+> **Situação (2026-11-18):** o titular pediu para priorizar os assets originais
+> do Ventania ("priorize os assets originais criados especificamente para o
+> Ventania") e autorizou a Etapa 3, cujo escopo é importá-los. Com base nisso,
+> a Etapa 3 converteu os modelos, as animações e os ícones listados no
+> catálogo. **Falta uma confirmação explícita por escrito**, que deve ser
+> registrada aqui com data antes da primeira distribuição pública (Etapa 13).
 
 ## 3. Lista de reaproveitamento (Etapa 0)
 
@@ -84,6 +85,12 @@ asset convertido ganha uma entrada no formato:
   "modificado": "conversão para BMD, cor de vértice, colisão em caixa",
   "estado": "convertido"
 }
+```
+
+(O formato real gerado tem `id`, `arquivo`, `tipo`, `bytes`, `crc32`, `origem`,
+`autor`, `licenca`, `autorizacao`, `categoria` e as medidas de cada tipo.)
+
+```text
 ```
 
 ## 5. Dependências de código e ferramentas

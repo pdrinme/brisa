@@ -107,3 +107,29 @@ um painel com o caminho, os objetos, os triângulos, o quadro, a CPU, o tempo do
 ## Valores do emulador (Play!), só para referência
 
 Eles não medem o console. Ver `BRISA_ROADMAP.md`, Etapa 2.
+
+---
+
+# Etapa 3 — Vitrine do kit com os assets do Ventania
+
+O ELF agora abre na **vitrine do kit**: a mesma composição da imagem da
+vitrine do Ventania (`docs/art/vitrine_kit_quality.png` de lá), com os
+modelos, as animações e os ícones convertidos.
+
+| Botão | Efeito |
+|---|---|
+| L1 / R1 | Troca o traje do personagem da esquerda (11 trajes) |
+| R2 | LOD: AUTO → 0 → 1 → 2 |
+| ○ / ■ | Próxima / anterior das 16 animações |
+| SELECT | Caminho VU1 ↔ EE |
+| ✕ | Pausa a animação |
+| START | Mostra/esconde o painel |
+| ▲ | Volta a câmera para a posição da vitrine |
+| L3 segurado + R3 | Alterna para a cena de benchmark da Etapa 2 |
+
+**Conferir e me mandar:**
+1. Uma foto da TV **sem o painel** (START), com a câmera na posição inicial. Ela vai ser comparada com `docs/etapa3/ventania_x_brisa_emulador.png`.
+2. O painel mostra "CRC OK"? (o pacote embutido conferido no console)
+3. Os 11 trajes aparecem inteiros (sem peças voando ou faltando) nos 3 LODs?
+4. As animações tocam sem tremer, os ícones de baixo aparecem com transparência certa e as sombras redondas ficam sob os personagens e os baús?
+5. O FPS e o "3D" do painel, nos caminhos VU1 e EE.

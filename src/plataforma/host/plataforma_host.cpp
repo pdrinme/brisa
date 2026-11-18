@@ -81,6 +81,7 @@ void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D
     if (capturar) {
         g_rast.iniciar_3d(cena.ceu, cena.neblina.cor, cena.camera.perto);
         pipeline_cena(cena, tela, g_rast, est);
+        projetar_sombras(cena, tela, g_rast);
         g_rast.desenhar(hud, false);
     } else {
         pipeline_cena(cena, tela, contador, est);
@@ -90,6 +91,32 @@ void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D
 }
 
 bool caminho_disponivel(Caminho3D caminho) { return caminho == Caminho3D::EE; }
+
+const u8* conteudo(u32* tamanho) {
+    // O PC lê o pacote do disco (no PS2 ele vem embutido no ELF).
+    static u8* dados = nullptr;
+    static u32 n = 0;
+    if (!dados) {
+        const char* caminho = getenv("BRISA_PAK");
+        if (!caminho) caminho = "build/conteudo/BRISA.PAK";
+        FILE* f = fopen(caminho, "rb");
+        if (!f) return nullptr;
+        fseek(f, 0, SEEK_END);
+        long t = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        dados = static_cast<u8*>(aligned_alloc(64, (static_cast<size_t>(t) + 63) / 64 * 64));
+        n = static_cast<u32>(fread(dados, 1, static_cast<size_t>(t), f));
+        fclose(f);
+    }
+    if (tamanho) *tamanho = n;
+    return dados;
+}
+
+int registrar_textura(const TexturaBrisa& t) {
+    if (g_rast.n_texturas >= Rasterizador::MAX_TEXTURAS) return -1;
+    g_rast.texturas[g_rast.n_texturas] = t;
+    return g_rast.n_texturas++;
+}
 
 void log(const char* texto) { fputs(texto, stdout); }
 

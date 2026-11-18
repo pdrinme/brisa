@@ -42,6 +42,16 @@ Mat4 Mat4::rotacao_x(f32 a) {
     return r;
 }
 
+Mat4 Mat4::trs(Vec3 t, const f32 q[4], Vec3 s) {
+    f32 x = q[0], y = q[1], z = q[2], w = q[3];
+    Mat4 r;
+    r.m[0] = (1 - 2 * (y * y + z * z)) * s.x; r.m[1] = 2 * (x * y + z * w) * s.x; r.m[2] = 2 * (x * z - y * w) * s.x; r.m[3] = 0;
+    r.m[4] = 2 * (x * y - z * w) * s.y; r.m[5] = (1 - 2 * (x * x + z * z)) * s.y; r.m[6] = 2 * (y * z + x * w) * s.y; r.m[7] = 0;
+    r.m[8] = 2 * (x * z + y * w) * s.z; r.m[9] = 2 * (y * z - x * w) * s.z; r.m[10] = (1 - 2 * (x * x + y * y)) * s.z; r.m[11] = 0;
+    r.m[12] = t.x; r.m[13] = t.y; r.m[14] = t.z; r.m[15] = 1;
+    return r;
+}
+
 Mat4 Mat4::perspectiva(f32 fovy, f32 aspecto, f32 perto, f32 longe) {
     Mat4 r = {};
     f32 f = 1.0f / tanf(fovy * 0.5f);

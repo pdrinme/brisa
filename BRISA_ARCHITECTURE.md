@@ -280,3 +280,64 @@ e rápido, e nada some perto da câmera.
 **Estado do BR-ADR-1:** os dois caminhos estão prontos e geram a mesma imagem
 no emulador. A decisão **depende do benchmark no console**
 (`docs/TESTE_NO_CONSOLE.md`, Etapa 2). Os tempos do emulador não valem.
+
+## 16. Conteúdo e pipeline (Etapa 3, implementado)
+
+| Peça | Arquivo | Papel |
+|---|---|---|
+| Conversor | `tools/conversor/construir.py` (+ `modelo.py`, `decimar.py`, `textura.py`, `formatos.py`, `mat.py`) | GLB do Ventania → BMOD/BANI/BTEX em `assets/`, com catálogo e relatório |
+| Empacotador | `tools/conversor/empacotar.py` | `assets/` → `build/conteudo/BRISA.PAK`, recusando arquivo sem registro, CRC diferente ou licença fora da lista |
+| Leitores | `src/conteudo/` (`pak`, `modelo`, `animacao`, `textura`) | Leem o pacote sem copiar: as malhas das partes apontam para os dados do pacote |
+| Instância | `src/render3d/instancia.*` | Modelo + pose → uma entrada da cena por parte rígida |
+| Sombras | `projetar_sombras` + plataforma | Quadrado com a textura blob no chão (gsKit, STQ, alfa, Z ligado) |
+| Vitrine | `src/jogo/vitrine.*` | A vitrine do kit do Ventania com os assets convertidos |
+
+**Formato de modelo único** (`docs/FORMATOS.md`): nós + partes rígidas +
+marcadores + colisões. Cobre os três casos do Ventania sem código especial:
+- personagem com pele rígida (uma parte por osso);
+- objeto com nó animado (a tampa do baú);
+- objeto estático (uma parte, nó −1).
+
+**BR-ADR-10: o pacote vai embutido no ELF nesta fase.** Ler arquivos ao lado do
+ELF exige os drivers do dispositivo de boot depois do reinício do IOP (USB:
+`usbd`, `bdm`, `usbmass_bd`, `bdmfs_fatfs`; rede: os módulos do ps2link). O
+formato e o carregador já são os definitivos (o jogo só vê um ponteiro para o
+pacote); quando a leitura de arquivos entrar (até a Etapa 13, com os patches),
+o mesmo `BRISA.PAK` passa a ser lido do dispositivo, e o embutido fica como
+alternativa. O jogo continua com código e conteúdo separados no build: o
+conteúdo pode ser reconstruído sem recompilar o código.
+
+**BR-ADR-11: redução de polígonos por QEM no conversor.** Dos dois caminhos
+previstos (PIPELINE_ASSETS §2), ficou a decimação por métricas quádricas,
+parte rígida por parte rígida, com restrição nas bordas e nas fronteiras de
+cor. Ela reduz os 11 trajes a ~1.000 e ~290 triângulos mantendo silhueta e
+manchas de cor, em 13 s para todo o kit, sem precisar do Blender. A
+reexecução dos geradores Blender continua possível, se algum LOD ficar ruim.
+
+**BR-ADR-12: calibração da luz da vitrine.** A Godot ilumina em espaço linear
+com luz ambiente, e o Brisa multiplica cor de vértice no espaço da tela. Na
+imagem de referência, o lado do sol sai cerca de 1,3× a cor da paleta e o da
+sombra 0,75–0,95× (azulado), e a vitrine usa esses fatores. Uma curva de tom
+de verdade (por paleta, no conversor) fica como alternativa, se a TV mostrar
+diferença.
+
+**Memória medida na Etapa 3** (emulador; a contagem de bytes vale para o console):
+
+| Item | Medido | Orçamento (§6) |
+|---|---|---|
+| ELF (com o pacote embutido) | 5,4 MB em disco; 9,0 MB na RAM (programa + bss) | 4 MB de código + o conteúdo à parte |
+| Pacote inteiro | 5,0 MB (125 arquivos) | — |
+| Modelos no pacote | 4,6 MB (os 33 modelos de personagem, com LODs, são 3,6 MB) | 3 MB |
+| Modelos carregados pela vitrine | 50 modelos, 3,6 MB (sem cópia: apontam para o pacote) | — |
+| Animações | 228 KB (2 bancos) | 0,5 MB |
+| Texturas | 56 KB na RAM; < 80 KB na VRAM | — |
+| Memória livre no boot | 18,3 MB | ≥ 11 MB de reserva |
+
+**Achado de memória:** a lista de triângulos não indexada repete vértices e
+gasta 24 B por vértice. Os modelos passam do orçamento (4,6 MB contra 3 MB). As
+correções previstas, em ordem:
+1. tiras de triângulos no conversor e no VU1 (cerca de 3× menos vértices);
+2. posições em int16 com escala por parte (24 → 16 B por vértice);
+3. carregar só os trajes usados na partida (a vitrine carrega todos).
+
+Vale fazer antes do mapa (Etapa 5), quando o orçamento do mundo entrar.

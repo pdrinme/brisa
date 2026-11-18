@@ -143,12 +143,57 @@ EE), mas a proporção real só o console dá.
 
 **Não incluído (próximas etapas):** texturas (a sombra blob e as texturas CLUT entram com o conversor de texturas, na Etapa 3), descarte de faces traseiras no VU1 e otimização do microprograma (quando o console mostrar onde está o gargalo).
 
-### Etapa 3 — Pipeline Ventania → Brisa ⬜
-- Conversores de modelo (BMD/BSK/BAN), textura (BTX), dados (BIN) e empacotador (PAK).
-- LODs (comparação decimação × geradores).
-- Catálogo do Brisa com a licença e a origem de cada asset.
-- Importar o kit de construção, o baú, as armas e o Recruta.
-- **Aceite:** a vitrine do kit (a mesma composição da imagem de referência) renderizada no PS2 e lado a lado com a do Ventania; memória medida; conversores com testes.
+### Etapa 3 — Pipeline Ventania → Brisa 🟡 (pronta e testada no emulador; ⏳ falta ver no console)
+**Feito:**
+- **Conversor** (`tools/conversor/`, só com a biblioteca padrão do Python): GLB do Ventania → formatos próprios (`docs/FORMATOS.md`):
+  - **BMOD**: nós, partes rígidas, marcadores, colisões, posições, normais e cores da paleta;
+  - **BANI**: clipes a 30 Hz, quaternions int16;
+  - **BTEX**: PSMT8/PSMT4 com CLUT no arranjo do GS;
+  - **BPAK**: pacote com índice e CRC32.
+- **Importados do Ventania (`7864cd7`):**
+  - os 89 modelos reaproveitáveis (14 peças de construção, 51 de cenário e mobília, 7 armas, 7 coletáveis, 11 trajes, 2 acessórios);
+  - o banco de 16 animações do esqueleto padrão e a animação do baú;
+  - os 11 ícones do inventário.
+  - Ficou de fora: `caixote_exemplo_01`.
+- **Redução de polígonos** (QEM por parte rígida, preservando bordas e cores):
+  - 7 modelos acima do orçamento caíram para o LOD0 permitido;
+  - os 11 trajes ganharam LOD1 (~1.000 triângulos) e LOD2 (~290).
+- **Validações:** skinning rígido, UV dentro da paleta, esqueleto igual em todos os trajes, partes alinhadas para o VIF, orçamentos.
+- **Catálogo do Brisa** (`assets/catalogo_brisa.json`, 125 arquivos com origem, autor, licença, commit e CRC); o empacotador **recusa** arquivo sem registro.
+- **No jogo:** leitores sem cópia, pose e animação (interpolação, laço), modelo → cena por parte, sombras blob texturizadas, sprites com textura no 2D, pacote embutido no ELF (BR-ADR-10).
+- **Vitrine do kit** reproduzindo `vitrine_kit.gd` do Ventania (posições, rotações, câmera, sol, faixa de luz). Controles:
+  - L1/R1 troca entre os 11 trajes e R2 troca o LOD;
+  - ○ percorre as 16 animações e SELECT troca entre VU1 e EE;
+  - START mostra e esconde o HUD, e os analógicos giram a câmera.
+  - A cena de benchmark da Etapa 2 continua em L3 + R3.
+
+**Testes executados:**
+- `python3 tools/conversor/testes.py`: 15 testes OK. Cobrem matemática, QEM (alvo, sem virar faces, cores preservadas), CSM1, pacote (ordem, alinhamento, CRC), PSMT4, sombra, quantização, Recruta (rígido, 2.790 triângulos, coral do cachecol, 16 clipes normalizados), baú (2 partes, marcador, colisão de 1,1 m), marcadores da picareta, alinhamento das partes e a recusa do empacotador.
+- `make testes`: 32 testes, 0 falhas. Os 7 novos cobrem CRC32, pacote íntegro e ordenado, pacote corrompido recusado, partes alinhadas a 16 bytes, animações servindo a 4 trajes, a mão subindo no aceno, o laço contínuo, a tampa do baú abrindo e as texturas.
+- `make emulador`: `EMULADOR_OK` (cena e controle). `make emulador-completo`: `EMULADOR_OK`, com VU1 e EE, **os 11 trajes × 3 LODs e os 16 clipes** desenhados e o fim sem travar.
+- **Imagens:**
+  - VU1 × EE no emulador: 3 de 152.320 pixels diferentes;
+  - emulador × PC: 0,88% (bordas finas e filtragem bilinear da sombra);
+  - comparação lado a lado com a vitrine do Ventania em `docs/etapa3/ventania_x_brisa_emulador.png`.
+
+**Medido** (bytes valem para o console; tempos são do emulador):
+- pacote de 5,0 MB (125 arquivos): modelos 4,6 MB, animações 228 KB, texturas 56 KB;
+- vitrine com 50 modelos carregados (3,6 MB, sem cópia) e 8.950 triângulos na cena;
+- memória livre no boot: 18,3 MB (era 28 MB na Etapa 1);
+- ELF de 5,4 MB;
+- conversão completa em 13 s.
+
+**Problemas encontrados e resolvidos:**
+- **alinhamento do VIF:** as partes precisam começar em múltiplo de 4 vértices, e o UNPACK V4-8 precisa consumir qwords inteiros (sem isso, bytes de dados seriam lidos como comandos do VIF);
+- a assinatura do esqueleto incluía o nome da malha de cada traje;
+- luz mais escura que a da Godot (calibrada, BR-ADR-12);
+- um teste supunha errado o movimento do marcador da tampa.
+
+**Problema aberto:** os modelos passam do orçamento de memória (4,6 MB contra 3 MB) por causa da lista de triângulos não indexada. As correções estão em BRISA_ARCHITECTURE §16 (tiras, int16, carregar só o necessário), antes da Etapa 5.
+
+**Não incluído:** compilador de dados de jogo (entra na Etapa 6, com o primeiro sistema que lê esses dados), leitura do pacote a partir do USB (BR-ADR-10), transparência (vidro e água do Capitão Maré estão opacos) e sombras projetadas de verdade (o Brisa usa blob, por projeto).
+
+**⏳ Falta para o aceite:** rodar a vitrine no console e comparar na TV (`docs/TESTE_NO_CONSOLE.md`, Etapa 3).
 
 ### Etapa 4 — Personagem ⬜
 O Recruta convertido, com movimento, câmera, animações, colisão (relevo + caixas) e a decisão sobre o dano de queda.

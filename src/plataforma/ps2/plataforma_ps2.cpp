@@ -3,6 +3,7 @@
 
 #include <dmaKit.h>
 #include <gsKit.h>
+#include <gsInline.h>
 #include <iopcontrol.h>
 #include <kernel.h>
 #include <libpad.h>
@@ -20,6 +21,8 @@
 #include "render_vu1.h"
 
 extern "C" char _end[];  // fim do programa (linkfile do PS2SDK)
+extern "C" const u8 brisa_pak_inicio[];  // conteudo_embutido.S
+extern "C" const u8 brisa_pak_fim[];
 
 namespace {
 
@@ -27,6 +30,27 @@ GSGLOBAL* g_gs = nullptr;
 char g_buffer_pad[256] __attribute__((aligned(64)));
 bool g_pad_aberto = false;
 bool g_vu1 = false;
+const int MAX_TEXTURAS = 64;
+GSTEXTURE g_tex[MAX_TEXTURAS];
+int g_n_tex = 0;
+
+// Sombras blob pelo gsKit (STQ, textura com alfa, teste de Z ligado).
+struct SaidaSombras : SaidaTriangulos {
+    f32 perto = 0.5f;
+    void triangulo(const VerticeTela&, const VerticeTela&, const VerticeTela&) override {}
+    void triangulo_textura(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c, int tex) override {
+        if (tex < 0 || tex >= g_n_tex) return;
+        GSPRIMSTQPOINT v[3];
+        const VerticeTela* vs[3] = {&a, &b, &c};
+        for (int i = 0; i < 3; i++) {
+            const VerticeTela& p = *vs[i];
+            v[i].rgbaq = color_to_RGBAQ(0x80, 0x80, 0x80, 0x80, p.q);
+            v[i].stq = vertex_to_STQ(p.s * p.q, p.t * p.q);
+            v[i].xyz2 = vertex_to_XYZ2(g_gs, p.x, p.y, static_cast<int>(gs3d::z_de(p.q, perto)));
+        }
+        gsKit_prim_list_triangle_goraud_texture_stq_3d(g_gs, &g_tex[tex], 3, v);
+    }
+};
 bool g_pad_modo_pedido = false;
 int g_pad_ultimo_estado = -1;
 
@@ -194,6 +218,14 @@ static void desenhar_2d(const ListaDesenho2D& l) {
             gsKit_prim_quad_gouraud(g_gs, p.x[0], p.y[0], p.x[1], p.y[0], p.x[0], p.y[1], p.x[1], p.y[1], 1,
                                     cor_gs(p.cor[0]), cor_gs(p.cor[1]), cor_gs(p.cor[2]), cor_gs(p.cor[3]));
             break;
+        case TipoPrim::SPRITE_TEX:
+            if (p.textura >= 0 && p.textura < g_n_tex) {
+                const GSTEXTURE& t = g_tex[p.textura];
+                gsKit_prim_sprite_texture(g_gs, &t, p.x[0], p.y[0], 0.0f, 0.0f, p.x[1], p.y[1], static_cast<f32>(t.Width),
+                                          static_cast<f32>(t.Height), 1,
+                                          GS_SETREG_RGBAQ(p.cor[0].r, p.cor[0].g, p.cor[0].b, p.cor[0].a, 0x00));
+            }
+            break;
         case TipoPrim::QUAD:
             gsKit_prim_quad(g_gs, p.x[0], p.y[0], p.x[1], p.y[1], p.x[2], p.y[2], p.x[3], p.y[3], 1, cor_gs(p.cor[0]));
             break;
@@ -210,6 +242,31 @@ void desenhar_e_apresentar(const ListaDesenho2D& l) {
 }
 
 bool caminho_disponivel(Caminho3D c) { return c == Caminho3D::EE || g_vu1; }
+
+const u8* conteudo(u32* tamanho) {
+    if (tamanho) *tamanho = static_cast<u32>(brisa_pak_fim - brisa_pak_inicio);
+    return brisa_pak_inicio;
+}
+
+int registrar_textura(const TexturaBrisa& t) {
+    if (g_n_tex >= MAX_TEXTURAS) return -1;
+    GSTEXTURE& g = g_tex[g_n_tex];
+    memset(&g, 0, sizeof g);
+    g.Width = t.largura;
+    g.Height = t.altura;
+    g.PSM = t.psm == TexturaBrisa::PSM_T8 ? GS_PSM_T8 : GS_PSM_T4;
+    g.ClutPSM = GS_PSM_CT32;
+    g.Mem = reinterpret_cast<u32*>(const_cast<u8*>(t.pixels));
+    g.Clut = const_cast<u32*>(t.clut);
+    g.Filter = GS_FILTER_LINEAR;
+    g.Vram = gsKit_vram_alloc(g_gs, gsKit_texture_size(g.Width, g.Height, g.PSM), GSKIT_ALLOC_USERBUFFER);
+    g.VramClut = gsKit_vram_alloc(g_gs, gsKit_texture_size(g.PSM == GS_PSM_T8 ? 16 : 8, g.PSM == GS_PSM_T8 ? 16 : 2, GS_PSM_CT32),
+                                  GSKIT_ALLOC_USERBUFFER);
+    if (g.Vram == GSKIT_ALLOC_ERROR || g.VramClut == GSKIT_ALLOC_ERROR) return -1;
+    FlushCache(0);
+    gsKit_texture_upload(g_gs, &g);
+    return g_n_tex++;
+}
 
 void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D& hud, Estatisticas3D& est) {
     est = Estatisticas3D();
@@ -228,7 +285,11 @@ void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D
     }
     gif.terminar();
     est.tempo_3d_us = static_cast<u32>(tempo_us() - t0);
-    // 3) HUD por cima, sem teste de Z, e troca de buffer no vsync
+    // 3) sombras blob (textura com alfa, Z ligado) e o HUD por cima, sem Z
+    gsKit_set_test(g_gs, GS_ZTEST_ON);
+    SaidaSombras sombras;
+    sombras.perto = cena.camera.perto;
+    projetar_sombras(cena, ConfigTela(), sombras);
     gsKit_set_test(g_gs, GS_ZTEST_OFF);
     desenhar_2d(hud);
     gsKit_queue_exec(g_gs);

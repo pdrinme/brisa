@@ -31,15 +31,28 @@ struct Objeto3D {
     Mat4 modelo;
 };
 
+// Sombra "blob": um quadrado com a textura de sombra deitado no chão.
+struct Sombra3D {
+    Vec3 centro;  // no chão
+    f32 raio;
+};
+
 struct Cena3D {
     static const int MAX_OBJETOS = 4096;
+    static const int MAX_SOMBRAS = 64;
+    Sombra3D sombras[MAX_SOMBRAS];
+    int n_sombras = 0;
+    int textura_sombra = -1;  // id registrado na plataforma
     Camera3D camera;
     LuzToon luz;
     Neblina neblina;
     Cor ceu = {0xcf, 0xe8, 0xf6, 255};
     Objeto3D objetos[MAX_OBJETOS];
     int n = 0;
-    void limpar() { n = 0; }
+    void limpar() { n = 0; n_sombras = 0; }
+    void sombra(Vec3 c, f32 r) {
+        if (n_sombras < MAX_SOMBRAS) sombras[n_sombras++] = {c, r};
+    }
     bool adicionar(const Malha* m, const Mat4& modelo) {
         if (n >= MAX_OBJETOS || !m || m->n == 0) return false;
         objetos[n].malha = m;

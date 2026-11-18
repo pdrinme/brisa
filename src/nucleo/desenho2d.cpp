@@ -38,3 +38,13 @@ void ListaDesenho2D::moldura(f32 x, f32 y, f32 l, f32 a, f32 e, Cor c) {
     retangulo(x, y + e, e, a - 2 * e, c);
     retangulo(x + l - e, y + e, e, a - 2 * e, c);
 }
+
+void ListaDesenho2D::sprite(f32 x, f32 y, f32 l, f32 a, int textura, Cor c) {
+    if (l <= 0 || a <= 0 || textura < 0) return;
+    Prim* p = nova();
+    if (!p) return;
+    p->tipo = TipoPrim::SPRITE_TEX;
+    p->textura = static_cast<i16>(textura);
+    p->x[0] = x; p->y[0] = y; p->x[1] = x + l; p->y[1] = y + a;
+    p->cor[0] = c;
+}

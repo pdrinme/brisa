@@ -14,7 +14,9 @@ PS2DEV ?= /opt/ps2dev
 PS2SDK ?= $(PS2DEV)/ps2sdk
 GSKIT ?= $(PS2DEV)/gsKit
 
-NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp)
+NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp) $(wildcard src/conteudo/*.cpp)
+PAK := build/conteudo/BRISA.PAK
+ASSETS := assets/catalogo_brisa.json $(wildcard assets/*/*)
 PS2_SRC := src/main.cpp $(NUCLEO) $(wildcard src/plataforma/ps2/*.cpp)
 VU_SRC := $(wildcard src/plataforma/ps2/vu1/*.vsm)
 DVP_AS := $(PS2DEV)/dvp/bin/dvp-as
@@ -34,7 +36,7 @@ EE_LDFLAGS := -T$(PS2SDK)/ee/startup/linkfile -L$(PS2SDK)/ee/lib -L$(GSKIT)/lib 
 EE_LIBS := -lgskit -ldmakit -lpacket2 -lpad -lpatches -lc -lm
 
 define objetos_ps2
-$(patsubst src/%.cpp,build/$(1)/%.o,$(PS2_SRC)) $(patsubst src/%.vsm,build/$(1)/%.vu.o,$(VU_SRC)) $(patsubst %,build/$(1)/irx/%_irx.o,$(IRX))
+$(patsubst src/%.cpp,build/$(1)/%.o,$(PS2_SRC)) $(patsubst src/%.vsm,build/$(1)/%.vu.o,$(VU_SRC)) build/$(1)/conteudo_embutido.o $(patsubst %,build/$(1)/irx/%_irx.o,$(IRX))
 endef
 
 all: build/ps2/brisa.elf
@@ -43,6 +45,20 @@ build/ps2/brisa.elf: $(call objetos_ps2,ps2)
 	$(EE_CXX) $(EE_LDFLAGS) -o $@ $^ $(EE_LIBS)
 	$(EE_SIZE) $@
 	@cp $@ build/ps2/brisa_debug.elf && $(EE_STRIP) $@
+
+# ---------------- Conteúdo ----------------
+# make conteudo-ventania VENTANIA=../ventania  reconverte os assets a partir do Ventania (Etapa 3).
+VENTANIA ?= ../ventania
+conteudo: $(PAK)
+$(PAK): $(ASSETS) tools/conversor/empacotar.py tools/conversor/formatos.py
+	python3 tools/conversor/empacotar.py --saida $@
+conteudo-ventania:
+	python3 tools/conversor/construir.py --ventania $(VENTANIA)
+	python3 tools/conversor/empacotar.py --saida $(PAK)
+
+build/%/conteudo_embutido.o: src/plataforma/ps2/conteudo_embutido.S $(PAK)
+	@mkdir -p $(@D)
+	$(EE_CC) -D_EE -G0 '-DBRISA_PAK_CAMINHO="$(PAK)"' -c $< -o $@
 
 build/%.vu.o:
 	@mkdir -p $(@D)
@@ -74,11 +90,11 @@ build/%_irx.o: build/%_irx.c
 HOST_CXX ?= g++
 HOST_FLAGS := -std=c++17 -O1 -g -Wall -Wextra -Wno-unused-parameter -Isrc -Itests -fno-exceptions -fno-rtti
 
-build/host/testes: $(HOST_SRC) $(wildcard tests/*.cpp) $(wildcard tests/*.h) $(wildcard src/*/*.h) $(wildcard src/*/*/*.h)
+build/host/testes: $(PAK) $(HOST_SRC) $(wildcard tests/*.cpp) $(wildcard tests/*.h) $(wildcard src/*/*.h) $(wildcard src/*/*/*.h)
 	@mkdir -p $(@D)
 	$(HOST_CXX) $(HOST_FLAGS) -o $@ $(filter %.cpp,$^) -lm
 
-build/host/brisa_previa: src/main.cpp $(HOST_SRC) $(wildcard src/*/*.h) $(wildcard src/*/*/*.h)
+build/host/brisa_previa: $(PAK) src/main.cpp $(HOST_SRC) $(wildcard src/*/*.h) $(wildcard src/*/*/*.h)
 	@mkdir -p $(@D)
 	$(HOST_CXX) $(HOST_FLAGS) -o $@ $(filter %.cpp,$^) -lm
 
@@ -102,7 +118,7 @@ emulador: autoteste
 	@rm -rf build/emulador
 	@mkdir -p build/emulador
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
-	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 90,380,900
+	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 90,420,900
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
 	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/controle 150 botoes
 	python3 tools/emulador/ppm_para_png.py --todos build/emulador
@@ -124,6 +140,6 @@ emulador-completo: autoteste
 limpar:
 	rm -rf build
 
-.PHONY: all autoteste testes previa emulador emulador-completo limpar
+.PHONY: all autoteste testes previa emulador emulador-completo limpar conteudo conteudo-ventania
 
 -include $(shell find build -name '*.d' 2>/dev/null)

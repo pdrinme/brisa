@@ -3,6 +3,7 @@
 #pragma once
 #include "nucleo/controle.h"
 #include "nucleo/desenho2d.h"
+#include "conteudo/textura.h"
 #include "render3d/cena3d.h"
 
 // Caminho da renderização 3D (BRISA_ARCHITECTURE BR-ADR-1).
@@ -30,6 +31,10 @@ void desenhar_e_apresentar(const ListaDesenho2D& lista);  // só 2D: envia e esp
 // 2D (HUD) por cima e espera o vsync. Preenche as estatísticas do 3D.
 void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D& hud, Estatisticas3D& est);
 bool caminho_disponivel(Caminho3D caminho);
+// Pacote de conteúdo (BRISA.PAK). No PS2, embutido no ELF nesta fase (BR-ADR-10).
+const u8* conteudo(u32* tamanho);
+// Registra uma textura (sobe para a VRAM no PS2). Devolve o id ou −1.
+int registrar_textura(const TexturaBrisa& t);
 void log(const char* texto);
 void encerrar();
 }

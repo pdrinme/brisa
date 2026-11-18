@@ -118,3 +118,27 @@ void pipeline_cena(const Cena3D& cena, const ConfigTela& tela, SaidaTriangulos& 
         est.triangulos_desenhados += pipeline_objeto(cena, o, tela, saida);
     }
 }
+
+u32 projetar_sombras(const Cena3D& cena, const ConfigTela& tela, SaidaTriangulos& saida) {
+    u32 n = 0;
+    for (int i = 0; i < cena.n_sombras; i++) {
+        const Sombra3D& sb = cena.sombras[i];
+        const f32 cs[4][2] = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+        VerticeTela v[4];
+        bool ok = true;
+        for (int k = 0; k < 4 && ok; k++) {
+            Vec4 c = transformar(cena.camera.vp, Vec3(sb.centro.x + cs[k][0] * sb.raio, sb.centro.y + 0.03f, sb.centro.z + cs[k][1] * sb.raio));
+            if (c.w < cena.camera.perto || fabsf(c.x) > GUARDA * c.w || fabsf(c.y) > GUARDA * c.w) { ok = false; break; }
+            VClip vc{c.x, c.y, c.z, c.w, 128, 128, 128};
+            v[k] = projetar(vc, tela, cena.neblina);
+            v[k].cor.a = 128;
+            v[k].s = (cs[k][0] + 1) * 0.5f;
+            v[k].t = (cs[k][1] + 1) * 0.5f;
+        }
+        if (!ok) continue;
+        saida.triangulo_textura(v[0], v[1], v[2], cena.textura_sombra);
+        saida.triangulo_textura(v[1], v[3], v[2], cena.textura_sombra);
+        n += 2;
+    }
+    return n;
+}

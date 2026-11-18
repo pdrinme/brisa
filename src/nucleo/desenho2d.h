@@ -16,10 +16,12 @@ enum class TipoPrim : u8 {
     RETANGULO,   // x0,y0 (canto) e x1,y1 (canto oposto), cor[0]
     GRADIENTE,   // retângulo com cor por canto: [0]=sup-esq, [1]=sup-dir, [2]=inf-esq, [3]=inf-dir
     QUAD,        // 4 vértices em ordem de tira (0,1,2 e 1,2,3), cor[0]
+    SPRITE_TEX,  // retângulo texturizado (textura registrada na plataforma), cor[0] modula (128 = 1,0)
 };
 
 struct Prim {
     TipoPrim tipo;
+    i16 textura;
     f32 x[4], y[4];
     Cor cor[4];
 };
@@ -33,6 +35,8 @@ public:
     void quad(const f32 xs[4], const f32 ys[4], Cor c);
     // Contorno de retângulo com espessura e (para dentro).
     void moldura(f32 x, f32 y, f32 l, f32 a, f32 e, Cor c);
+    // Textura inteira esticada no retângulo. modulacao 128,128,128,128 = cor original.
+    void sprite(f32 x, f32 y, f32 l, f32 a, int textura, Cor modulacao = Cor{128, 128, 128, 128});
     int tamanho() const { return n_; }
     int descartadas() const { return descartadas_; }
     const Prim& operator[](int i) const { return prims_[i]; }
