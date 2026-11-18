@@ -29,7 +29,7 @@ problemas e próxima etapa).
 - Correção posterior (Etapa 1): o emulador Play! roda ELFs sem BIOS; a Etapa 1 passou a usá-lo.
 - Não executado: nenhum ELF rodou (não há emulador com BIOS nem console aqui).
 
-### Etapa 1 — Primeira execução no PS2 🟡 (tudo pronto e testado em emulador; ⏳ falta o teste no console)
+### Etapa 1 — Primeira execução no PS2 🟡 (pronta e testada no emulador; ⏳ falta o teste no console)
 **Feito:**
 - `Makefile` próprio (`make`, `make autoteste`, `make testes`, `make previa`, `make emulador`, `make emulador-completo`) com dependências de cabeçalho (`-MMD`).
 - Estrutura `src/`: `nucleo/` (portátil, sem PS2SDK), `jogo/` (a tela), `plataforma/ps2` e `plataforma/host`, `main.cpp`.
@@ -89,11 +89,50 @@ problemas e próxima etapa).
 
 **Não feito (fora do escopo da etapa):** PCSX2. Ele exige o dump da BIOS do console do dono, que não existe neste ambiente; o Play! foi usado no lugar, com a BIOS em alto nível.
 
-### Etapa 2 — Motor gráfico ⬜
-- Câmera 3D, matrizes, frustum, z-buffer.
-- Caminho A (EE + gsKit) e caminho B (VU1 próprio); benchmark comparando os dois.
-- Malha estática com cor de vértice, luz em 2 faixas, neblina e blob.
-- **Aceite:** cena de benchmark com N mil triângulos a 30 FPS medidos no console; decisão do BR-ADR-1 registrada com os números.
+### Etapa 2 — Motor gráfico 🟡 (pronto e testado no emulador; ⏳ falta o benchmark no console)
+**Feito:**
+- **Núcleo 3D portátil:**
+  - `Vec3`/`Mat4`, perspectiva, câmera, inversa rígida e frustum por planos;
+  - malhas em SoA no formato do VU1, com geradores procedurais (caixa, cilindro, cone, pirâmide, esfera geodésica, grade de chão);
+  - cena com câmera, **luz toon de 2 faixas com sombra azulada** (a fórmula do `toon_paleta.gdshader` do Ventania) e neblina;
+  - pipeline de referência com recorte no plano perto e na faixa de guarda do GS e descarte de faces traseiras.
+- **Caminho A (EE):** triângulos → GIFtag PACKED RGBAQ+XYZF2 → DMA do GIF em buffer duplo.
+- **Caminho B (VU1):**
+  - microprograma próprio `vu1/toon.vsm` (transformação, luz toon, Z, neblina, recorte por CLIP/ADC, XGKICK);
+  - cadeia de DMA do VIF1 que só referencia as malhas;
+  - lotes de 96 vértices em buffer duplo;
+  - objetos que cruzam o plano perto vão pelo EE (BR-ADR-9).
+- **Z-buffer** de 24 bits (GEQUAL), **neblina do GS** por vértice, material = cor da paleta por vértice.
+- **Cena de teste** na paleta do Ventania:
+  - objetos: chão com relevo, casas de tábuas, torres de pedra, galpões de metal, pinheiros, árvores redondas, baús azul-petróleo/amarelo e pedras;
+  - 7 níveis de densidade (24 a 1.536 objetos) e 5 de "carga" (esferas de 1.280 triângulos);
+  - câmera pelos analógicos, SELECT troca o caminho, ▲ roda o **benchmark automático** (12 configurações × 2 caminhos, com linhas `BRISA_BENCH` no log e uma tabela na tela).
+- Rasterizador do PC com Z e neblina iguais aos do GS, para as prévias e os testes.
+
+**Testes executados:**
+- `make testes`: 25 testes, 0 falhas. Os 9 novos cobrem perspectiva, câmera e inversa, frustum, normais para fora em todos os geradores, normal empacotada, luz toon, faces traseiras (6 de 12 num canto do cubo e 0 por dentro), recorte no plano perto, Z "maior ou igual" e neblina no rasterizador, e os níveis e o benchmark da cena.
+- `make emulador` (Play!, GS real em OpenGL): `EMULADOR_OK` nas duas execuções, a da cena (VU1 e EE) e a do controle.
+- **Os dois caminhos geram a mesma imagem:** na mesma cena parada (11.238 triângulos), as capturas do VU1 e do EE diferem em **8 de 170.240 pixels** (bordas). O EE do emulador comparado com a referência do PC difere em 0,28% dos pixels (regras de borda). Capturas em `docs/etapa2/`.
+- `make emulador-completo` (AutoTest, benchmark reduzido): ver o resultado abaixo.
+
+**Medido no emulador (NÃO vale como desempenho de console):** na cena de
+11.238 triângulos (121 objetos visíveis, 361 lotes), o 3D levou 13,1 ms pelo
+VU1 e 93,1 ms pelo EE. A diferença aponta na direção esperada (o VU1 alivia o
+EE), mas a proporção real só o console dá.
+
+**Problemas encontrados e resolvidos:**
+- no caminho do VU1, o Z ia 16× menor que o do EE (escala errada para o XYZF2) e os objetos sumiam atrás do chão;
+- no caminho do EE, triângulos perto da câmera podiam sair da faixa de coordenadas do GS (agora há recorte na faixa de guarda, igual ao critério do VU1);
+- arredondamento no rasterizador do PC;
+- o benchmark do autoteste foi reduzido (3+6 quadros por configuração), porque o Play! é muito lento no caminho do EE.
+
+**⏳ Falta para o aceite:**
+- o **benchmark no console** (▲ na cena; `docs/TESTE_NO_CONSOLE.md`, Etapa 2);
+- com os números, registrar a decisão do BR-ADR-1 e o orçamento de triângulos por quadro a 30 FPS.
+
+**Também continua pendente:** o teste da Etapa 1 no console.
+
+**Não incluído (próximas etapas):** texturas (a sombra blob e as texturas CLUT entram com o conversor de texturas, na Etapa 3), descarte de faces traseiras no VU1 e otimização do microprograma (quando o console mostrar onde está o gargalo).
 
 ### Etapa 3 — Pipeline Ventania → Brisa ⬜
 - Conversores de modelo (BMD/BSK/BAN), textura (BTX), dados (BIN) e empacotador (PAK).

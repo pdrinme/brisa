@@ -12,12 +12,15 @@ código, motor, pipeline, build e documentação são próprios.
 
 ## Status
 
-**Etapa 1 (primeira execução no PS2): pronta e testada no emulador; falta o
-teste no console** ([docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md)). O ELF
-inicia o IOP, abre o vídeo NTSC/PAL, lê o DualShock 2 e mostra a tela de prova
-de vida com as medições. Veja [BRISA_ROADMAP.md](BRISA_ROADMAP.md).
+**Etapa 2 (motor gráfico): pronta e testada no emulador; falta o benchmark no
+console.** Há dois caminhos de renderização 3D: o do EE e o do VU1 (com
+microprograma próprio). Os dois usam a luz toon de 2 faixas do Ventania,
+Z-buffer e neblina. A cena de teste vem com benchmark automático (▲). O teste
+da Etapa 1 no console também continua pendente. Veja
+[docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md) e
+[BRISA_ROADMAP.md](BRISA_ROADMAP.md).
 
-![Brisa no emulador Play! (GS real, controle simulado)](docs/etapa1/emulador_play_com_botoes.png)
+![Cena de teste no emulador Play!, pelo VU1](docs/etapa2/emulador_vu1.png)
 
 ## Compilar e testar
 
@@ -45,9 +48,9 @@ make emulador
 |---|---|
 | `make` | `build/ps2/brisa.elf` (o que vai para o console) |
 | `make testes` | Testes do núcleo no PC (`TESTES_OK`) |
-| `make previa` | Telas renderizadas no PC em `build/previa/*.png` |
-| `make emulador` | O ELF no Play! (sem BIOS) com vídeo e controle simulado; quadros em `build/emulador/` (`EMULADOR_OK`) |
-| `make emulador-completo` | O ELF no AutoTest do Play! até o fim (600 quadros) |
+| `make previa` | Cena renderizada no PC (referência) em `build/previa/*.png` |
+| `make emulador` | O ELF no Play! (sem BIOS) com vídeo: a cena pelo VU1 e pelo EE, e o controle simulado; quadros em `build/emulador/` (`EMULADOR_OK`) |
+| `make emulador-completo` | O ELF no AutoTest do Play! até o fim (roteiro + benchmark reduzido) |
 
 As ferramentas de emulador são instaladas por `tools/ambiente/instalar_emulador.sh`.
 
@@ -98,12 +101,13 @@ python3 tools/auditoria/densidade_mapa.py --layout docs/auditoria/ilha_ventania_
 ```
 brisa-ps2/
 ├── src/
-│   ├── nucleo/              ✅ tipos, arena, passo fixo, controle, estatísticas, lista 2D, fonte, formato
-│   ├── jogo/                ✅ telas (Etapa 1: tela_boot)
-│   ├── plataforma/ps2/      ✅ IOP/IRX, gsKit, libpad, relógio (depois: VIF/VU1, libmc, audsrv, RTC, arquivos)
+│   ├── nucleo/              ✅ tipos, arena, passo fixo, controle, estatísticas, lista 2D, fonte, formato, mat (3D)
+│   ├── render3d/            ✅ malhas, cena, luz toon, pipeline de referência (caminho EE)
+│   ├── jogo/                ✅ telas (tela_boot da Etapa 1, cena_teste da Etapa 2)
+│   ├── plataforma/ps2/      ✅ IOP/IRX, gsKit, libpad, relógio, caminho EE (GIF), caminho VU1 (VIF1 + vu1/toon.vsm)
 │   ├── plataforma/host/     ✅ PC: rasterizador de software, PNG, controle por roteiro
 │   ├── main.cpp             ✅
-│   └── (planejado) renderer/ vu1/ conteudo/ mundo/ personagem/ armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
+│   └── (planejado) conteudo/ mundo/ personagem/ armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
 ├── data/                    JSON de conteúdo (armas, itens, cosméticos, temporadas, loja)
 ├── assets/                  catálogo do Brisa e saídas convertidas
 ├── tools/

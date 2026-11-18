@@ -67,6 +67,30 @@ void desenhar_e_apresentar(const ListaDesenho2D& l) {
     if (g_png && g_png_quadro == g_quadro) g_rast.salvar_png(g_png);
 }
 
+void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D& hud, Estatisticas3D& est) {
+    g_quadro++;
+    g_tempo += 33367;  // 30 FPS (NTSC, 2 campos por quadro)
+    bool capturar = g_png && (g_png_quadro == 0 || g_png_quadro == g_quadro);
+    est = Estatisticas3D();
+    // O PC só tem o caminho de referência (o do EE). As estatísticas saem dele
+    // mesmo quando não há captura, para os testes e o log.
+    struct Contador : SaidaTriangulos {
+        void triangulo(const VerticeTela&, const VerticeTela&, const VerticeTela&) override {}
+    } contador;
+    ConfigTela tela;
+    if (capturar) {
+        g_rast.iniciar_3d(cena.ceu, cena.neblina.cor, cena.camera.perto);
+        pipeline_cena(cena, tela, g_rast, est);
+        g_rast.desenhar(hud, false);
+    } else {
+        pipeline_cena(cena, tela, contador, est);
+    }
+    (void)caminho;
+    if (g_png && g_png_quadro == g_quadro) g_rast.salvar_png(g_png);
+}
+
+bool caminho_disponivel(Caminho3D caminho) { return caminho == Caminho3D::EE; }
+
 void log(const char* texto) { fputs(texto, stdout); }
 
 void encerrar() {

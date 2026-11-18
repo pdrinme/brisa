@@ -247,3 +247,36 @@ portátil (retângulos, gradientes, quads); o PS2 a envia pelo gsKit e o PC a
 rasteriza em software. Isso permite testar telas e ver prévias sem console, e o
 teste da Etapa 1 mostrou que a imagem do GS no emulador e a do PC são iguais
 pixel a pixel nas áreas estáticas.
+
+## 15. Motor gráfico (Etapa 2, implementado)
+
+| Peça | Arquivo | Papel |
+|---|---|---|
+| Matemática | `src/nucleo/mat.*` | Vec3/Mat4 (coluna principal), perspectiva e câmera no estilo OpenGL, inversa rígida, frustum por planos |
+| Malha | `src/render3d/malha.*` | Lista de triângulos em SoA no formato do VU1 (posição V4-32, normal V4-8 com sinal, cor V4-8), geradores procedurais com normal plana |
+| Cena | `src/render3d/cena3d.h` | Câmera, luz toon (luz, sombra azulada, limiar, suavidade), neblina, objetos |
+| Pipeline de referência | `src/render3d/pipeline_sw.*` | Transforma, ilumina, recorta (plano perto + faixa de guarda ±4w), descarta faces traseiras e projeta. É o **caminho A** no PS2 e a referência no PC |
+| Caminho A (EE) | `src/plataforma/ps2/render_ee.*` | Triângulos → GIFtag PACKED (RGBAQ + XYZF2) em 2 buffers de 192 KB → DMA do GIF (PATH3) |
+| Caminho B (VU1) | `src/plataforma/ps2/render_vu1.*`, `vu1/toon.vsm` | Cadeia de DMA para o VIF1 com referências às malhas (sem copiar vértices), lotes de até 96 vértices em buffer duplo (BASE 0, OFFSET 512), microprograma que transforma, ilumina, aplica Z/neblina e faz XGKICK (PATH1) |
+| Quadro | `plataforma_ps2.cpp: desenhar_quadro` | Limpa (gsKit) → estado do 3D (TEST Z ≥, FOGCOL) → caminho escolhido → HUD 2D (gsKit, sem Z) → vsync |
+| PC | `plataforma/host/rasterizador.*` | Rasterizador com Z "maior ou igual" e neblina por vértice como o GS: prévias e testes |
+
+**Formato do Z e da neblina (os dois caminhos e o PC):** Z = (perto/w)·Zmax
+(24 bits, perto = Z maior, teste GEQUAL), interpolado linearmente na tela;
+neblina F = clamp((fim − w)·255/(fim − início)), com 255 = sem neblina.
+
+**BR-ADR-9: o VU1 não recorta; objetos que cruzam o plano perto vão para o
+EE.** O microprograma descarta triângulos com algum vértice fora do volume (Z
+fora de ±w ou X/Y fora de ±4w), marcando ADC no XYZF2. O EE testa a esfera de
+cada objeto: se ela cruza o plano perto (por exemplo, o chão sob a câmera),
+o objeto inteiro vai pelo caminho A, que recorta. Assim o VU1 continua simples
+e rápido, e nada some perto da câmera.
+
+**Limitações conhecidas do caminho B (Etapa 2):**
+- não descarta faces traseiras (o GS desenha e o Z rejeita): quando o GS for o gargalo, o descarte entra no microprograma (área com sinal na tela);
+- o microprograma não está otimizado (um vértice por volta, com espera do DIV); há espaço para desenrolar o laço e intercalar instruções;
+- um objeto com mais de 96 vértices é enviado em vários lotes, e cada lote reenvia o cabeçalho de 12 qw.
+
+**Estado do BR-ADR-1:** os dois caminhos estão prontos e geram a mesma imagem
+no emulador. A decisão **depende do benchmark no console**
+(`docs/TESTE_NO_CONSOLE.md`, Etapa 2). Os tempos do emulador não valem.

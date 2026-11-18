@@ -43,10 +43,57 @@ void Rasterizador::triangulo(const f32* xs, const f32* ys, const Cor* cs) {
         }
 }
 
-void Rasterizador::desenhar(const ListaDesenho2D& l) {
-    Cor f = l.fundo();
+void Rasterizador::iniciar_3d(Cor f, Cor neblina, f32 perto) {
     u32 fundo = (static_cast<u32>(f.r) << 16) | (static_cast<u32>(f.g) << 8) | f.b;
     for (u32& p : px_) p = fundo;
+    for (u32& z : z_) z = 0;
+    neblina_ = neblina;
+    perto_ = perto;
+}
+
+void Rasterizador::triangulo(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c) {
+    const VerticeTela* v[3] = {&a, &b, &c};
+    f32 xs[3], ys[3];
+    for (int i = 0; i < 3; i++) { xs[i] = v[i]->x; ys[i] = v[i]->y; }
+    f32 area = aresta(xs[0], ys[0], xs[1], ys[1], xs[2], ys[2]);
+    if (fabsf(area) < 1e-6f) return;
+    int x0 = static_cast<int>(floorf(fminf(xs[0], fminf(xs[1], xs[2]))));
+    int x1 = static_cast<int>(ceilf(fmaxf(xs[0], fmaxf(xs[1], xs[2]))));
+    int y0 = static_cast<int>(floorf(fminf(ys[0], fminf(ys[1], ys[2]))));
+    int y1 = static_cast<int>(ceilf(fmaxf(ys[0], fmaxf(ys[1], ys[2]))));
+    if (x0 < 0) x0 = 0;
+    if (y0 < 0) y0 = 0;
+    if (x1 > L) x1 = L;
+    if (y1 > A) y1 = A;
+    f32 zs[3];
+    for (int i = 0; i < 3; i++) zs[i] = static_cast<f32>(gs3d::z_de(v[i]->q, perto_));
+    for (int y = y0; y < y1; y++)
+        for (int x = x0; x < x1; x++) {
+            f32 px = x + 0.5f, py = y + 0.5f;
+            f32 w0 = aresta(xs[1], ys[1], xs[2], ys[2], px, py) / area;
+            f32 w1 = aresta(xs[2], ys[2], xs[0], ys[0], px, py) / area;
+            f32 w2 = 1.0f - w0 - w1;
+            if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+            u32 zp = static_cast<u32>(w0 * zs[0] + w1 * zs[1] + w2 * zs[2]);
+            u32& zd = z_[y * L + x];
+            if (zp < zd) continue;
+            zd = zp;
+            f32 f = (w0 * v[0]->neblina + w1 * v[1]->neblina + w2 * v[2]->neblina) / 255.0f;
+            f32 r = w0 * v[0]->cor.r + w1 * v[1]->cor.r + w2 * v[2]->cor.r;
+            f32 g = w0 * v[0]->cor.g + w1 * v[1]->cor.g + w2 * v[2]->cor.g;
+            f32 bl = w0 * v[0]->cor.b + w1 * v[1]->cor.b + w2 * v[2]->cor.b;
+            int nr = static_cast<int>(r * f + neblina_.r * (1 - f) + 0.5f);
+            int ng = static_cast<int>(g * f + neblina_.g * (1 - f) + 0.5f);
+            int nb = static_cast<int>(bl * f + neblina_.b * (1 - f) + 0.5f);
+            px_[y * L + x] = (static_cast<u32>(nr) << 16) | (static_cast<u32>(ng) << 8) | static_cast<u32>(nb);
+        }
+}
+
+void Rasterizador::desenhar(const ListaDesenho2D& l, bool limpar) {
+    Cor f = l.fundo();
+    u32 fundo = (static_cast<u32>(f.r) << 16) | (static_cast<u32>(f.g) << 8) | f.b;
+    if (limpar)
+        for (u32& p : px_) p = fundo;
     for (int i = 0; i < l.tamanho(); i++) {
         const Prim& p = l[i];
         if (p.tipo == TipoPrim::RETANGULO) {

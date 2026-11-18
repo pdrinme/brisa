@@ -14,8 +14,10 @@ PS2DEV ?= /opt/ps2dev
 PS2SDK ?= $(PS2DEV)/ps2sdk
 GSKIT ?= $(PS2DEV)/gsKit
 
-NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp)
+NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp)
 PS2_SRC := src/main.cpp $(NUCLEO) $(wildcard src/plataforma/ps2/*.cpp)
+VU_SRC := $(wildcard src/plataforma/ps2/vu1/*.vsm)
+DVP_AS := $(PS2DEV)/dvp/bin/dvp-as
 HOST_SRC := $(NUCLEO) $(wildcard src/plataforma/host/*.cpp)
 IRX := sio2man padman
 
@@ -29,10 +31,10 @@ EE_FLAGS := -D_EE -G0 -O2 -Wall -Wextra -Wno-unused-parameter -ffunction-section
             -Isrc -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(GSKIT)/include
 EE_CXXFLAGS := $(EE_FLAGS) -std=gnu++17 -fno-exceptions -fno-rtti -MMD -MP
 EE_LDFLAGS := -T$(PS2SDK)/ee/startup/linkfile -L$(PS2SDK)/ee/lib -L$(GSKIT)/lib -Wl,-zmax-page-size=128 -Wl,--gc-sections
-EE_LIBS := -lgskit -ldmakit -lpad -lpatches -lc -lm
+EE_LIBS := -lgskit -ldmakit -lpacket2 -lpad -lpatches -lc -lm
 
 define objetos_ps2
-$(patsubst src/%.cpp,build/$(1)/%.o,$(PS2_SRC)) $(patsubst %,build/$(1)/irx/%_irx.o,$(IRX))
+$(patsubst src/%.cpp,build/$(1)/%.o,$(PS2_SRC)) $(patsubst src/%.vsm,build/$(1)/%.vu.o,$(VU_SRC)) $(patsubst %,build/$(1)/irx/%_irx.o,$(IRX))
 endef
 
 all: build/ps2/brisa.elf
@@ -41,6 +43,10 @@ build/ps2/brisa.elf: $(call objetos_ps2,ps2)
 	$(EE_CXX) $(EE_LDFLAGS) -o $@ $^ $(EE_LIBS)
 	$(EE_SIZE) $@
 	@cp $@ build/ps2/brisa_debug.elf && $(EE_STRIP) $@
+
+build/%.vu.o:
+	@mkdir -p $(@D)
+	$(DVP_AS) $(patsubst build/ps2/%.vu.o,src/%.vsm,$(patsubst build/autoteste/%.vu.o,src/%.vsm,$@)) -o $@
 
 build/ps2/%.o: src/%.cpp
 	@mkdir -p $(@D)
@@ -53,7 +59,7 @@ build/autoteste/brisa_autoteste.elf: $(call objetos_ps2,autoteste)
 
 build/autoteste/%.o: src/%.cpp
 	@mkdir -p $(@D)
-	$(EE_CXX) $(EE_CXXFLAGS) -DBRISA_AUTOTESTE=600 -c $< -o $@
+	$(EE_CXX) $(EE_CXXFLAGS) -DBRISA_AUTOTESTE=3000 -DBRISA_BENCH_AQUECER=3 -DBRISA_BENCH_MEDIR=6 -c $< -o $@
 
 build/%/irx/sio2man_irx.c: $(PS2SDK)/iop/irx/sio2man.irx
 	@mkdir -p $(@D)
@@ -81,9 +87,9 @@ testes: build/host/testes
 
 previa: build/host/brisa_previa
 	@mkdir -p build/previa
-	./build/host/brisa_previa --quadros=90 --png=build/previa/tela_boot.png > /dev/null
-	./build/host/brisa_previa --quadros=90 --png=build/previa/tela_botoes.png --segurar=xis,l1,r2,cima,triangulo,start,r3 --lx=40 --ly=220 --rx=255 --ry=128 > /dev/null
-	./build/host/brisa_previa --quadros=90 --png=build/previa/tela_desconectado.png --desconectado > /dev/null
+	./build/host/brisa_previa --roteiro=1 --quadros=60 --png=build/previa/cena_nivel4.png > /dev/null
+	./build/host/brisa_previa --nivel=7 --quadros=60 --png=build/previa/cena_nivel7.png > /dev/null
+	./build/host/brisa_previa --nivel=3 --carga=1 --quadros=60 --png=build/previa/carga_nivel3.png > /dev/null
 	@ls -la build/previa
 
 # ---------------- Emulador (Play!, sem BIOS) ----------------
@@ -96,11 +102,14 @@ emulador: autoteste
 	@rm -rf build/emulador
 	@mkdir -p build/emulador
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
-	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/quadro 30,150 botoes
+	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 90,380,900
+	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
+	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/controle 150 botoes
 	python3 tools/emulador/ppm_para_png.py --todos build/emulador
-	@echo "--- saída do ELF no emulador ---"
-	@cat build/emulador/quadro.log
-	tools/emulador/verificar_saida.sh build/emulador/quadro.log --parcial
+	@echo "--- saída do ELF no emulador (cena) ---"
+	@cat build/emulador/cena.log
+	tools/emulador/verificar_saida.sh build/emulador/cena.log --cena
+	tools/emulador/verificar_saida.sh build/emulador/controle.log --controle
 
 # emulador-completo: os 600 quadros até o fim do programa (AutoTest: GS nulo, sem controle).
 emulador-completo: autoteste
@@ -108,7 +117,7 @@ emulador-completo: autoteste
 	@mkdir -p build/emulador_completo
 	cp build/autoteste/brisa_autoteste.elf build/emulador_completo/
 	@echo "(saída conferida por tools/emulador/verificar_saida.sh)" > build/emulador_completo/brisa_autoteste.expected
-	-cd build/emulador_completo && timeout 300 $(AUTOTEST) . > autotest.log 2>&1
+	-cd build/emulador_completo && timeout 1800 $(AUTOTEST) . > autotest.log 2>&1
 	@cat build/emulador_completo/brisa_autoteste.result
 	tools/emulador/verificar_saida.sh build/emulador_completo/brisa_autoteste.result --completo
 

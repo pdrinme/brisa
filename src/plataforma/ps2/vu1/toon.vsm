@@ -1,0 +1,101 @@
+; Brisa — microprograma do VU1: transforma, ilumina em 2 faixas (toon do
+; Ventania), aplica neblina e Z do GS e manda os triângulos pelo PATH1.
+; Original do Brisa; a estrutura (xtop, recorte por CLIP/FCAND, XGKICK) segue o
+; exemplo draw_3D do PS2SDK (AFL 2.0). Formato do lote: BRISA_ARCHITECTURE §5 e
+; render_vu1.cpp.
+;
+; Memória do lote (qw, a partir de TOP):
+;   0       x = n (int, vértices, múltiplo de 3)
+;   1..4    colunas da matriz MVP
+;   5       xyz = luz no espaço do objeto / 127, w = a (toon)
+;   6       xyz = luz − sombra
+;   7       xyz = sombra, w = b (toon)
+;   8       x = 320, y = −224, z = perto·Zmax (o ftoi4 põe o Z nos bits 4..27 do XYZF2)
+;   9       x = 2048+320, y = 2048+224 (centro da tela no GS)
+;   10      x = −k, y = fim·k (neblina), z = 255, w = 0,25 (faixa de guarda)
+;   11      x = 255, w = 128
+;   12      GIFtag (NLOOP corrigido aqui)
+;   13      posições [n] (V4-32), normais [n] (V4-8 com sinal), cores [n] (V4-8 sem sinal)
+;   13+3n   saída: GIFtag + n × (RGBAQ, XYZF2)
+        .vu
+        .align 4
+        .global brisa_vu1_toon_inicio
+        .global brisa_vu1_toon_fim
+brisa_vu1_toon_inicio:
+        NOP                                     xtop VI02
+        NOP                                     ilw.x VI03,0(VI02)
+        NOP                                     lq VF01,1(VI02)
+        NOP                                     lq VF02,2(VI02)
+        NOP                                     lq VF03,3(VI02)
+        NOP                                     lq VF04,4(VI02)
+        NOP                                     lq VF05,5(VI02)
+        NOP                                     lq VF06,6(VI02)
+        NOP                                     lq VF07,7(VI02)
+        NOP                                     lq VF08,8(VI02)
+        NOP                                     lq VF09,9(VI02)
+        NOP                                     lq VF10,10(VI02)
+        NOP                                     lq VF11,11(VI02)
+        NOP                                     lq VF12,12(VI02)
+        NOP                                     iaddiu VI04,VI02,13
+        NOP                                     iadd VI05,VI04,VI03
+        NOP                                     iadd VI06,VI05,VI03
+        NOP                                     iadd VI07,VI06,VI03
+        NOP                                     iaddiu VI08,VI07,1
+        NOP                                     sq VF12,0(VI07)
+        NOP                                     iaddiu VI10,VI00,0x7fff
+        NOP                                     iaddiu VI10,VI10,1
+        NOP                                     ior VI11,VI03,VI10
+        NOP                                     isw.x VI11,0(VI07)
+        NOP                                     fcset 0
+        NOP                                     iadd VI09,VI00,VI03
+laco:
+        NOP                                     lq VF13,0(VI04)
+        mulax ACC,VF01,VF13x                    lq VF17,0(VI05)
+        madday ACC,VF02,VF13y                   lq VF18,0(VI06)
+        maddaz ACC,VF03,VF13z                   NOP
+        maddw VF14,VF04,VF00w                   NOP
+        itof0 VF17,VF17                         NOP
+        itof0 VF18,VF18                         NOP
+        mulw.xy VF15,VF14,VF10w                 move.zw VF15,VF14
+        clipw.xyz VF15xyz,VF14w                 div Q,VF00w,VF14w
+        mul.xyz VF19,VF17,VF05                  NOP
+        addy.x VF19,VF19,VF19y                  NOP
+        addz.x VF19,VF19,VF19z                  NOP
+        mulw.x VF20,VF19,VF05w                  NOP
+        addw.x VF20,VF20,VF07w                  NOP
+        maxx.x VF20,VF20,VF00x                  NOP
+        miniw.x VF20,VF20,VF00w                 NOP
+        mulx.xyz VF19,VF06,VF20x                NOP
+        add.xyz VF19,VF19,VF07                  NOP
+        mul.xyz VF18,VF18,VF19                  NOP
+        minix.xyz VF18,VF18,VF11x               NOP
+        mulw.w VF18,VF00,VF11w                  NOP
+        ftoi0 VF18,VF18                         waitq
+        mulq.xyz VF16,VF14,Q                    NOP
+        mulaw.xyz ACC,VF09,VF00w                NOP
+        madd.xyz VF16,VF16,VF08                 NOP
+        mulq.z VF16,VF08,Q                      NOP
+        mulx.w VF16,VF14,VF10x                  NOP
+        addy.w VF16,VF16,VF10y                  NOP
+        maxx.w VF16,VF16,VF00x                  NOP
+        miniz.w VF16,VF16,VF10z                 NOP
+        ftoi4 VF16,VF16                         fcand VI01,0x3ffff
+        NOP                                     iaddiu VI11,VI01,0x7fff
+        NOP                                     iand VI11,VI11,VI10
+        NOP                                     mtir VI12,VF16w
+        NOP                                     ior VI12,VI12,VI11
+        NOP                                     sq VF18,0(VI08)
+        NOP                                     sq VF16,1(VI08)
+        NOP                                     isw.w VI12,1(VI08)
+        NOP                                     iaddiu VI04,VI04,1
+        NOP                                     iaddiu VI05,VI05,1
+        NOP                                     iaddiu VI06,VI06,1
+        NOP                                     iaddiu VI08,VI08,2
+        NOP                                     iaddi VI09,VI09,-1
+        NOP                                     ibne VI09,VI00,laco
+        NOP                                     NOP
+        NOP                                     xgkick VI07
+        NOP[E]                                  NOP
+        NOP                                     NOP
+        .align 4
+brisa_vu1_toon_fim:

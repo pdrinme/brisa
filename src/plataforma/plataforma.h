@@ -3,6 +3,10 @@
 #pragma once
 #include "nucleo/controle.h"
 #include "nucleo/desenho2d.h"
+#include "render3d/cena3d.h"
+
+// Caminho da renderização 3D (BRISA_ARCHITECTURE BR-ADR-1).
+enum class Caminho3D : u8 { EE, VU1 };
 
 struct InfoPlataforma {
     char nome[32] = "";          // "PS2" ou "HOST"
@@ -21,7 +25,11 @@ namespace plataforma {
 bool iniciar(InfoPlataforma& info, int argc, char** argv);
 void ler_controle(EstadoControle& estado);
 u64 tempo_us();                                  // relógio monotônico
-void desenhar_e_apresentar(const ListaDesenho2D& lista);  // envia e espera o vsync
+void desenhar_e_apresentar(const ListaDesenho2D& lista);  // só 2D: envia e espera o vsync
+// Quadro com 3D: limpa com o céu, desenha a cena pelo caminho pedido, desenha o
+// 2D (HUD) por cima e espera o vsync. Preenche as estatísticas do 3D.
+void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D& hud, Estatisticas3D& est);
+bool caminho_disponivel(Caminho3D caminho);
 void log(const char* texto);
 void encerrar();
 }

@@ -16,6 +16,8 @@
 #include <unistd.h>
 
 #include "irx_embutidos.h"
+#include "render_ee.h"
+#include "render_vu1.h"
 
 extern "C" char _end[];  // fim do programa (linkfile do PS2SDK)
 
@@ -24,6 +26,7 @@ namespace {
 GSGLOBAL* g_gs = nullptr;
 char g_buffer_pad[256] __attribute__((aligned(64)));
 bool g_pad_aberto = false;
+bool g_vu1 = false;
 bool g_pad_modo_pedido = false;
 int g_pad_ultimo_estado = -1;
 
@@ -120,16 +123,20 @@ bool iniciar(InfoPlataforma& info, int argc, char** argv) {
     g_gs->Height = 448;
 #endif
     g_gs->PSM = GS_PSM_CT24;
-    g_gs->ZBuffering = GS_SETTING_OFF;  // Etapa 1 é só 2D: economiza 1,1 MB de VRAM
+    g_gs->ZBuffering = GS_SETTING_ON;   // Etapa 2: Z de 24 bits (BRISA_ARCHITECTURE §5.1)
+    g_gs->PSMZ = GS_PSMZ_24;
     g_gs->DoubleBuffering = GS_SETTING_ON;
     g_gs->PrimAlphaEnable = GS_SETTING_ON;
     dmaKit_init(D_CTRL_RELE_OFF, D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC, D_CTRL_STD_OFF, D_CTRL_RCYC_8, 1 << DMA_CHANNEL_GIF);
     dmaKit_chan_init(DMA_CHANNEL_GIF);
+    dmaKit_chan_init(DMA_CHANNEL_VIF1);
     gsKit_init_screen(g_gs);
     gsKit_mode_switch(g_gs, GS_ONESHOT);
     gsKit_set_test(g_gs, GS_ZTEST_OFF);
     gsKit_set_primalpha(g_gs, GS_SETREG_ALPHA(0, 1, 0, 1, 0), 0);
 
+    g_vu1 = vu1::iniciar();
+    printf("BRISA: VU1 %s\n", g_vu1 ? "pronto (microprograma toon)" : "FALHOU");
     info.largura = g_gs->Width;
     info.altura = g_gs->Height;
     bool pal = g_gs->Mode == GS_MODE_PAL;
@@ -176,8 +183,7 @@ u64 tempo_us() {
     return c / (kBUSCLK / 1000000);
 }
 
-void desenhar_e_apresentar(const ListaDesenho2D& l) {
-    gsKit_clear(g_gs, cor_gs(l.fundo()));
+static void desenhar_2d(const ListaDesenho2D& l) {
     for (int i = 0; i < l.tamanho(); i++) {
         const Prim& p = l[i];
         switch (p.tipo) {
@@ -193,6 +199,38 @@ void desenhar_e_apresentar(const ListaDesenho2D& l) {
             break;
         }
     }
+}
+
+void desenhar_e_apresentar(const ListaDesenho2D& l) {
+    gsKit_clear(g_gs, cor_gs(l.fundo()));
+    gsKit_set_test(g_gs, GS_ZTEST_OFF);
+    desenhar_2d(l);
+    gsKit_queue_exec(g_gs);
+    gsKit_sync_flip(g_gs);
+}
+
+bool caminho_disponivel(Caminho3D c) { return c == Caminho3D::EE || g_vu1; }
+
+void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D& hud, Estatisticas3D& est) {
+    est = Estatisticas3D();
+    // 1) limpa cor e Z (fila do gsKit) e espera terminar
+    gsKit_clear(g_gs, cor_gs(cena.ceu));
+    gsKit_queue_exec(g_gs);
+    u64 t0 = tempo_us();
+    // 2) estado do 3D (TEST Z, cor da neblina) e o caminho escolhido
+    SaidaGif::enviar_estado(cena);
+    SaidaGif gif;
+    gif.iniciar(cena.camera.perto);
+    if (caminho == Caminho3D::VU1 && g_vu1) {
+        vu1::desenhar(cena, gif, est);
+    } else {
+        pipeline_cena(cena, ConfigTela(), gif, est);
+    }
+    gif.terminar();
+    est.tempo_3d_us = static_cast<u32>(tempo_us() - t0);
+    // 3) HUD por cima, sem teste de Z, e troca de buffer no vsync
+    gsKit_set_test(g_gs, GS_ZTEST_OFF);
+    desenhar_2d(hud);
     gsKit_queue_exec(g_gs);
     gsKit_sync_flip(g_gs);
 }
