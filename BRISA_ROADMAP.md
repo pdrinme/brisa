@@ -64,7 +64,7 @@ problemas e próxima etapa).
 - `make emulador`: o ELF real no Play! com vídeo e controle simulado → `EMULADOR_OK`. Os módulos da ROM carregam, o controle chega ao estado estável e é lido em modo analógico, e todos os botões e eixos do roteiro aparecem na imagem. Capturas em `docs/etapa1/`.
 - **Fidelidade do desenho:** a imagem do GS no emulador e a prévia do PC são idênticas no cartão do controle (0 de 66.216 pixels diferentes).
 - `make emulador-completo`: 600 quadros até o fim do programa → `EMULADOR_OK`.
-- **Estabilidade (10 min, 36.000 quadros) no emulador:** ver o resultado abaixo.
+- **Estabilidade no emulador:** 36.000 quadros (10 min de tempo emulado a 59,8 FPS) até `BRISA_FIM_OK`, sem travar. O tempo de quadro ficou constante (16.718–16.719 µs), a CPU teve pior caso de 1.444 µs, e nenhuma primitiva foi descartada.
 
 **Medido (no emulador Play!; não vale como medição de console):**
 - quadro de 16,7 ms (59,8 FPS, NTSC);
