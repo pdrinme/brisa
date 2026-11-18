@@ -204,8 +204,46 @@ def converter(caminho_glb, paleta):
         pts = []
         for prim in j["meshes"][n["mesh"]]["primitives"]:
             pts += [mat.ponto(mw, p) for p in g.accessor(prim["attributes"]["POSITION"])]
-        m.colisoes.append((tuple(min(p[q] for p in pts) for q in range(3)), tuple(max(p[q] for p in pts) for q in range(3))))
+        m.colisoes.append(classificar_colisao(pts))
     return m
+
+
+def classificar_colisao(pts, tol=0.01):
+    """Convexo de colisão → (min, max, tipo, espessura).
+    tipo 0 = caixa; 1..4 = rampa (laje inclinada) que sobe para +x, −x, +z, −z.
+    Outros convexos (telhado em pirâmide, escada em cunha) viram a caixa envolvente."""
+    mn = tuple(min(p[q] for p in pts) for q in range(3))
+    mx = tuple(max(p[q] for p in pts) for q in range(3))
+    unicos = {tuple(round(c, 3) for c in p) for p in pts}
+    def eh_canto(p):
+        return all(abs(p[q] - mn[q]) < tol or abs(p[q] - mx[q]) < tol for q in range(3))
+    if all(eh_canto(p) for p in unicos):
+        return (mn, mx, 0, 0.0)
+    if len(unicos) == 8:
+        for eixo, (sinal_tipo) in ((0, (1, 2)), (2, (3, 4))):
+            outro = 2 - eixo
+            # Em cada ponta do eixo, as alturas (topo e base) são as mesmas nos dois lados do outro eixo.
+            pontas = {}
+            for p in unicos:
+                if abs(p[eixo] - mn[eixo]) < 0.25:
+                    pontas.setdefault("min", []).append(p)
+                elif abs(p[eixo] - mx[eixo]) < 0.25:
+                    pontas.setdefault("max", []).append(p)
+            if len(pontas.get("min", [])) != 4 or len(pontas.get("max", [])) != 4:
+                continue
+            ys_min = sorted(p[1] for p in pontas["min"])
+            ys_max = sorted(p[1] for p in pontas["max"])
+            if abs(ys_min[0] - ys_min[1]) > tol or abs(ys_min[2] - ys_min[3]) > tol:
+                continue
+            if abs(ys_max[0] - ys_max[1]) > tol or abs(ys_max[2] - ys_max[3]) > tol:
+                continue
+            esp_a, esp_b = ys_min[2] - ys_min[0], ys_max[2] - ys_max[0]
+            if abs(esp_a - esp_b) > tol or abs(ys_max[2] - ys_min[2]) < 0.2:
+                continue
+            sobe_para_max = ys_max[2] > ys_min[2]
+            tipo = sinal_tipo[0] if sobe_para_max else sinal_tipo[1]
+            return (mn, mx, tipo, round(esp_a, 4))
+    return (mn, mx, 0, 0.0)
 
 
 def animacoes(caminho_glb, modelo, fps=30):

@@ -142,7 +142,8 @@ class TesteVentania(unittest.TestCase):
         m = modelo.converter(self.glb("baus_coletaveis/bau_ventania_01.glb"), self.pal)
         self.assertEqual(len(m.partes), 2)
         self.assertEqual([k["nome"] for k in m.marcadores], ["alca_tampa"])
-        (mn, mx), = m.colisoes
+        (mn, mx, tipo, _esp), = m.colisoes
+        self.assertEqual(tipo, 0)  # o baú é caixa
         self.assertAlmostEqual(mx[0] - mn[0], 1.1, places=3)  # 1,1 m (guia de estilo)
 
     def test_picareta_marcadores(self):
@@ -157,6 +158,55 @@ class TesteVentania(unittest.TestCase):
             no, ini, n = struct.unpack_from("<iII", b, off_partes + 32 * i)
             self.assertEqual(ini % 4, 0)
             self.assertEqual(n % 3, 0)
+
+
+class TesteColisao(unittest.TestCase):
+    """BMOD v2: caixas e rampas a partir dos convexos -colonly."""
+
+    def caixa(self, mn, mx):
+        return [(x, y, z) for x in (mn[0], mx[0]) for y in (mn[1], mx[1]) for z in (mn[2], mx[2])]
+
+    def test_caixa(self):
+        mn, mx, tipo, esp = modelo.classificar_colisao(self.caixa((-2, 0, -0.12), (2, 4, 0.12)))
+        self.assertEqual((tipo, esp), (0, 0.0))
+        self.assertEqual((mn, mx), ((-2, 0, -0.12), (2, 4, 0.12)))
+
+    def test_rampa_nos_quatro_sentidos(self):
+        # Laje de 0,15 m que sobe 4 m ao longo de 4 m.
+        def laje(eixo, sobe_para_max):
+            pts = []
+            for a in (-2, 2):
+                for b in (-2, 2):
+                    alto = (b > 0) == sobe_para_max
+                    base = 3.85 if alto else 0.0
+                    for y in (base, base + 0.15):
+                        pts.append((a, y, b) if eixo == 2 else (b, y, a))
+            return pts
+        for eixo, sobe, esperado in ((0, True, 1), (0, False, 2), (2, True, 3), (2, False, 4)):
+            mn, mx, tipo, esp = modelo.classificar_colisao(laje(eixo, sobe))
+            self.assertEqual(tipo, esperado)
+            self.assertAlmostEqual(esp, 0.15, places=3)
+            self.assertAlmostEqual(mx[1], 4.0, places=3)
+
+    def test_cunha_vira_caixa(self):
+        # Prisma triangular (telhado/escada em cunha): fica a AABB.
+        pts = [(-2, 0, -2), (2, 0, -2), (-2, 0, 2), (2, 0, 2), (-2, 2, 0), (2, 2, 0)]
+        mn, mx, tipo, esp = modelo.classificar_colisao(pts)
+        self.assertEqual(tipo, 0)
+        self.assertEqual((mn, mx), ((-2, 0, -2), (2, 2, 2)))
+
+    def test_rampa_do_ventania_no_pacote(self):
+        caminho = os.path.join(RAIZ, "assets", "modelos", "rampa_pedra.bmod")
+        d = open(caminho, "rb").read()
+        self.assertEqual(d[:4], b"BMOD")
+        versao, n_col = struct.unpack_from("<I", d, 4)[0], struct.unpack_from("<I", d, 24)[0]
+        off_col = struct.unpack_from("<7I", d, 80)[3]
+        self.assertEqual(versao, 2)
+        self.assertEqual(n_col, 1)
+        x0, y0, z0, tipo, x1, y1, z1, esp = struct.unpack_from("<3fI3ff", d, off_col)
+        self.assertEqual(tipo, 4)  # sobe para −z, como no campo de treino
+        self.assertAlmostEqual(esp, 0.141, places=2)
+        self.assertAlmostEqual(y1, 4.1, places=1)
 
 
 class TesteEmpacotador(unittest.TestCase):

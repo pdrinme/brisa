@@ -24,14 +24,20 @@ struct MarcadorBMOD {
 };
 static_assert(sizeof(MarcadorBMOD) == 48, "MarcadorBMOD");
 
+// Colisão (v2): caixa, ou rampa (laje inclinada) que sobe na direção do tipo.
+// Topo da rampa: de min.y + espessura (ponta baixa) até max.y (ponta alta).
 struct ColisaoBMOD {
-    f32 min[3], _a;
-    f32 max[3], _b;
+    enum Tipo : u32 { CAIXA = 0, RAMPA_MAIS_X = 1, RAMPA_MENOS_X = 2, RAMPA_MAIS_Z = 3, RAMPA_MENOS_Z = 4 };
+    f32 min[3];
+    u32 tipo;
+    f32 max[3];
+    f32 espessura;
 };
+static_assert(sizeof(ColisaoBMOD) == 32, "ColisaoBMOD");
 
 class ModeloBrisa {
 public:
-    static const u32 VERSAO = 1;
+    static const u32 VERSAO = 2;
     static const int MAX_PARTES = 40;
     static const int MAX_NOS = 32;
     bool carregar(const u8* dados, u32 tamanho, char* erro, int n_erro);

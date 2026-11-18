@@ -168,7 +168,7 @@ EE), mas a proporção real só o console dá.
   - A cena de benchmark da Etapa 2 continua em L3 + R3.
 
 **Testes executados:**
-- `python3 tools/conversor/testes.py`: 15 testes OK. Cobrem matemática, QEM (alvo, sem virar faces, cores preservadas), CSM1, pacote (ordem, alinhamento, CRC), PSMT4, sombra, quantização, Recruta (rígido, 2.790 triângulos, coral do cachecol, 16 clipes normalizados), baú (2 partes, marcador, colisão de 1,1 m), marcadores da picareta, alinhamento das partes e a recusa do empacotador.
+- `python3 tools/conversor/testes.py`: 15 testes OK (19 a partir da Etapa 4). Cobrem matemática, QEM (alvo, sem virar faces, cores preservadas), CSM1, pacote (ordem, alinhamento, CRC), PSMT4, sombra, quantização, Recruta (rígido, 2.790 triângulos, coral do cachecol, 16 clipes normalizados), baú (2 partes, marcador, colisão de 1,1 m), marcadores da picareta, alinhamento das partes e a recusa do empacotador.
 - `make testes`: 32 testes, 0 falhas. Os 7 novos cobrem CRC32, pacote íntegro e ordenado, pacote corrompido recusado, partes alinhadas a 16 bytes, animações servindo a 4 trajes, a mão subindo no aceno, o laço contínuo, a tampa do baú abrindo e as texturas.
 - `make emulador`: `EMULADOR_OK` (cena e controle). `make emulador-completo`: `EMULADOR_OK`, com VU1 e EE, **os 11 trajes × 3 LODs e os 16 clipes** desenhados e o fim sem travar.
 - **Imagens:**
@@ -195,8 +195,70 @@ EE), mas a proporção real só o console dá.
 
 **⏳ Falta para o aceite:** rodar a vitrine no console e comparar na TV (`docs/TESTE_NO_CONSOLE.md`, Etapa 3).
 
-### Etapa 4 — Personagem ⬜
-O Recruta convertido, com movimento, câmera, animações, colisão (relevo + caixas) e a decisão sobre o dano de queda.
+### Etapa 4 — Personagem 🟡 (pronta e testada no PC e no emulador; ⏳ falta jogar no console)
+**Feito:**
+- **Campo de treino do Ventania** (`world/arena/campo_treino.gd`) como cena inicial do ELF (`src/jogo/treino.*`):
+  - as 19 peças de construção, os 7 baús e os 40 props nas posições do Ventania (os props saem de `tools/auditoria/extrair_campo_treino.gd`, com a mesma semente 42 do RNG da Godot);
+  - as paredes invisíveis da borda (±110 m) e o ponto inicial (4, 0, 10).
+- **Personagem jogável** com os 11 trajes do Ventania (SELECT troca), sombra blob e os números de `pawn_body.gd`/`player_movement.gd` (`src/personagem/movimento.*`):
+  - andar 4,5 m/s, correr 6,5, agachado 2,5;
+  - gravidade 22 m/s², salto 7,4 m/s (1,37 m), aceleração 45 no chão e 9 no ar, queda máxima 45 m/s;
+  - cilindro de raio 0,35 m e altura 1,8 m (agachado 1,15), degrau de 0,35 m e "grudar" no chão ao descer;
+  - velocidade constante ao longo do piso nas rampas;
+  - sem levantar do agachado se não houver espaço.
+- **Colisão** (`src/mundo/colisao.*`, §17): caixas e **rampas** (o conversor classifica as colisões do Ventania, BMOD v2), giradas pela instância, numa grade de 8 m. Faz chão, paredes, teto, "cabe aqui?" e raio.
+- **Câmera em 3ª pessoa** de `player_camera.gd` (`src/personagem/camera3p.*`):
+  - ombro de 0,55 m, 3,2 m de distância (1,7 m mirando com L2);
+  - FOV de 70°/55°, pitch de −80° a 70°, 135°/s no analógico direito;
+  - braço de mola que encolhe na parede e estica devagar.
+- **Animador** (`src/personagem/animador.*`), a árvore do `pawn_visual.gd`:
+  - idle/andar/correr misturados pela velocidade, com a fase sincronizada;
+  - agachado e agachado andando;
+  - pulo sobre a queda, aterrissagem, aterrissagem pesada (queda ≥ 6 m) e aceno (◀ no direcional).
+- **Dano de queda: não tem** (BR-ADR-13), como no Ventania.
+- **Roteiro do autoteste** (`src/jogo/roteiro_treino.h`): o mesmo no PC e no PS2. Sobe a torre pelas duas rampas, cai 8 m, pula, gira a câmera, anda agachado, corre, troca VU1 → EE e acena. Cada marco vai para o log (`BRISA_MARCO …`).
+- **Modos:** L1 + R1 + START alterna treino → vitrine (Etapa 3) → benchmark (Etapa 2).
+
+**Testes executados:**
+- `make testes`: 43 testes, 5.387 verificações, 0 falhas. Os 11 novos (`tests/teste_personagem.cpp`) cobrem:
+  - as velocidades, a aceleração e a direção pelo yaw da câmera;
+  - o salto (1,2–1,45 m, ~0,67 s) e a queda presa a 45 m/s;
+  - parede, degrau de 0,3 m (sobe) e obstáculo de 0,5 m (bloqueia), além do deslizar numa parede girada 45°;
+  - teto baixo (agachado passa e não levanta embaixo; o pulo para no teto) e o raio contra caixa girada e o chão;
+  - a câmera: posição do ombro, braço de mola, mira, agachado, velocidade e limites;
+  - o campo carregado (3 rampas, pisos a 4,1 m e 8,1 m) e a passagem agachada sob os pisos de madeira a 1,5 m;
+  - os estados do animador e a pose finita;
+  - o **roteiro completo** com as mesmas expectativas do emulador.
+- `python3 tools/conversor/testes.py`: 19 testes OK. Os 4 novos cobrem caixa, rampa nos 4 sentidos, cunha → caixa e a rampa de pedra do Ventania no pacote (tipo −z, laje de 0,141 m). Foi corrigido o teste do baú, que ainda lia a colisão do formato v1.
+- O teste da câmera achou um erro: a margem de 0,2 m era descontada mesmo sem nada no caminho. Corrigido.
+- `make emulador`: `EMULADOR_OK` (cena e controle). `make emulador-completo`: `EMULADOR_OK` (16 verificações).
+- **PC × PS2 (Play!):** os 10 marcos do roteiro saem **iguais** (posição com 2 casas, estado, animação, yaw da câmera). Por exemplo:
+  - topo da torre em (−0,15; 8,10; −25,90);
+  - aterrissagem com queda de 8,05 m;
+  - fim em (5,19; 0,00; −5,42).
+- **Imagens** (`docs/etapa4/`): a rampa, o topo da torre pelo VU1, o aceno pelo EE e a tira da prévia no PC.
+
+**Medido** (bytes valem para o console; **tempos são do emulador**, não do console):
+- campo com 62 colisores e 91 objetos na cena (25 a 59 visíveis), com 3.670 a 9.224 triângulos enviados;
+- caminho VU1: 3D de 1,3 a 2,6 ms e quadro de 16,7 ms (59,8 FPS); CPU (lógica + montar a cena) de 1,23 ms;
+- caminho EE: 3D de 43 ms com 5.170 triângulos (35 FPS no emulador);
+- ELF de 5,4 MB (9,9 MB na RAM com o bss) e 18,1 MB livres no boot;
+- mundo de colisão: ~545 KB de bss (2.048 colisores e a grade de 64 × 64 × 48).
+
+**Problemas encontrados e resolvidos:**
+- no alto da primeira rampa, o piso seguinte (topo a 4,1 m) virava parede. Agora, sobre rampa, o degrau conta a partir do chão na frente do cilindro;
+- faltava o campo `y` no `.inc` dos props;
+- a margem do braço de mola (acima);
+- a linha de ajuda do HUD passava da borda da tela;
+- a captura do emulador encerra o programa no último quadro salvo. O fim do roteiro é conferido no `emulador-completo`.
+
+**Limitações conhecidas (vão para as próximas etapas):**
+- as escadas e os telhados em cunha ainda colidem como caixa (AABB). As escadas da ilha entram na Etapa 5, com o mapa;
+- o campo é plano: o relevo da ilha entra na Etapa 5;
+- o caminho EE é lento demais para o jogo (43 ms só de 3D no emulador). Ele fica como alternativa e diagnóstico, e o VU1 é o caminho do jogo (a confirmar no console, BR-ADR-1);
+- o problema de memória dos modelos (Etapa 3) continua aberto e é a primeira tarefa antes do mapa.
+
+**⏳ Falta para o aceite:** jogar o campo de treino no console (`docs/TESTE_NO_CONSOLE.md`, Etapa 4).
 
 ### Etapa 5 — Mapa ⬜
 Relevo, vegetação, construções do mapa, baús, POIs, estradas, setores, LOD e culling, minimapa. **Decisão do tamanho da ilha** com medições (BRISA_GAME_DESIGN §6).

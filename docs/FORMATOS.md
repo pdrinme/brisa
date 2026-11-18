@@ -1,4 +1,4 @@
-# Formatos binários do Brisa (versão 1)
+# Formatos binários do Brisa
 
 Todos em little-endian (o EE e o PC também são). Os blocos ficam alinhados a 16
 bytes, e os arquivos dentro do pacote começam alinhados a 64. Escritores:
@@ -26,7 +26,7 @@ Cabeçalho de 128 bytes:
 | Offset | Tipo | Campo |
 |---|---|---|
 | 0 | char[4] | `BMOD` |
-| 4 | u32 | versão (1) |
+| 4 | u32 | versão (2) |
 | 8 | u32 | n de vértices (com a folga entre partes) |
 | 12 | u32 | n de partes (≤ 40) |
 | 16 | u32 | n de nós (≤ 32) |
@@ -45,7 +45,7 @@ Blocos:
 | Partes | 32 B | `no i32` (−1 = estática), `inicio u32` (múltiplo de 4), `n u32` (múltiplo de 3), 4 B, `centro f32[3]`, `raio f32` (no espaço "bind" da parte) |
 | Nós | 144 B | `nome[24]`, `pai i32`, `flags u32` (bit 0 animado, bit 1 osso), `t f32[3]+4`, `r f32[4]` (quaternion x,y,z,w), `s f32[3]+4`, `inv_bind f32[16]` (coluna principal). Pais vêm antes dos filhos |
 | Marcadores | 48 B | `nome[24]`, `no i32` (pai), `pos f32[3]` (local ao pai), 8 B |
-| Colisões | 32 B | AABB `min f32[3]+4`, `max f32[3]+4` no espaço do modelo |
+| Colisões | 32 B | `min f32[3]`, `tipo u32`, `max f32[3]`, `espessura f32`, no espaço do modelo. Tipo 0 = caixa; 1–4 = rampa (laje inclinada) que sobe para +x, −x, +z ou −z, com o topo indo de `min.y + espessura` na ponta baixa até `max.y` na alta (v2; na v1 era só a AABB) |
 | Posições | 16 B/vértice | `x, y, z, 1` (f32) → UNPACK V4-32 |
 | Normais | 4 B/vértice | `nx, ny, nz, 0` em i8 (×127) → UNPACK V4-8 com sinal |
 | Cores | 4 B/vértice | `r, g, b, 255` → UNPACK V4-8 sem sinal |

@@ -37,10 +37,50 @@ f32 BancoAnimacoes::duracao(int i) const {
     return (i >= 0 && i < n_clipes_) ? static_cast<f32>(clipes_[i].n_quadros - 1) / static_cast<f32>(fps_) : 0.0f;
 }
 
-void BancoAnimacoes::amostrar(int ci, f32 t, const ModeloBrisa& m, Pose& p) const {
+void misturar_trs(TRSLocal* a, const TRSLocal* b, int n, f32 w) {
+    if (w <= 0) return;
+    if (w >= 1) {
+        for (int i = 0; i < n; i++) a[i] = b[i];
+        return;
+    }
+    for (int i = 0; i < n; i++) {
+        f32 d = a[i].q[0] * b[i].q[0] + a[i].q[1] * b[i].q[1] + a[i].q[2] * b[i].q[2] + a[i].q[3] * b[i].q[3];
+        f32 s = d < 0 ? -1.0f : 1.0f, len = 0;
+        for (int k = 0; k < 4; k++) {
+            a[i].q[k] += (b[i].q[k] * s - a[i].q[k]) * w;
+            len += a[i].q[k] * a[i].q[k];
+        }
+        len = len > 1e-12f ? 1.0f / sqrtf(len) : 0.0f;
+        for (int k = 0; k < 4; k++) a[i].q[k] *= len;
+        a[i].t = a[i].t + (b[i].t - a[i].t) * w;
+    }
+}
+
+void trs_repouso(const ModeloBrisa& m, TRSLocal* l) {
+    for (int i = 0; i < m.n_nos(); i++) {
+        for (int k = 0; k < 4; k++) l[i].q[k] = m.no(i).r[k];
+        l[i].t = Vec3(m.no(i).t[0], m.no(i).t[1], m.no(i).t[2]);
+    }
+}
+
+void compor_pose(const ModeloBrisa& m, const TRSLocal* l, Pose& p) {
     p.n = m.n_nos();
+    for (int i = 0; i < p.n; i++) {
+        const NoBMOD& no = m.no(i);
+        Mat4 local = Mat4::trs(l[i].t, l[i].q, Vec3(no.s[0], no.s[1], no.s[2]));
+        p.mundo[i] = no.pai < 0 ? local : p.mundo[no.pai] * local;
+    }
+}
+
+void BancoAnimacoes::amostrar(int ci, f32 t, const ModeloBrisa& m, Pose& p) const {
+    TRSLocal l[ModeloBrisa::MAX_NOS];
+    amostrar_local(ci, t, m, l);
+    compor_pose(m, l, p);
+}
+
+void BancoAnimacoes::amostrar_local(int ci, f32 t, const ModeloBrisa& m, TRSLocal* out) const {
     if (ci < 0 || ci >= n_clipes_ || static_cast<u32>(m.n_nos()) != n_nos_) {
-        pose_repouso(m, p);
+        trs_repouso(m, out);
         return;
     }
     const Clipe& c = clipes_[ci];
@@ -85,9 +125,9 @@ void BancoAnimacoes::amostrar(int ci, f32 t, const ModeloBrisa& m, Pose& p) cons
         }
         len = len > 1e-12f ? 1.0f / sqrtf(len) : 0.0f;
         for (int k = 0; k < 4; k++) q[k] *= len;
-        Vec3 tr((a0[i].t[0] + (a1[i].t[0] - a0[i].t[0]) * u) * 0.001f, (a0[i].t[1] + (a1[i].t[1] - a0[i].t[1]) * u) * 0.001f,
-                (a0[i].t[2] + (a1[i].t[2] - a0[i].t[2]) * u) * 0.001f);
-        Mat4 local = Mat4::trs(tr, q, Vec3(no.s[0], no.s[1], no.s[2]));
-        p.mundo[i] = no.pai < 0 ? local : p.mundo[no.pai] * local;
+        for (int k = 0; k < 4; k++) out[i].q[k] = q[k];
+        out[i].t = Vec3((a0[i].t[0] + (a1[i].t[0] - a0[i].t[0]) * u) * 0.001f, (a0[i].t[1] + (a1[i].t[1] - a0[i].t[1]) * u) * 0.001f,
+                        (a0[i].t[2] + (a1[i].t[2] - a0[i].t[2]) * u) * 0.001f);
+        (void)no;
     }
 }

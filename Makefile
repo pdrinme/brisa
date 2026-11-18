@@ -14,7 +14,7 @@ PS2DEV ?= /opt/ps2dev
 PS2SDK ?= $(PS2DEV)/ps2sdk
 GSKIT ?= $(PS2DEV)/gsKit
 
-NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp) $(wildcard src/conteudo/*.cpp)
+NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp) $(wildcard src/conteudo/*.cpp) $(wildcard src/mundo/*.cpp) $(wildcard src/personagem/*.cpp)
 PAK := build/conteudo/BRISA.PAK
 ASSETS := assets/catalogo_brisa.json $(wildcard assets/*/*)
 PS2_SRC := src/main.cpp $(NUCLEO) $(wildcard src/plataforma/ps2/*.cpp)
@@ -118,7 +118,7 @@ emulador: autoteste
 	@rm -rf build/emulador
 	@mkdir -p build/emulador
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
-	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 90,420,900
+	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 200,700,1250
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
 	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/controle 150 botoes
 	python3 tools/emulador/ppm_para_png.py --todos build/emulador

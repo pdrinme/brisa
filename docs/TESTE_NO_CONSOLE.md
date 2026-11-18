@@ -11,7 +11,7 @@ deste teste**. Ele leva cerca de 15 minutos.
 
 ## 2. Arquivo
 
-`build/ps2/brisa.elf` (cerca de 240 KB). É gerado por `make`, ou você recebe pronto.
+`build/ps2/brisa.elf` (cerca de 5,4 MB a partir da Etapa 3, com o conteúdo embutido). É gerado por `make`, ou você recebe pronto.
 
 ## 3. Pelo pendrive (uLaunchELF)
 
@@ -133,3 +133,37 @@ modelos, as animações e os ícones convertidos.
 3. Os 11 trajes aparecem inteiros (sem peças voando ou faltando) nos 3 LODs?
 4. As animações tocam sem tremer, os ícones de baixo aparecem com transparência certa e as sombras redondas ficam sob os personagens e os baús?
 5. O FPS e o "3D" do painel, nos caminhos VU1 e EE.
+
+---
+
+# Etapa 4 — Personagem no campo de treino
+
+O ELF agora abre no **campo de treino do Ventania**, com o personagem jogável.
+A vitrine (Etapa 3) e o benchmark (Etapa 2) continuam no ELF: **L1 + R1 +
+START** alterna treino → vitrine → benchmark.
+
+| Botão | Efeito |
+|---|---|
+| Analógico esquerdo | Anda (o personagem vai para onde a câmera olha) |
+| Analógico direito | Gira a câmera |
+| ✕ | Pula |
+| L3 segurado | Corre (só para a frente) |
+| R3 | Agacha / levanta |
+| L2 segurado | Mira (câmera mais perto, FOV menor) |
+| ◀ no direcional | Acena |
+| SELECT | Troca o traje (11) |
+| ▼ no direcional | Caminho de desenho VU1 ↔ EE |
+| START | Mostra/esconde o painel |
+
+**Conferir e me mandar:**
+1. **Subir a torre de pedra** (em frente ao ponto inicial, um pouco à esquerda) pelas duas rampas até o baú no alto. A subida é contínua, sem engasgar na emenda entre rampa e piso? O painel mostra Y 8,1 no alto?
+2. **Pular do alto:** o personagem cai, toca a **aterrissagem pesada** e não perde vida (não há dano de queda, BR-ADR-13).
+3. **Paredes:** andar contra as paredes da cabana de madeira e do galpão de metal. O personagem para sem atravessar e sem tremer, e desliza quando chega em ângulo?
+4. **Agachado:** passar por baixo dos dois pisos de madeira a 1,5 m (à esquerda do ponto inicial). Em pé ele não passa; agachado passa; e embaixo deles R3 não deixa levantar.
+5. **Câmera:** encostar as costas numa parede. A câmera chega perto sem entrar na parede e volta devagar ao sair?
+6. **Animações:** parado, andando, correndo, agachado, pulando, caindo e acenando. Elas trocam suavemente e os pés não "patinam" demais?
+7. **Desempenho:** o FPS e o "3D" do painel no alto da torre e no meio do campo, nos caminhos VU1 e EE. No emulador, o VU1 dá 59,8 FPS e 1,3–2,6 ms de 3D, e o EE dá 35 FPS e 43 ms. **Esses valores não medem o console.**
+8. **Pelo ps2link:** as linhas `BRISA: quadro …` a cada 300 quadros.
+
+Se algo atravessar, travar ou tremer, anote onde (os valores X, Y e Z do
+painel) e o que você estava fazendo.

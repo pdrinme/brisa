@@ -4,6 +4,18 @@
 #pragma once
 #include "modelo.h"
 
+// Transformação local de um nó (para misturar clipes antes de compor a hierarquia).
+struct TRSLocal {
+    f32 q[4];
+    Vec3 t;
+};
+
+// Mistura b sobre a com peso w (nlerp na rotação, lerp na translação).
+void misturar_trs(TRSLocal* a, const TRSLocal* b, int n, f32 w);
+// Compõe a hierarquia a partir dos TRS locais (escala de repouso do modelo).
+void compor_pose(const ModeloBrisa& m, const TRSLocal* local, Pose& p);
+void trs_repouso(const ModeloBrisa& m, TRSLocal* local);
+
 class BancoAnimacoes {
 public:
     static const u32 VERSAO = 1;
@@ -20,6 +32,8 @@ public:
     // rotação), usa a escala de repouso do modelo e compõe a hierarquia.
     // Fora de um clipe em laço, t é preso ao último quadro.
     void amostrar(int clipe, f32 t, const ModeloBrisa& m, Pose& p) const;
+    // Só os TRS locais do clipe no tempo t (n = m.n_nos()).
+    void amostrar_local(int clipe, f32 t, const ModeloBrisa& m, TRSLocal* local) const;
 private:
     struct Clipe { char nome[24]; u32 n_quadros, loop, offset, n_nos; u32 _[2]; };
     struct Amostra { i16 q[4]; i16 t[3]; i16 _; };

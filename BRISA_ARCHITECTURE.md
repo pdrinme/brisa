@@ -125,7 +125,7 @@ de uso em cada medição.
 
 - **Uma grade só para tudo:** a grade de 4 m da construção do Ventania também indexa colisão, tiro e navegação. Cada célula guarda as peças (até 5 slots: parede X, parede Z, piso, rampa, teto) e uma lista curta de props.
 - **Relevo:** 201×201 amostras a cada 3 m (o mesmo do Ventania), com altura bilinear. Visual em blocos de 32 m com 2 LODs.
-- **Colisão do personagem:** cilindro vertical (raio 0,35 m, altura 1,8 m; agachado 1,2 m) contra o relevo, as caixas finas das peças (paredes de 0,24 m, pisos com topo a 0,10 m), planos inclinados (rampas), cilindros ou caixas dos props e a colisão simplificada das escadas.
+- **Colisão do personagem:** cilindro vertical (raio 0,35 m, altura 1,8 m; agachado 1,15 m, o valor do Ventania) contra o relevo, as caixas finas das peças (paredes de 0,24 m, pisos com topo a 0,10 m), planos inclinados (rampas), cilindros ou caixas dos props e a colisão simplificada das escadas.
 - **Tiro:** raio por DDA na grade (como um voxel traversal) e, depois, contra as hitboxes (cabeça e corpo) dos personagens próximos ao raio.
 - **Navegação dos bots:** o grafo estático (150×150 células de 4 m mais nós de andar, escadas e portas) sai **pronto do pipeline**. Em jogo, só se atualizam as arestas das células tocadas por construção ou destruição. A* com limite de expansões por tick.
 
@@ -341,3 +341,28 @@ correções previstas, em ordem:
 3. carregar só os trajes usados na partida (a vitrine carrega todos).
 
 Vale fazer antes do mapa (Etapa 5), quando o orçamento do mundo entrar.
+
+## 17. Personagem, colisão e câmera (Etapa 4, implementado)
+
+| Peça | Arquivo | Papel |
+|---|---|---|
+| Mundo de colisão | `src/mundo/colisao.*` | Caixas e rampas giradas em Y numa grade de 8 m (64 × 64 células, até 48 por célula, 2.048 colisores), mais o chão plano |
+| Movimento | `src/personagem/movimento.*` | `passo_movimento`: os números do Ventania, a 30 Hz e portátil (o mesmo resultado no PC e no PS2) |
+| Câmera | `src/personagem/camera3p.*` | Por cima do ombro, com braço de mola (raio contra o mundo) |
+| Animador | `src/personagem/animador.*` | Misturas e one-shots do `pawn_visual.gd` sobre `amostrar_local` + `misturar_trs` + `compor_pose` |
+| Campo de treino | `src/jogo/treino.*` | Cena, controles, HUD de depuração e o roteiro do autoteste |
+
+**Colisão** (sem física de corpos rígidos, BRISA_GAME_DESIGN §7):
+- **Formato:** o conversor classifica cada `-colonly` do Ventania como caixa ou **rampa** (laje inclinada, com sentido de subida e espessura; BMOD v2). As escadas e os telhados em cunha ainda viram AABB, e as escadas ganham forma própria na Etapa 5.
+- **Consultas:** `chao` (o maior topo sob um círculo, até um limite), `empurrar` (tira o cilindro das paredes, e obstáculos com topo até pés + degrau não bloqueiam), `teto`, `livre` e `raio` (slab test no espaço do colisor; nas rampas, 12 amostras).
+- **Movimento:** primeiro o horizontal, em subpassos de até 0,2 m (empurra, sobe degrau e rampa, mantém a velocidade ao longo do piso); depois o vertical (teto, chão e "grudar" a até 0,45 m ao descer). A velocidade guardada é a que as paredes deixaram andar, para a animação não "correr parada".
+- **Custo:** ~545 KB de bss. Com a ilha (Etapa 5), a grade passa para a de 4 m do §7, com as peças por célula.
+
+**BR-ADR-13: sem dano de queda.** O Ventania não tem dano de queda (o dano vem
+só de armas, picareta e Tormenta, `combat_server.gd` e `partida_br.gd`), e o
+Brisa mantém isso. A aterrissagem pesada é só visual. No Ventania ela toca ao
+chegar ao chão depois da queda livre ou do planador. No Brisa, que ainda não
+tem ônibus nem planador (Etapa 8), ela toca em qualquer queda de 6 m ou mais
+(`mov::QUEDA_PESADA`). Quando o planador entrar, o pouso dele também vai
+disparar a aterrissagem pesada.
+

@@ -12,13 +12,20 @@ código, motor, pipeline, build e documentação são próprios.
 
 ## Status
 
-**Etapa 3 (pipeline Ventania → Brisa): pronta e testada no emulador; falta
-ver no console.** Os modelos, as animações e os ícones originais do Ventania
-são convertidos para os formatos do Brisa (com LODs e redução de polígonos) e
-empacotados com catálogo de licenças. A vitrine do kit do Ventania roda no PS2
-com os assets convertidos. Os testes no console das Etapas 1 a 3 continuam
-pendentes ([docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md)). Veja
+**Etapa 4 (personagem): pronta e testada no PC e no emulador; falta jogar no
+console.** O ELF abre no campo de treino do Ventania, com o personagem
+jogável:
+- movimento com os números do Ventania (andar, correr, agachar, pular, rampas e degraus);
+- câmera por cima do ombro com braço de mola;
+- animações misturadas e os 11 trajes;
+- colisão com as peças, os baús e os props.
+
+A vitrine da Etapa 3 e o benchmark da Etapa 2 continuam no ELF (L1 + R1 +
+START). Os testes no console das Etapas 1 a 4 continuam pendentes
+([docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md)). Veja
 [BRISA_ROADMAP.md](BRISA_ROADMAP.md).
+
+![Campo de treino no emulador: topo da torre pelo VU1](docs/etapa4/emulador_topo_vu1.png)
 
 ![Vitrine do Ventania (esquerda) e do Brisa no emulador (direita)](docs/etapa3/ventania_x_brisa_emulador.png)
 
@@ -50,8 +57,8 @@ make emulador
 | `make conteudo-ventania VENTANIA=../ventania` | Reconverte os assets a partir do Ventania (só ao sincronizar) |
 | `make testes` | Testes do núcleo no PC (`TESTES_OK`) |
 | `make previa` | Cena renderizada no PC (referência) em `build/previa/*.png` |
-| `make emulador` | O ELF no Play! (sem BIOS) com vídeo: a cena pelo VU1 e pelo EE, e o controle simulado; quadros em `build/emulador/` (`EMULADOR_OK`) |
-| `make emulador-completo` | O ELF no AutoTest do Play! até o fim (roteiro + benchmark reduzido) |
+| `make emulador` | O ELF no Play! (sem BIOS) com vídeo: o roteiro do campo de treino (pelo VU1 e pelo EE) e o controle simulado; quadros em `build/emulador/` (`EMULADOR_OK`) |
+| `make emulador-completo` | O ELF no AutoTest do Play! até o fim do roteiro do campo de treino |
 
 As ferramentas de emulador são instaladas por `tools/ambiente/instalar_emulador.sh`.
 
@@ -98,19 +105,21 @@ GODOT=/caminho/godot-4.7.2 tools/auditoria/extrair_ilha.sh ../ventania docs/audi
 python3 tools/auditoria/densidade_mapa.py --layout docs/auditoria/ilha_ventania_layout.json --assets docs/auditoria/assets_ventania.json --setor 64
 ```
 
-## Estrutura (a de agora e a planejada para a Etapa 1)
+## Estrutura (a de agora e a planejada)
 
 ```
 brisa-ps2/
 ├── src/
 │   ├── nucleo/              ✅ tipos, arena, passo fixo, controle, estatísticas, lista 2D, fonte, formato, mat (3D)
 │   ├── render3d/            ✅ malhas, cena, luz toon, pipeline de referência (caminho EE)
-│   ├── jogo/                ✅ telas (tela_boot da Etapa 1, cena_teste da Etapa 2)
+│   ├── jogo/                ✅ telas (tela_boot, cena_teste, vitrine, treino + roteiro do autoteste)
 │   ├── plataforma/ps2/      ✅ IOP/IRX, gsKit, libpad, relógio, caminho EE (GIF), caminho VU1 (VIF1 + vu1/toon.vsm)
 │   ├── plataforma/host/     ✅ PC: rasterizador de software, PNG, controle por roteiro
 │   ├── main.cpp             ✅
-│   ├── conteudo/            ✅ pacote, modelos, animações, texturas
-│   └── (planejado) mundo/ personagem/ armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
+│   ├── conteudo/            ✅ pacote, modelos, animações (mistura de poses), texturas, biblioteca de modelos
+│   ├── mundo/               ✅ colisão (caixas e rampas, grade, raio)
+│   ├── personagem/          ✅ movimento, câmera em 3ª pessoa, animador
+│   └── (planejado) armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
 ├── data/                    JSON de conteúdo (armas, itens, cosméticos, temporadas, loja)
 ├── assets/                  ✅ assets convertidos (modelos, animações, texturas) + catalogo_brisa.json
 ├── tools/
@@ -119,7 +128,7 @@ brisa-ps2/
 │   ├── emulador/            ✅ capturador no Play!, verificação da saída, PPM→PNG
 │   ├── conversor/           ✅ GLB → BMOD/BANI, PNG → BTEX, QEM, catálogo, empacotador, testes
 │   ├── (planejado) conversor_mapa/ compilador_dados/
-├── tests/                   ✅ testes do núcleo no PC
+├── tests/                   ✅ testes no PC (núcleo, 3D, conteúdo, personagem)
 ├── docs/
 ├── Makefile                 ✅
 └── BRISA_*.md, ASSET_LICENSES.md, CHANGELOG.md

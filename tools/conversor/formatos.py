@@ -5,7 +5,7 @@ import math
 import struct
 import zlib
 
-VERSAO_MODELO = 1
+VERSAO_MODELO = 2  # v2: colisões com tipo (caixa/rampa) e espessura
 VERSAO_ANIM = 1
 VERSAO_TEXTURA = 1
 VERSAO_PAK = 1
@@ -66,7 +66,7 @@ def escrever_modelo(m):
         b_nos += struct.pack("<3ff4f3ff", *no.t, 0.0, *no.r, *no.s, 0.0)
         b_nos += struct.pack("<16f", *no.inv_bind)
     b_marc = b"".join(_nome(k["nome"], 24) + struct.pack("<i3f4x4x", k["no"], *k["pos"]) for k in m.marcadores)
-    b_col = b"".join(struct.pack("<3ff3ff", *a, 0.0, *b, 0.0) for a, b in m.colisoes)
+    b_col = b"".join(struct.pack("<3fI3ff", *a, tipo, *b, esp) for a, b, tipo, esp in m.colisoes)
     nv_pad = (nv + 4 + 3) // 4 * 4  # folga zerada: o VIF lê de 16 em 16 bytes
     b_pos = b"".join(struct.pack("<4f", *v, 1.0) for v in pos)
     b_nrm = struct.pack(f"<{nv}I", *nrm) + b"\0" * 4 * (nv_pad - nv)
