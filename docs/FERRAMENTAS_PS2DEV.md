@@ -28,8 +28,8 @@ Data: 2026-11-18. Ambiente: contêiner Linux x86_64 sem GPU e sem PS2.
 | Sonda C++17 (`tools/ambiente/sonda/`): `-std=gnu++17 -fno-exceptions -fno-rtti`, templates, ligada com libpad, libmc e audsrv | `sonda.elf` gerado, text 132.692 B |
 | Exemplo `cpp-hello` do PS2SDK | Falha: gera um `.erl` com a opção obsoleta `-mno-crt0`. É um problema do exemplo, não do toolchain; não afeta o Brisa, que gera ELF comum |
 
-**Nenhum ELF foi executado:** não há emulador com BIOS nem console neste
-ambiente. Executar é o primeiro aceite da Etapa 1.
+**Na Etapa 0, nenhum ELF foi executado.** Na Etapa 1, o Brisa passou a rodar no
+emulador Play! (§5); o console continua sendo a referência.
 
 ## 3. Outras ferramentas verificadas
 
@@ -37,6 +37,7 @@ ambiente. Executar é o primeiro aceite da Etapa 1.
 |---|---|
 | Godot 4.7.2-stable (headless) | Baixada e usada para extrair o mapa (só no pipeline) |
 | PCSX2 | O download da release (AppImage) responde. **Não instalado:** precisa da BIOS do console do dono, que não pode ser distribuída nem baixada |
+| **Play!** (Etapa 1) | Emulador de PS2 com BIOS em alto nível: roda ELFs **sem dump da BIOS**. Compilado do código-fonte (commit `1f27232`, 2026-10-24; licença BSD de 2 cláusulas). Ver §5 |
 | Docker | O cliente existe, mas não há daemon. A imagem `ps2dev/ps2dev` não é necessária (o pacote pré-compilado funciona) |
 | Python 3 | Presente; os scripts do pipeline só usam a biblioteca padrão |
 | Blender (`bpy` 5.3) | Não instalado nesta etapa. Só seria necessário para o caminho (b) de LOD (`PIPELINE_ASSETS.md` §2) |
@@ -52,3 +53,19 @@ ambiente. Executar é o primeiro aceite da Etapa 1.
 
 O caminho de boot (`mass:`, `host:`, `cdrom0:`) é detectado pelo `argv[0]`, e
 os dados são procurados ao lado do ELF.
+
+## 5. Emulador no ambiente de desenvolvimento (Etapa 1)
+
+`tools/ambiente/instalar_emulador.sh` compila, a partir do código do Play!:
+
+| Ferramenta | O que faz | Alvo do Makefile |
+|---|---|---|
+| `autotest` (do Play!) | Roda o ELF com GS nulo e grava o stdout do EE até o programa terminar | `make emulador-completo` |
+| `brisa_captura` (`tools/emulador/captura_play/`) | Roda o ELF com o GS em OpenGL (Mesa em software, num Xvfb), simula o DualShock 2 pela SIO2 (o caminho real do PADMAN) e salva os quadros pedidos | `make emulador` |
+
+**Achados no Play! (Etapa 1):**
+- o PADMAN de código aberto do PS2SDK embutido no ELF fica preso em `PAD_STATE_EXECCMD`. Os módulos da ROM (`rom0:XSIO2MAN`/`XPADMAN`, emulados em alto nível) funcionam; por isso o Brisa carrega primeiro os da ROM;
+- com o PADMAN embutido, `padPortClose`/`padEnd` não retornam;
+- os tempos do Play! não são precisos em ciclos: servem para ver se o programa roda e para comparar versões, **não** para medir desempenho.
+
+O emulador **não substitui** o console (`docs/TESTE_NO_CONSOLE.md`).

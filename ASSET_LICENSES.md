@@ -67,7 +67,10 @@ Verificações feitas em cada GLB:
 
 ## 4. Registro de assets do Brisa
 
-Ainda vazio: nenhum asset foi convertido na Etapa 0. A partir da Etapa 3, cada
+Ainda vazio: nenhum asset do Ventania foi convertido (Etapa 3). A Etapa 1 só
+tem conteúdo original do Brisa escrito em código: a fonte bitmap 5×7
+(`src/nucleo/fonte.cpp`, desenho próprio) e as cores do tema do Ventania
+(valores hexadecimais de `ventania_theme.gd`, do mesmo dono). A partir da Etapa 3, cada
 asset convertido ganha uma entrada no formato:
 
 ```json
@@ -92,6 +95,8 @@ asset convertido ganha uma entrada no formato:
 | Toolchain GCC/binutils (ps2dev) | Compilação | GPL (ferramenta; não é distribuída com o jogo) |
 | Godot 4.7.2 (só no pipeline, para extrair o mapa) | Ferramenta | MIT (não é distribuída com o jogo) |
 | PCSX2 | Emulador de teste | GPL (ferramenta; não é distribuída) |
+| Play! (Jean-Philip Desjardins) | Emulador de teste da Etapa 1 (AutoTest e o capturador `tools/emulador/captura_play`, que liga com ele) | BSD de 2 cláusulas (conferida no `License.txt`); ferramenta, não é distribuída com o jogo |
+| Mesa, Xvfb | Renderização em software para as capturas do emulador | MIT/X11; ferramentas |
 
 ## 6. Atribuições exigidas
 

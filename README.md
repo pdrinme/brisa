@@ -12,8 +12,44 @@ código, motor, pipeline, build e documentação são próprios.
 
 ## Status
 
-**Etapa 0 (estudo e planejamento) concluída.** Aguarda autorização para a
-Etapa 1. Ainda não há código de jogo. Veja [BRISA_ROADMAP.md](BRISA_ROADMAP.md).
+**Etapa 1 (primeira execução no PS2): pronta e testada no emulador; falta o
+teste no console** ([docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md)). O ELF
+inicia o IOP, abre o vídeo NTSC/PAL, lê o DualShock 2 e mostra a tela de prova
+de vida com as medições. Veja [BRISA_ROADMAP.md](BRISA_ROADMAP.md).
+
+![Brisa no emulador Play! (GS real, controle simulado)](docs/etapa1/emulador_play_com_botoes.png)
+
+## Compilar e testar
+
+```bash
+source tools/ambiente/env.sh
+```
+
+```bash
+make
+```
+
+```bash
+make testes
+```
+
+```bash
+make previa
+```
+
+```bash
+make emulador
+```
+
+| Alvo | Resultado |
+|---|---|
+| `make` | `build/ps2/brisa.elf` (o que vai para o console) |
+| `make testes` | Testes do núcleo no PC (`TESTES_OK`) |
+| `make previa` | Telas renderizadas no PC em `build/previa/*.png` |
+| `make emulador` | O ELF no Play! (sem BIOS) com vídeo e controle simulado; quadros em `build/emulador/` (`EMULADOR_OK`) |
+| `make emulador-completo` | O ELF no AutoTest do Play! até o fim (600 quadros) |
+
+As ferramentas de emulador são instaladas por `tools/ambiente/instalar_emulador.sh`.
 
 ## Documentos
 
@@ -26,11 +62,12 @@ Etapa 1. Ainda não há código de jogo. Veja [BRISA_ROADMAP.md](BRISA_ROADMAP.m
 | [ASSET_LICENSES.md](ASSET_LICENSES.md) | Política, reaproveitamento arquivo a arquivo, dependências |
 | [docs/PIPELINE_ASSETS.md](docs/PIPELINE_ASSETS.md) | Conversão Ventania → Brisa (modelos, texturas, mapa, dados, áudio) |
 | [docs/ESTILO_VISUAL_PS2.md](docs/ESTILO_VISUAL_PS2.md) | A identidade visual do Ventania traduzida para o PS2 |
-| [docs/FERRAMENTAS_PS2DEV.md](docs/FERRAMENTAS_PS2DEV.md) | Toolchain validado, versões e como testar no emulador e no console |
+| [docs/FERRAMENTAS_PS2DEV.md](docs/FERRAMENTAS_PS2DEV.md) | Toolchain validado, versões, emulador Play! e como testar |
+| [docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md) | Roteiro do teste no PS2 real e o que reportar |
 | [docs/SINCRONIA_VENTANIA.md](docs/SINCRONIA_VENTANIA.md) | Versão de referência do Ventania e o processo de sincronia |
 | [docs/auditoria/](docs/auditoria/) | Saídas medidas: assets, reaproveitamento, layout da ilha, densidade por setor |
 
-## Ferramentas (já funcionam)
+## Ferramentas de auditoria do Ventania
 
 ```bash
 tools/ambiente/instalar_ps2dev.sh
@@ -60,23 +97,22 @@ python3 tools/auditoria/densidade_mapa.py --layout docs/auditoria/ilha_ventania_
 
 ```
 brisa-ps2/
-├── src/                     (Etapa 1)
-│   ├── nucleo/              matemática, memória (arenas e pools), tempo, log
-│   ├── plataforma/ps2/      gsKit, DMA/VIF, libpad, libmc, audsrv, RTC, arquivos, IRX embutidos
-│   ├── plataforma/host/     stubs para os testes no PC
-│   ├── renderer/  vu1/      pipeline 3D no VU1 (microprogramas .vcl) e 2D
-│   ├── conteudo/            carregamento dos .PAK e .BIN
-│   ├── mundo/  personagem/  armas/  inventario/  construcao/  bots/  partida/
-│   ├── ui/  audio/  progressao/  save/
-│   └── main.cpp
+├── src/
+│   ├── nucleo/              ✅ tipos, arena, passo fixo, controle, estatísticas, lista 2D, fonte, formato
+│   ├── jogo/                ✅ telas (Etapa 1: tela_boot)
+│   ├── plataforma/ps2/      ✅ IOP/IRX, gsKit, libpad, relógio (depois: VIF/VU1, libmc, audsrv, RTC, arquivos)
+│   ├── plataforma/host/     ✅ PC: rasterizador de software, PNG, controle por roteiro
+│   ├── main.cpp             ✅
+│   └── (planejado) renderer/ vu1/ conteudo/ mundo/ personagem/ armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
 ├── data/                    JSON de conteúdo (armas, itens, cosméticos, temporadas, loja)
 ├── assets/                  catálogo do Brisa e saídas convertidas
 ├── tools/
 │   ├── ambiente/            ✅ instalar e verificar o toolchain (+ sonda)
 │   ├── auditoria/           ✅ leitor GLB, auditoria, extrator da ilha, densidade, reuso
+│   ├── emulador/            ✅ capturador no Play!, verificação da saída, PPM→PNG
 │   ├── conversor_modelos/  conversor_texturas/  conversor_mapa/  compilador_dados/  empacotador/   (Etapa 3+)
-├── tests/                   testes do núcleo no PC (Etapa 1+)
+├── tests/                   ✅ testes do núcleo no PC
 ├── docs/
-├── Makefile                 (Etapa 1)
+├── Makefile                 ✅
 └── BRISA_*.md, ASSET_LICENSES.md, CHANGELOG.md
 ```

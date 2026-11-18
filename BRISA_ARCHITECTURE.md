@@ -85,6 +85,9 @@ emulador **e** de console.
 Alternativas, se faltar espaço: framebuffer em PSMCT16S, ou renderização por
 campo (640×224). A escolha é por medição e por comparação visual na TV.
 
+**Etapa 1 (só 2D):** 2 framebuffers PSMCT24 de 640×448, sem Z-buffer (o Z entra
+na Etapa 2), no modo de vídeo do console (NTSC ou PAL, detectado pelo gsKit).
+
 ### 5.2 Orçamento por quadro (hipótese inicial; Etapa 2 mede)
 
 | Item | Meta |
@@ -228,3 +231,19 @@ jogo inteiro (basta reconverter).
 completa as partidas. O mapa começa com o layout da Ilha Ventania (para medir
 com dados reais); a decisão entre manter os 600 m ou uma ilha compacta
 derivada dele é tomada na Etapa 5, com os números (§5.2).
+
+**BR-ADR-7: módulos do controle da ROM primeiro (Etapa 1).** O plano da Etapa 0
+previa embutir `sio2man.irx` e `padman.irx` do PS2SDK no ELF. No emulador Play!,
+o PADMAN de código aberto não sai de `PAD_STATE_EXECCMD`; os módulos da ROM
+(`XSIO2MAN`/`XPADMAN`, ou `SIO2MAN`/`PADMAN` nos BIOS antigos) funcionam, e o
+`libpad` atual aceita os dois protocolos. A ordem ficou ROM → IRX embutidos
+(os embutidos continuam no ELF como alternativa; `-DBRISA_PAD_EMBUTIDO` inverte
+a ordem). *A confirmar no console:* qual caminho é usado e se o controle
+responde igual. Quando o Memory Card entrar (Etapa 12), o `MCMAN`/`MCSERV`
+precisa ser da mesma família do `SIO2MAN` carregado.
+
+**BR-ADR-8: tela 2D por lista de primitivas.** As telas montam uma lista
+portátil (retângulos, gradientes, quads); o PS2 a envia pelo gsKit e o PC a
+rasteriza em software. Isso permite testar telas e ver prévias sem console, e o
+teste da Etapa 1 mostrou que a imagem do GS no emulador e a do PC são iguais
+pixel a pixel nas áreas estáticas.
