@@ -12,21 +12,19 @@ código, motor, pipeline, build e documentação são próprios.
 
 ## Status
 
-**Etapa 5 (mapa): pronta e testada no PC e no emulador; falta jogar no
-console.** O ELF abre na **Ilha Ventania inteira**, convertida do gerador do
-Ventania:
-- relevo e mar;
-- casas com portas, janelas e escadas;
-- props, baús e estradas;
-- 6 regiões, minimapa e mapa completo.
+**Etapa 6 (combate e inventário): pronta e testada no PC e no emulador; falta
+jogar no console.** O ELF abre na **Ilha Ventania inteira** (Etapa 5), agora com:
+- loot no chão e baús que abrem;
+- as 5 armas do Ventania com raridades, munição, curas e escudos;
+- a picareta e o inventário de 5 espaços com a tela de inventário;
+- a arma nas duas mãos (IK) e o HUD de combate.
 
-O personagem da Etapa 4 anda por ela com colisão no relevo, nas construções e
-na costa. O campo de treino, a vitrine e o benchmark continuam no ELF (L1 + R1
-+ START). Os testes no console das Etapas 1 a 5 continuam pendentes
+O campo de treino (L1 + R1 + START) tem os bonecos de treino para testar o
+combate. Os testes no console das Etapas 1 a 6 continuam pendentes
 ([docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md)). Veja
 [BRISA_ROADMAP.md](BRISA_ROADMAP.md).
 
-![Vila Brisa no emulador, pelo VU1](docs/etapa5/emulador_vila_brisa_vu1.png)
+![Inventário no emulador, pelo VU1](docs/etapa6/emulador_inventario_vu1.png)
 
 ## Compilar e testar
 
@@ -54,6 +52,7 @@ make emulador
 |---|---|
 | `make` | `build/ps2/brisa.elf` (o que vai para o console, com o pacote de conteúdo embutido) |
 | `make conteudo-ventania VENTANIA=../ventania` | Reconverte os assets a partir do Ventania (só ao sincronizar) |
+| `make dados` | Recompila `data/*.json` → `assets/dados/*.bdat` (sem o Ventania) |
 | `make testes` | Testes do núcleo no PC (`TESTES_OK`) |
 | `make previa` | Cena renderizada no PC (referência) em `build/previa/*.png` |
 | `make emulador` | O ELF no Play! (sem BIOS) com vídeo: os roteiros do treino e da ilha, com imagens comparadas às do PC no mesmo passo, e o controle simulado; quadros em `build/emulador/` (`EMULADOR_OK`) |
@@ -117,9 +116,10 @@ brisa-ps2/
 │   ├── main.cpp             ✅
 │   ├── conteudo/            ✅ pacote, modelos, animações (mistura de poses), texturas, biblioteca de modelos
 │   ├── mundo/               ✅ colisão (caixas, rampas, cunhas, relevo, grade, raio), mapa (BMAP), relevo 3D
-│   ├── personagem/          ✅ movimento, câmera em 3ª pessoa, animador
+│   ├── personagem/          ✅ movimento, câmera em 3ª pessoa, animador, portador (item na mão, IK)
+│   ├── combate/             ✅ itens, inventário, vida/escudo, tiro, loot
 │   └── (planejado) armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
-├── data/                    JSON de conteúdo (armas, itens, cosméticos, temporadas, loja)
+├── data/                    ✅ JSON de jogo (itens.json; cosméticos, temporadas e loja depois)
 ├── assets/                  ✅ assets convertidos (modelos, animações, texturas) + catalogo_brisa.json
 ├── tools/
 │   ├── ambiente/            ✅ instalar e verificar o toolchain (+ sonda)

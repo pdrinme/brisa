@@ -100,6 +100,10 @@ catálogo, com a origem exata:
 
 Todos têm a licença do titular (§2), e nenhum asset de terceiros entrou.
 
+**Etapa 6 (dados de jogo):** `data/itens.json` é uma cópia revisada de
+`game/data/itens.json` do Ventania, com os mesmos valores. O binário
+`assets/dados/itens.bdat` está no catálogo, com essa origem.
+
 ## 5. Dependências de código e ferramentas
 
 | Componente | Uso | Licença |

@@ -443,3 +443,65 @@ inteira**, com distância de visão de 240 m e neblina. Motivos medidos:
 | Livre no boot | 16,5 MB (eram 19,5 MB depois do int16 e 18,1 MB na Etapa 4) | Reserva ≥ 11 MB |
 | Ilha em jogo | arena 1,2 MB (relevo 888 KB, biblioteca de 175 modelos ~300 KB) + colisão 341 KB | Mapa: 4 MB |
 
+## 19. Combate e inventário (Etapa 6, implementado)
+
+| Peça | Arquivo | Papel (no Ventania) |
+|---|---|---|
+| Dados | `data/itens.json` → `assets/dados/itens.bdat` (`tools/conversor/dados.py`) | `game/data/itens.json`, com os mesmos valores |
+| Itens | `src/combate/itens.*` | `item_db.gd`: índices, nomes, raridades, sorteios por peso (o Mítico nunca sai) |
+| Inventário e vitais | `src/combate/inventario.*` | `inventory.gd` e `vitals.gd`: picareta permanente, 5 espaços, reservas, nunca perde nem duplica |
+| Tiro | `src/combate/tiro.*` | `combat.gd` e `hitbox.gd`: raio de mira pelo ombro, dispersão, projéteis determinísticos, cápsula + cabeça, tempos da picareta |
+| Loot | `src/combate/loot.*` | `loot_server.gd`: pontos de loot, baús, munição automática, troca explícita |
+| Combatente | `src/jogo/combatente.*` | `combat_server.gd` (por passo, 30 Hz): troca, tiro, recarga, consumível, golpe, baú e pegar |
+| Portador | `src/personagem/portador.*` | `item_rig.gd`, `aim_pose_modifier.gd` e os `TwoBoneIK3D`: o item na mão e as mãos nos marcadores |
+| HUD de combate | `src/jogo/hud_combate.*` | `combat_hud.gd`, `inventory_screen.gd`, `loot_visual.gd` |
+
+**Regras iguais às do Ventania:**
+- os tempos contam em passos de 30 Hz: cadência, recarga (com a raridade), uso, 6 passos para sacar, golpe de 19 passos com o impacto no passo 8, baú em 15 passos segurando ▲;
+- o tiro passa primeiro pela colisão do mundo (`MundoColisao::raio`), e só acerta alvos mais perto que a parede;
+- o dano soma os projéteis por alvo e vai primeiro para o escudo.
+
+O roteiro de combate dá **o mesmo resultado no PC e no PS2**:
+- o sorteio é um PCG32 com semente fixa;
+- a direção de cada projétil sai da semente do tiro.
+
+**Bonecos de treino:** os 3 do campo de treino (`DUMMIES` do Ventania), com 50 de
+escudo. Quando zeram, voltam inteiros, e se recuperam 3 s depois do último
+acerto. Ainda não colidem com o personagem: são só alvos.
+
+**BR-ADR-17: armas na mão por IK sobre a pose rígida.** O Ventania não tem
+clipes de tiro. A arma vai para a pose da categoria, e as mãos são puxadas até os
+marcadores do modelo por dois `TwoBoneIK3D`. O Brisa faz o mesmo sobre as
+matrizes da pose rígida, depois do animador:
+1. mira: coluna, peito, pescoço e cabeça giram com os pesos do Ventania;
+2. o item é posto com as mesmas chaves do `item_rig.gd` (quadril/mira, corrida, sacar, recuo, recarga por arma, golpes A/B da picareta, usos de cada consumível);
+3. IK analítico de dois ossos com polo: a menor rotação leva o braço ao cotovelo calculado pela lei dos cossenos, e depois o antebraço ao alvo, com a mesma extensão de 6,5 cm na mão.
+
+Os marcadores do item (`grip_r`, `grip_l`, `mag`, `muzzle`, `mao`, `cabeca`)
+vêm do conversor da Etapa 3.
+
+**BR-ADR-18: controles e atalhos.** O mapeamento é o do GAME_DESIGN §4: R2 atira
+ou usa, L2 mira, ■ recarrega, ▲ interage, L1/R1 trocam de item, ▶ picareta, ◀
+emote, ▲ no direcional mapa, SELECT inventário. Os atalhos de depuração passam
+para combinações com L1 + R1 segurados, para não ocupar os botões do jogo:
+- START: modo;
+- SELECT: caminho de desenho VU1/EE;
+- ●: traje.
+
+START sozinho ainda mostra ou esconde o painel; ele vira pausa na Etapa 10.
+
+**Tela de inventário (SELECT):**
+- ◀▶ escolhe o espaço;
+- ✕ marca e troca de lugar;
+- ■ larga o espaço inteiro;
+- ▲ divide a pilha ao meio;
+- ● fecha.
+
+Com ela aberta, o personagem anda, mas não atira nem interage.
+
+**Medido** (emulador; o número de primitivas vale para o console):
+- campo de treino com o combate: CPU de 1,7 a 2,3 ms por quadro (era 1,2 ms na Etapa 4), com loot, bonecos e HUD;
+- o HUD usa de 1.500 a 2.600 primitivas 2D, porque a fonte 5×7 desenha cada traço como retângulo (a fonte rasterizada entra na Etapa 10);
+- livres no boot: 16,4 MB (16,5 MB na Etapa 5);
+- dados de itens: 1.856 bytes.
+

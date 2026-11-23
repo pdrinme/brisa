@@ -333,8 +333,70 @@ EE), mas a proporção real só o console dá.
 
 **⏳ Falta para o aceite:** jogar a ilha no console e mandar as medições (`docs/TESTE_NO_CONSOLE.md`, Etapa 5).
 
-### Etapa 6 — Combate e inventário ⬜
-As 5 armas, munição, dano, raridade, cura, escudo, inventário de 5 espaços, picareta, loot e baús.
+### Etapa 6 — Combate e inventário 🟡 (pronta e testada no PC e no emulador; ⏳ falta jogar no console)
+**Feito** (detalhes em BRISA_ARCHITECTURE §19):
+- **Compilador de dados de jogo** (`tools/conversor/dados.py`): `data/itens.json`, uma cópia revisada do Ventania com os mesmos valores, vira `dados/itens.bdat`, com validação. `make dados` recompila sem o Ventania.
+- **As regras do Ventania** portadas e testadas:
+  - 5 armas e 6 raridades (o Mítico nunca é sorteado);
+  - 4 tipos de munição, 4 consumíveis e a picareta permanente;
+  - inventário de 5 espaços com pilhas, reservas e troca só explícita (nada some nem duplica);
+  - vida 100 + escudo, com o escudo primeiro;
+  - tiro pelo ombro com dispersão por estado, projéteis determinísticos e hitboxes de corpo e cabeça;
+  - cadência, recarga e uso em passos;
+  - picareta com um impacto por golpe e combo A/B;
+  - baú segurando ▲ (arma + a munição dela + consumível + munição);
+  - munição automática a 1,3 m e itens largados.
+- **Item na mão** com IK de dois ossos (BR-ADR-17): as 3 poses de arma, o consumível e a picareta, mais a mira, o recuo, o sacar, as recargas (carregador, cartuchos da espingarda, pistola), os golpes e o uso de cada consumível.
+- **Mundo:**
+  - loot no chão girando sobre o anel da raridade, saltando do baú ao abrir;
+  - a tampa do baú animada pelo clipe "abrir";
+  - no treino, os 17 pontos de loot, 7 baús que reabastecem em 45 s e os 3 bonecos de treino;
+  - na ilha, os 102 pontos de loot e os 37 baús da partida (BMAP v2).
+- **HUD:**
+  - vida e escudo, barra de itens com os ícones do Ventania e a cor da raridade, nome completo e munição;
+  - barra de ação (recarga, uso, baú) e aviso de interação com o símbolo do botão;
+  - mira que abre com o recuo, marcador de acerto e números de dano;
+  - traçantes e mensagens ("inventário cheio…").
+- **Tela de inventário** (SELECT): mover, largar e dividir, com as reservas de munição e materiais.
+- **Controles do GAME_DESIGN §4**, com os atalhos de depuração em L1 + R1 + … (BR-ADR-18).
+- **Roteiro de combate** do autoteste, depois do de movimento, igual no PC e no PS2: abre o baú 4 e pega uma Rajada rara e células de escudo; dá 10 tiros no boneco 2 (330 de dano); recarrega; usa a célula (escudo 25); dá 3 golpes de picareta; larga a Rajada pelo inventário.
+
+**Testes executados:**
+- `make testes`: 66 testes, 19.234 verificações, 0 falhas. Os 13 novos cobrem:
+  - os itens com os valores do Ventania e o sorteio (o Mítico nunca sai, e a mesma semente dá o mesmo resultado);
+  - o inventário: picareta permanente, ciclo da barra, pilhas, cheio com coleta parcial, troca explícita, dividir, largar, munição e recarga;
+  - vida e escudo;
+  - mira pelo ombro, hitbox de cabeça e corpo, dano com raridade e cabeça, dispersão e projéteis no cone;
+  - o loot: pontos, baú, pegar e trocar sem perder, munição automática, bloqueio de quem largou, inventário ao ser eliminado;
+  - a picareta: um impacto por golpe no passo certo, combo, cadência, alcance;
+  - o combatente: saque de 0,2 s, pente, recarga automática, semi-automática, a parede bloqueando o tiro, consumível com limite, baú e pegar;
+  - o **roteiro de combate inteiro**;
+  - o loot da ilha (37 baús, itens sobre o chão).
+- **Poses do item na mão** conferidas em imagens laterais (Rajada, Gavião mirando, Faísca, golpe da picareta, curativo, célula).
+- `make emulador`: `EMULADOR_OK`, com **5 comparações de imagem PS2 × PC**: treino 0,41%, Rajada na mão 0,51%, tela de inventário 0,36%, Vila 1,01%, Mirante 0,62%.
+- `make emulador-completo`: `EMULADOR_OK`. O log de combate sai **igual linha a linha** no PC e no PS2.
+
+**Medido** (bytes e primitivas valem para o console; tempos são do emulador):
+- CPU do treino com o combate de 1,7 a 2,3 ms (1,2 ms na Etapa 4);
+- 1.500 a 2.600 primitivas 2D no HUD;
+- 16,4 MB livres no boot;
+- pacote de 4,4 MB.
+
+**Problemas encontrados e resolvidos:**
+- três testes meus estavam errados: o tiro na cabeça matava o boneco, os itens do baú não pousavam no cenário de teste e a conta da recarga estava errada;
+- o tiro registrava o acerto com o tick 0;
+- a lista de munição passava da borda da tela de inventário;
+- o número da vida encostava na barra de itens.
+
+**Limitações conhecidas:**
+- os bonecos não colidem com o personagem;
+- sem dano nas construções e sem coleta de materiais (Etapa 9);
+- sem som (Etapa 10);
+- sem clarão do cano (o 3D não tem transparência aditiva ainda);
+- o personagem ainda não recebe dano: não há inimigos até os bots (Etapa 7);
+- os traçantes e números são 2D, desenhados por cima.
+
+**⏳ Falta para o aceite:** jogar o combate no console (`docs/TESTE_NO_CONSOLE.md`, Etapa 6).
 
 ### Etapa 7 — Bots ⬜
 Navegação (grafo do pipeline), exploração, saque, coleta, combate, cobertura, Tormenta, dificuldades. Custo por bot medido no console. **Aceite:** partida só com bots termina e o tempo preso fica < 1%.

@@ -73,6 +73,11 @@ a do Ventania: Fácil, Médio, Médio, Difícil.
 Todos remapeáveis por um conjunto de esquemas prontos (como em jogos da época),
 e não tecla a tecla.
 
+**Implementado na Etapa 6** (BR-ADR-18): este mapeamento, com duas ressalvas
+até a Etapa 10. START mostra ou esconde o painel de depuração (a pausa vem com os
+menus), e os atalhos de depuração usam L1 + R1 segurados + START (modo), SELECT
+(caminho de desenho) ou ● (traje).
+
 ## 5. Combate, itens e inventário
 
 Valores iniciais = Ventania (`itens.json`).

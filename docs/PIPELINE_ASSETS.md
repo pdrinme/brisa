@@ -123,10 +123,15 @@ lê os GLB das peças de construção do Ventania.
 Ficam para depois: o **grafo de navegação** dos bots (Etapa 7) e os pontos de
 loot (Etapa 6).
 
-## 5. Dados de jogo (Etapa 3 em diante)
+## 5. Dados de jogo (Etapa 6 — `tools/conversor/dados.py`)
 
 `data/*.json` do Brisa (legíveis, começam como cópia revisada dos valores do
-Ventania) → `compilador_dados` → `*.BIN`. Validador com as regras do Ventania:
+Ventania) → `tools/conversor/dados.py` → `assets/dados/*.bdat` (formato BDAT em
+`FORMATOS.md`), registrado no catálogo. `make dados` recompila só os dados,
+sem o Ventania; o `make conteudo-ventania` também os inclui. Implementado na
+Etapa 6: `data/itens.json` (armas, consumíveis, munição, materiais, picareta,
+raridades, baú, dispersão), com a validação das referências. Os outros arquivos
+entram com os sistemas que os usam. Validador com as regras do Ventania:
 - temporada: níveis 1..N com uma recompensa cada, itens existentes, estimativa de horas;
 - loja: itens com visual, preços por raridade;
 - cosméticos: todo id com modelo.

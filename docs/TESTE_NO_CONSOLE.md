@@ -211,3 +211,43 @@ ilha (BR-ADR-16), então os números do painel importam:
 Se o FPS na Vila ficar abaixo de 30, anote o "3D" e o "TRI". A ordem do corte
 já está planejada (BR-ADR-16): distâncias de LOD e de visão, depois o descarte
 de faces no VU1 e, por último, a ilha compacta.
+
+---
+
+# Etapa 6 — Combate e inventário
+
+O ELF continua abrindo na ilha. Os testes de combate ficam mais fáceis no
+**campo de treino** (L1 + R1 + START), onde estão os 3 bonecos de treino e os
+baús que reabastecem.
+
+| Botão | Efeito |
+|---|---|
+| R2 | Atirar / usar o consumível / golpe da picareta (segurar: golpes seguidos) |
+| L2 | Mirar |
+| ■ | Recarregar |
+| ▲ | Segurar perto de um baú: abrir. Tocar perto de um item: pegar (cheio: troca pelo da mão) |
+| R1 / L1 | Próximo / anterior item (picareta → 1 → … → 5) |
+| ▶ no direcional | Picareta |
+| SELECT | Inventário (◀▶ escolher, ✕ mover, ■ largar, ▲ dividir, ● fechar) |
+| L1 + R1 + SELECT | Caminho de desenho VU1 ↔ EE (antes era ▼) |
+| L1 + R1 + ● | Trocar o traje (antes era SELECT) |
+
+**Conferir e me mandar:**
+1. **Baú:** segure ▲ em frente a um baú. A barra "ABRINDO O BAÚ" enche em meio segundo, a tampa abre e saem 4 itens (arma, munição, consumível, munição). A munição entra sozinha ao passar perto.
+2. **Armas** (pegue as 5, nos baús e no chão):
+   - a arma aparece **nas duas mãos**, sem ficar solta nem atravessar o corpo;
+   - ao mirar (L2), a câmera chega perto e a mira fecha;
+   - o personagem inclina o tronco para cima e para baixo com a câmera.
+3. **Tiro nos bonecos:**
+   - aparecem os traçantes, o número do dano (amarelo na cabeça, azul no escudo) e o marcador na mira;
+   - o painel de cima mostra a vida/escudo de cada boneco;
+   - uma parede no caminho segura o tiro.
+4. **Recarga** (■ ou ao esvaziar o pente): a mão esquerda vai ao carregador. Na espingarda, coloca os cartuchos e puxa a bomba.
+5. **Consumíveis:**
+   - com escudo abaixo de 50, a célula pequena leva o frasco à boca;
+   - o curativo só funciona com a vida abaixo de 75 (ainda não há como tomar dano fora do teste; anote se funciona quando houver).
+6. **Picareta** (▶): segure R2 perto de um boneco. Os golpes alternam de lado, e cada um tira 20.
+7. **Inventário** (SELECT): mover, largar e dividir. Confira que nada some.
+8. **Desempenho:** o FPS e o "3D" do painel no campo de treino durante um tiroteio e na Vila Brisa com o loot no chão.
+
+Anote também se algum botão não responde, ou responde em dobro.

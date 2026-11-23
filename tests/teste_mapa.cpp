@@ -338,3 +338,21 @@ TESTE(ilha_sobe_a_escada_em_u) {
     }
     VERIFICA(subiu >= 1);
 }
+
+TESTE(ilha_loot_baus_e_pontos_do_ventania) {
+    Ilha* il = ilha();
+    if (!il) return;
+    const Loot& l = il->loot();
+    VERIFICA(l.n_baus() == 37 && !l.reabastecer);
+    int itens = 0, municao = 0;
+    for (int i = 0; i < l.n_itens(); i++) {
+        if (!l.item(i).id) continue;
+        if (l.item(i).reserva()) municao++;
+        else itens++;
+        // todo item fica sobre o chão do mapa (relevo ou piso), nunca dentro dele
+        f32 y = 0;
+        VERIFICA(il->mundo().chao(l.item(i).pos.x, l.item(i).pos.z, 0.05f, l.item(i).pos.y + 0.3f, &y));
+    }
+    VERIFICA(itens > 60 && itens < 102);  // 75% dos 102 pontos
+    VERIFICA(municao > 20);
+}

@@ -95,6 +95,30 @@ Categorias: 0 peça de construção, 1 árvore, 2 prop pequeno, 3 móvel, 4 prop
 grande, 5 baú, 6 estrada. A malha do relevo **não** vai no arquivo: o jogo a
 gera na carga (BRISA_ARCHITECTURE §18).
 
+## BDAT — dados de jogo (Etapa 6)
+
+Escrito por `tools/conversor/dados.py` a partir de `data/itens.json` (cópia
+revisada do `game/data/itens.json` do Ventania); lido por `src/combate/itens.cpp`.
+O compilador valida as referências antes de gravar (munição de cada arma, modelos
+existentes, consumível com vida **ou** escudo, quantidade ≤ pilha). Cabeçalho de
+64 bytes: `BDAT`, versão (1), n de raridades, munições, materiais, armas,
+consumíveis e ferramentas (u32 ×6), e os offsets dos 8 blocos (u32 ×8).
+
+| Bloco | Registro | Campos |
+|---|---|---|
+| Raridades | 52 B | `id[12]`, `nome[16]`, `cor u32`, `cor2 u32`, `dano`, `recarga`, `peso_bau`, `peso_chao` (f32) |
+| Munições | 48 B | `id[12]`, `nome[24]`, `max u32`, `caixa u32`, 4 B |
+| Materiais | 32 B | `id[12]`, `nome[16]`, `max u32` |
+| Armas | 132 B | `id[12]`, `nome[16]`, `tipo[24]`, `modelo[24]`, `municao u32` (índice), `dano`, `cadencia` (f32), `automatica`, `pente` (u32), `recarga_s`, `alcance`, `dispersao` (f32), `projeteis u32`, `cabeca`, `peso`, `dispersao_mirando` (f32; < 0 = sem), 4 B, `pose u32` (1 rifle, 2 precisão, 3 pistola) |
+| Consumíveis | 100 B | `id[12]`, `nome[32]`, `modelo[24]`, `vida`, `escudo`, `limite`, `tempo_s` (f32), `pilha`, `quantidade` (u32), `peso f32`, 4 B |
+| Ferramentas | 76 B | `id[12]`, `nome[16]`, `modelo[24]`, `cadencia`, `impacto`, `alcance` (f32), `dano_jogador`, `dano_construcao` (u32), 4 B |
+| Modificadores | 16 B | dispersão: `mirando`, `movendo`, `agachado`, `no_ar` (f32) |
+| Baú | 16 B | `armas`, `consumiveis`, `caixas_municao` (u32), 4 B |
+
+Os textos são UTF-8 com o zero no fim; o compilador recusa nomes que não cabem.
+Índices de item no jogo: 0 = vazio, depois as armas, os consumíveis e as
+ferramentas, na ordem do JSON (os mesmos do `ItemDB` do Ventania).
+
 ## BANI — animações
 
 | Offset | Tipo | Campo |
