@@ -195,6 +195,28 @@ class TesteColisao(unittest.TestCase):
         self.assertEqual(tipo, 0)
         self.assertEqual((mn, mx), ((-2, 0, -2), (2, 2, 2)))
 
+    def test_escada_em_u_vira_cunha_patamar_e_laje(self):
+        # Lance 1 + patamar num prisma só (gerar_interiores.py do Ventania): sobe de x = 2 até -0,665.
+        pts = []
+        for z in (-0.05, 1.95):
+            pts += [(2.0, 0.1, z), (-0.665, 2.1, z), (-1.95, 2.1, z), (-1.95, 0.1, z)]
+        pedacos = modelo.decompor_colisao(pts)
+        tipos = sorted(p[2] for p in pedacos)
+        self.assertEqual(tipos, [0, 6])  # patamar (caixa) + cunha subindo para −x
+        cunha = [p for p in pedacos if p[2] == 6][0]
+        self.assertAlmostEqual(cunha[0][0], -0.665, places=3)
+        self.assertAlmostEqual(cunha[1][0], 2.0, places=3)
+        self.assertAlmostEqual(cunha[1][1], 2.1, places=3)
+        # Lance 2: laje inclinada com aba plana no topo
+        pts = []
+        for z in (-1.95, -0.05):
+            pts += [(-0.665, 1.85, z), (-0.665, 2.1, z), (2.0, 4.1, z), (2.3, 4.1, z), (2.3, 3.85, z)]
+        pedacos = modelo.decompor_colisao(pts)
+        self.assertEqual(sorted(p[2] for p in pedacos), [0, 1])  # laje subindo para +x + aba
+        laje = [p for p in pedacos if p[2] == 1][0]
+        self.assertAlmostEqual(laje[3], 0.25, places=3)
+        self.assertAlmostEqual(laje[0][1] + laje[3], 2.1, places=3)  # topo na ponta baixa
+
     def test_rampa_do_ventania_no_pacote(self):
         caminho = os.path.join(RAIZ, "assets", "modelos", "rampa_pedra.bmod")
         d = open(caminho, "rb").read()

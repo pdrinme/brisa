@@ -12,22 +12,21 @@ código, motor, pipeline, build e documentação são próprios.
 
 ## Status
 
-**Etapa 4 (personagem): pronta e testada no PC e no emulador; falta jogar no
-console.** O ELF abre no campo de treino do Ventania, com o personagem
-jogável:
-- movimento com os números do Ventania (andar, correr, agachar, pular, rampas e degraus);
-- câmera por cima do ombro com braço de mola;
-- animações misturadas e os 11 trajes;
-- colisão com as peças, os baús e os props.
+**Etapa 5 (mapa): pronta e testada no PC e no emulador; falta jogar no
+console.** O ELF abre na **Ilha Ventania inteira**, convertida do gerador do
+Ventania:
+- relevo e mar;
+- casas com portas, janelas e escadas;
+- props, baús e estradas;
+- 6 regiões, minimapa e mapa completo.
 
-A vitrine da Etapa 3 e o benchmark da Etapa 2 continuam no ELF (L1 + R1 +
-START). Os testes no console das Etapas 1 a 4 continuam pendentes
+O personagem da Etapa 4 anda por ela com colisão no relevo, nas construções e
+na costa. O campo de treino, a vitrine e o benchmark continuam no ELF (L1 + R1
++ START). Os testes no console das Etapas 1 a 5 continuam pendentes
 ([docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md)). Veja
 [BRISA_ROADMAP.md](BRISA_ROADMAP.md).
 
-![Campo de treino no emulador: topo da torre pelo VU1](docs/etapa4/emulador_topo_vu1.png)
-
-![Vitrine do Ventania (esquerda) e do Brisa no emulador (direita)](docs/etapa3/ventania_x_brisa_emulador.png)
+![Vila Brisa no emulador, pelo VU1](docs/etapa5/emulador_vila_brisa_vu1.png)
 
 ## Compilar e testar
 
@@ -57,8 +56,8 @@ make emulador
 | `make conteudo-ventania VENTANIA=../ventania` | Reconverte os assets a partir do Ventania (só ao sincronizar) |
 | `make testes` | Testes do núcleo no PC (`TESTES_OK`) |
 | `make previa` | Cena renderizada no PC (referência) em `build/previa/*.png` |
-| `make emulador` | O ELF no Play! (sem BIOS) com vídeo: o roteiro do campo de treino (pelo VU1 e pelo EE) e o controle simulado; quadros em `build/emulador/` (`EMULADOR_OK`) |
-| `make emulador-completo` | O ELF no AutoTest do Play! até o fim do roteiro do campo de treino |
+| `make emulador` | O ELF no Play! (sem BIOS) com vídeo: os roteiros do treino e da ilha, com imagens comparadas às do PC no mesmo passo, e o controle simulado; quadros em `build/emulador/` (`EMULADOR_OK`) |
+| `make emulador-completo` | O ELF no AutoTest do Play! até o fim dos roteiros (treino e as 16 vistas da ilha) |
 
 As ferramentas de emulador são instaladas por `tools/ambiente/instalar_emulador.sh`.
 
@@ -112,12 +111,12 @@ brisa-ps2/
 ├── src/
 │   ├── nucleo/              ✅ tipos, arena, passo fixo, controle, estatísticas, lista 2D, fonte, formato, mat (3D)
 │   ├── render3d/            ✅ malhas, cena, luz toon, pipeline de referência (caminho EE)
-│   ├── jogo/                ✅ telas (tela_boot, cena_teste, vitrine, treino + roteiro do autoteste)
+│   ├── jogo/                ✅ telas (tela_boot, cena_teste, vitrine, treino, ilha, jogador, roteiros do autoteste)
 │   ├── plataforma/ps2/      ✅ IOP/IRX, gsKit, libpad, relógio, caminho EE (GIF), caminho VU1 (VIF1 + vu1/toon.vsm)
 │   ├── plataforma/host/     ✅ PC: rasterizador de software, PNG, controle por roteiro
 │   ├── main.cpp             ✅
 │   ├── conteudo/            ✅ pacote, modelos, animações (mistura de poses), texturas, biblioteca de modelos
-│   ├── mundo/               ✅ colisão (caixas e rampas, grade, raio)
+│   ├── mundo/               ✅ colisão (caixas, rampas, cunhas, relevo, grade, raio), mapa (BMAP), relevo 3D
 │   ├── personagem/          ✅ movimento, câmera em 3ª pessoa, animador
 │   └── (planejado) armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
 ├── data/                    JSON de conteúdo (armas, itens, cosméticos, temporadas, loja)
@@ -126,9 +125,9 @@ brisa-ps2/
 │   ├── ambiente/            ✅ instalar e verificar o toolchain (+ sonda)
 │   ├── auditoria/           ✅ leitor GLB, auditoria, extrator da ilha, densidade, reuso
 │   ├── emulador/            ✅ capturador no Play!, verificação da saída, PPM→PNG
-│   ├── conversor/           ✅ GLB → BMOD/BANI, PNG → BTEX, QEM, catálogo, empacotador, testes
+│   ├── conversor/           ✅ GLB → BMOD/BANI, PNG → BTEX, mapa (BMAP, estradas, minimapa), QEM, catálogo, empacotador, testes
 │   ├── (planejado) conversor_mapa/ compilador_dados/
-├── tests/                   ✅ testes no PC (núcleo, 3D, conteúdo, personagem)
+├── tests/                   ✅ testes no PC (núcleo, 3D, conteúdo, personagem, mapa)
 ├── docs/
 ├── Makefile                 ✅
 └── BRISA_*.md, ASSET_LICENSES.md, CHANGELOG.md

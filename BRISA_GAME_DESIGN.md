@@ -89,10 +89,12 @@ Valores iniciais = Ventania (`itens.json`).
 ## 6. Mapa
 
 - **Ponto de partida:** o layout real da **Ilha Ventania**, extraído do gerador do Ventania. São cerca de 600 m (área jogável de 524 m) e 6 POIs: Vila Brisa, Pedreira Cinza, Porto Ferrugem, Fazenda Girassol, Mirante do Vento e Acampamento Coral. Há 646 peças de construção destrutíveis, 1.219 props, 37 baús, 102 pontos de loot e 24 pontos de início.
-- **Questão aberta para a Etapa 5:** com 12–16 participantes, 600 m é esparso, e a Vila Brisa é o setor mais pesado para desenhar. Opções:
-  - **(a)** a Ilha Ventania inteira, com distância de visão curta e neblina;
-  - **(b)** uma **ilha compacta** (cerca de 350–400 m) com os mesmos POIs, mais próximos e um pouco mais enxutos, que é a recomendação provisória;
+- **Decidido na Etapa 5 (BR-ADR-16, provisório até o benchmark no console):** a **Ilha Ventania inteira**, com distância de visão de 240 m e neblina. As opções eram:
+  - **(a)** a Ilha Ventania inteira, com distância de visão curta e neblina (**escolhida**);
+  - **(b)** uma ilha compacta (cerca de 350–400 m) com os mesmos POIs mais próximos;
   - **(c)** as duas, com (b) como padrão.
+- **Por quê:** o mapa inteiro cabe na memória, e a pior vista (Vila Brisa) envia 41,9 mil triângulos, dentro da meta de 40–70 mil (medições em BRISA_ARCHITECTURE §18). A ilha compacta exigiria um layout diferente do Ventania. Ela continua como último recurso, se o console não sustentar a Vila.
+- **A densidade** (12–16 participantes em 600 m) é tratada na partida (Etapa 8): Tormenta e pontos de início, medindo o tempo até o primeiro encontro.
 - **Tormenta:** as mesmas 7 fases. Se o mapa encolher, os raios são escalados por um fator único em `data/partida.json`.
 
 ## 7. Construção

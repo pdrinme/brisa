@@ -26,7 +26,7 @@ Cabeçalho de 128 bytes:
 | Offset | Tipo | Campo |
 |---|---|---|
 | 0 | char[4] | `BMOD` |
-| 4 | u32 | versão (3) |
+| 4 | u32 | versão (4) |
 | 8 | u32 | n de vértices (com a folga entre partes) |
 | 12 | u32 | n de partes (≤ 40) |
 | 16 | u32 | n de nós (≤ 32) |
@@ -45,17 +45,53 @@ Blocos:
 | Partes | 32 B | `no i32` (−1 = estática), `inicio u32` (múltiplo de 4), `n u32` (múltiplo de 3), 4 B, `centro f32[3]`, `raio f32` (no espaço "bind" da parte) |
 | Nós | 144 B | `nome[24]`, `pai i32`, `flags u32` (bit 0 animado, bit 1 osso), `t f32[3]+4`, `r f32[4]` (quaternion x,y,z,w), `s f32[3]+4`, `inv_bind f32[16]` (coluna principal). Pais vêm antes dos filhos |
 | Marcadores | 48 B | `nome[24]`, `no i32` (pai), `pos f32[3]` (local ao pai), 8 B |
-| Colisões | 32 B | `min f32[3]`, `tipo u32`, `max f32[3]`, `espessura f32`, no espaço do modelo. Tipo 0 = caixa; 1–4 = rampa (laje inclinada) que sobe para +x, −x, +z ou −z, com o topo indo de `min.y + espessura` na ponta baixa até `max.y` na alta (v2; na v1 era só a AABB) |
+| Colisões | 32 B | `min f32[3]`, `tipo u32`, `max f32[3]`, `espessura f32`, no espaço do modelo. Tipo 0 = caixa; 1–4 = rampa (laje inclinada) que sobe para +x, −x, +z ou −z, com o topo indo de `min.y + espessura` na ponta baixa até `max.y` na alta e a base `espessura` abaixo do topo (v2; na v1 era só a AABB); 5–8 = cunha, com o mesmo topo da rampa nos mesmos sentidos e a base plana em `min.y` (v4: lances de escada) |
 | Posições | 8 B/vértice | `x, y, z, 0` em i16 (× escala do cabeçalho) → UNPACK V4-16 com sinal; o VU1 converte com ITOF0 e a escala vai na matriz (v3; até a v2 eram 4 f32) |
 | Normais | 4 B/vértice | `nx, ny, nz, 0` em i8 (×127) → UNPACK V4-8 com sinal |
 | Cores | 4 B/vértice | `r, g, b, 255` → UNPACK V4-8 sem sinal |
 
 Posições, normais e cores têm folga zerada até o múltiplo de 4 (+4). Posição final de um
-vértice: `instância · mundo(nó) · inv_bind(nó) · p` (parte com nó) ou
-`instância · p` (parte estática).
+vértice: `instância · mundo(nó) · inv_bind(nó) · (escala · p)` (parte com nó) ou
+`instância · (escala · p)` (parte estática).
 
 **Assinatura do esqueleto** (para casar modelo e animação): CRC32 de
 `"índice:nome"` dos nós com flag de osso ou animado, unidos por `|`.
+
+## BMAP — mapa (Etapa 5)
+
+Escrito por `tools/conversor/mapa.py`; lido por `src/mundo/mapa.cpp` (sem cópia).
+Cabeçalho de 128 bytes:
+
+| Offset | Tipo | Campo |
+|---|---|---|
+| 0 | char[4] | `BMAP` |
+| 4 | u32 | versão (1) |
+| 8 | u32 | n de amostras do relevo por lado (201) |
+| 12 | f32 | passo do relevo (3 m) |
+| 16 | f32 | x e z da amostra (0, 0) (−300) |
+| 20 | f32 | nível do mar (−1,2) |
+| 24 | u32 | setores por lado (20) |
+| 28 | f32 | lado do setor (30 m) |
+| 32 | u32 ×6 | n de modelos, instâncias, POIs, pontos de início, pontos de contorno, amostras da costa |
+| 56 | u32 ×9 | offsets: relevo, cores, costa, modelos, setores, instâncias, POIs, pontos, pontos de início |
+
+Blocos:
+
+| Bloco | Registro | Conteúdo |
+|---|---|---|
+| Relevo | 2 B/amostra | altura em centímetros (i16), linha a linha (z), como `_alturas` do Ventania |
+| Cores | 4 B/amostra | `r, g, b, 255`: o `terreno.gdshader` avaliado na amostra (pesos de areia, rocha e terra; manchas de grama) |
+| Costa | 4 B × 360 | `coast_radius` do Ventania a cada 1° (`atan2(z, x)`) |
+| Modelos | 48 B | `nome[32]` (`modelos/<nome>.bmod`), `lod i32` (próximo LOD na tabela, ou −1), `dist_lod f32` (a partir de quantos metros usar o próximo), `dist_max f32`, `categoria u32` |
+| Setores | 16 B | `inicio u32`, `n u32` (instâncias do setor), `ymin f32`, `ymax f32` |
+| Instâncias | 32 B | `modelo u16`, `categoria u16`, `x, y, z, rot (graus), escala, raio f32`, 4 B. Ordenadas por setor e, dentro dele, por modelo |
+| POIs | 96 B | `id[24]`, `nome[40]` (UTF-8), `x, y, z, raio f32`, `cor u32` (0xRRGGBB), `inicio u32`, `n_pontos u32` (contorno), 4 B |
+| Pontos | 8 B | `x, z f32` dos contornos das regiões |
+| Pontos de início | 16 B | `x, y, z f32`, 4 B |
+
+Categorias: 0 peça de construção, 1 árvore, 2 prop pequeno, 3 móvel, 4 prop
+grande, 5 baú, 6 estrada. A malha do relevo **não** vai no arquivo: o jogo a
+gera na carga (BRISA_ARCHITECTURE §18).
 
 ## BANI — animações
 

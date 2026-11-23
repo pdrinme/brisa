@@ -90,8 +90,15 @@ asset convertido ganha uma entrada no formato:
 (O formato real gerado tem `id`, `arquivo`, `tipo`, `bytes`, `crc32`, `origem`,
 `autor`, `licenca`, `autorizacao`, `categoria` e as medidas de cada tipo.)
 
-```text
-```
+**Etapa 5 (mapa):** os arquivos gerados a partir do Ventania também estão no
+catálogo, com a origem exata:
+- `mapa/ilha.bmap`: layout extraído do gerador `ilha_ventania.gd`;
+- as paredes com porta e janela: GLB da parede + regras de `grade.gd`;
+- as estradas: layout + cores de `estrada.gdshader`;
+- os LODs do mapa: derivados por QEM dos modelos convertidos;
+- o minimapa: gerado pelo Brisa a partir do layout.
+
+Todos têm a licença do titular (§2), e nenhum asset de terceiros entrou.
 
 ## 5. Dependências de código e ferramentas
 

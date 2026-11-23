@@ -13,7 +13,7 @@ mapa) e produzem arquivos binários no formato do Brisa
  ├─ tools/assets/kit/paleta.json ► cores de vértice (no conversor)
  ├─ tools/assets/kit/blender/*.py ► (cópia no Brisa) geradores com perfil PS2 → LODs e assets novos (Etapa 3+)
  ├─ game/world/ilha/*.gd ──────► extrair_ilha.sh (Godot headless, cópia) ─► layout JSON (Etapa 0 ✅)
- │                                                        └► conversor_mapa ─► ILHA.BMP2 + minimapa (Etapa 5)
+ │                                                        └► conversor/mapa.py ─► mapa/ilha.bmap + minimapa (Etapa 5 ✅)
  ├─ game/data/*.json, backend/config/** ─► data/*.json do Brisa (revisados) ─► compilador_dados ─► *.BIN
  ├─ game/assets/audio/**/*.wav ─► (reamostrar 22/32 kHz) ─► adpenc ─► *.ADP (Etapa 10)
  └─ ui/fontes/fredoka_*.woff2 ─► rasterizador ─► fonte bitmap CLUT 4 bits (Etapa 10)
@@ -49,9 +49,10 @@ Implementado na Etapa 3:
 - sombra blob original;
 - catálogo e pacote.
 
-Ainda **não** feitos: tiras de triângulos, posições int16, LOD dos props, o
-compilador de dados de jogo (`data/*.json` → BIN, que entra com o primeiro
-sistema que usa esses dados, na Etapa 6) e o conversor de mapa (Etapa 5).
+Ainda **não** feitos: tiras de triângulos, o compilador de dados de jogo
+(`data/*.json` → BIN, que entra com o primeiro sistema que usa esses dados, na
+Etapa 6). Desde a Etapa 5: posições em int16 (BMOD v3, BR-ADR-14), LODs dos
+props usados no mapa e o conversor de mapa (§4).
 
 ## 1. Ferramentas da Etapa 0 (prontas e testadas)
 
@@ -97,15 +98,30 @@ minimapa e cartões da loja. Entrada PNG → quantização para 16 ou 256 cores 
 `*.BTX` (CLUT no layout do GS, com o swizzle de CSM1 tratado pelo conversor),
 largura e altura em potência de 2, alfa de 0 a 128 (escala do GS).
 
-## 4. Conversor de mapa (Etapa 5)
+## 4. Conversor de mapa (Etapa 5 — implementado em `tools/conversor/mapa.py`)
 
-Entrada: `ilha_ventania_layout.json` (ou o layout da ilha compacta).
-1. **Relevo** 201×201 → blocos de 32 m com 2 LODs. Cores do terreno por regra (grama em dois tons, areia, rocha, terra), como o shader do Ventania, mas assadas por vértice.
-2. **Estradas:** as faixas de asfalto, ruas, calçadas e terra são **pré-malhadas** pelo conversor (no Ventania são geradas em tempo de execução).
-3. **Instâncias** (peças, props, baús, loot): agrupadas por setor de 32 m, ordenadas por modelo (menos troca de estado), com distância de visibilidade por tipo.
-4. **Interiores:** a mobília é marcada com o edifício a que pertence, para o culling "só por dentro".
-5. **Colisão** por célula de 4 m e **navegação** (o grafo do `NavGrade` do Ventania calculado offline).
-6. **Minimapa e mapa completo:** imagem vista de cima (relevo + estradas + construções + cores das regiões) em 128² e 256², CLUT 8 bits.
+Roda dentro de `make conteudo-ventania` (cerca de 3,5 s). Entrada:
+`docs/auditoria/ilha_ventania_layout.json`, gerado por
+`tools/auditoria/extrair_ilha.sh`. Essa extração roda o gerador do Ventania
+numa cópia, e duas execuções dão o mesmo arquivo byte a byte. O conversor também
+lê os GLB das peças de construção do Ventania.
+
+1. **Relevo** 201×201 (centímetros, i16) e **cores do chão** por amostra. É o `terreno.gdshader` do Ventania avaliado no vértice: pesos de areia, rocha e terra extraídos do gerador, manchas de grama de ~30 m. Os ruídos finos (abaixo de 3 m) não cabem na grade e entram pelo valor médio. A malha do relevo é gerada no jogo (BR-ADR-15).
+2. **Peças da grade:** a `Grade.transform` do Ventania. As paredes com porta (máscara 493), janela (495) e vitrine/portão (448, 455) viram modelos próprios, como no `grade.gd` do Ventania:
+   - os ladrilhos 3×3 são recortados da parede do kit, e as aberturas ganham moldura escura da paleta;
+   - a QEM volta a malha para ~1,7× a parede inteira;
+   - a colisão é uma caixa por ladrilho presente.
+3. **Props, baús e pontos de início** com posição, rotação e escala do layout.
+4. **Estradas pré-malhadas** (`_malhas_estradas` + `estrada.gdshader`), agrupadas em modelos por setor de 30 m:
+   - asfalto com bordas brancas e faixa central amarela tracejada; ruas de bairro com bordas tracejadas;
+   - calçadas de concreto com meio-fio nos trechos urbanos e faixas de pedestres;
+   - os caminhos de terra são só cor do chão (como no Ventania).
+5. **Setores de 30 m**, com as instâncias ordenadas por modelo e as alturas mínima e máxima; categorias com distância máxima e **cadeia de LODs por QEM** (peças: LOD1 30% e LOD2 12%; árvores, props grandes e baús: LOD1 30%).
+6. **POIs** com contorno (para a região no HUD) e a costa (para o limite de movimento do Ventania, a 9 m da praia).
+7. **Minimapa** 256×256 PSMT8 (2,34 m por pixel): chão com sombreado, mar, estradas, plantas das casas, árvores e contornos das regiões.
+
+Ficam para depois: o **grafo de navegação** dos bots (Etapa 7) e os pontos de
+loot (Etapa 6).
 
 ## 5. Dados de jogo (Etapa 3 em diante)
 

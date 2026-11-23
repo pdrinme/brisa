@@ -1,10 +1,26 @@
 // Mundo de colisão do Brisa (portátil): caixas e rampas dos modelos, giradas em
-// Y pela instância, numa grade espacial; mais um chão plano opcional. Sem física
+// Y (e escaladas) pela instância, numa grade espacial compacta; mais um chão
+// plano opcional ou o relevo do mapa (altura bilinear, como o ground_height do
+// Ventania). Sem física
 // de corpos rígidos (BRISA_GAME_DESIGN §7): só o que o personagem e a câmera
 // precisam (chão, paredes, teto, raio).
 #pragma once
 #include "conteudo/modelo.h"
 #include "nucleo/mat.h"
+
+// Relevo em grade regular (alturas em centímetros, i16), lido do mapa sem cópia.
+struct Relevo {
+    const i16* alturas_cm = nullptr;
+    int n = 0;          // amostras por lado
+    f32 passo = 3.0f;   // metros
+    f32 origem = -300;  // x e z da amostra (0, 0)
+    f32 amostra(int i, int j) const {
+        i = i < 0 ? 0 : (i >= n ? n - 1 : i);
+        j = j < 0 ? 0 : (j >= n ? n - 1 : j);
+        return alturas_cm[j * n + i] * 0.01f;
+    }
+    f32 altura(f32 x, f32 z) const;  // bilinear
+};
 
 struct Colisor {
     Vec3 origem;      // posição da instância
@@ -21,7 +37,10 @@ struct Colisor {
     }
     // Topo e base num ponto local (preso ao retângulo).
     f32 topo(f32 lx, f32 lz) const;
-    f32 base(f32 lx, f32 lz) const { return tipo == ColisaoBMOD::CAIXA ? origem.y + mn.y : topo(lx, lz) - espessura; }
+    // Caixa e cunha: base plana; rampa (laje): espessura abaixo do topo.
+    f32 base(f32 lx, f32 lz) const {
+        return (tipo == ColisaoBMOD::CAIXA || tipo > ColisaoBMOD::RAMPA_MENOS_Z) ? origem.y + mn.y : topo(lx, lz) - espessura;
+    }
 };
 
 struct ImpactoRaio {
@@ -31,15 +50,18 @@ struct ImpactoRaio {
 
 class MundoColisao {
 public:
-    static const int MAX_COLISORES = 2048;
-    static const int CELULA = 8;          // metros
-    static const int GRADE = 64;          // 64 × 64 células = 512 m de lado
-    static const int MAX_POR_CELULA = 48;
+    static const int MAX_COLISORES = 4096;
+    static const int GRADE = 80;          // 80 × 80 células sobre 2 × meia_largura
+    static const int MAX_REFS = 16384;    // referências colisor→célula (grade compacta)
     void limpar(f32 meia_largura);
     void definir_chao(bool tem, f32 y = 0) { tem_chao_ = tem; chao_y_ = y; }
-    // Adiciona as colisões de um modelo na posição/rotação (graus) dadas.
-    int adicionar_modelo(const ModeloBrisa& m, Vec3 pos, f32 rot_graus);
+    // Relevo (substitui o chão plano); nullptr tira.
+    void definir_relevo(const Relevo* r) { relevo_ = r; }
+    const Relevo* relevo() const { return relevo_; }
+    // Adiciona as colisões de um modelo na posição/rotação (graus)/escala dadas.
+    int adicionar_modelo(const ModeloBrisa& m, Vec3 pos, f32 rot_graus, f32 escala = 1.0f);
     bool adicionar_caixa(Vec3 pos, f32 rot_graus, Vec3 mn, Vec3 mx);
+    int referencias() const { return n_refs_; }
     int n() const { return n_; }
     const Colisor& colisor(int i) const { return col_[i]; }
     int descartados() const { return descartados_; }
@@ -61,14 +83,18 @@ public:
 
 private:
     template <typename F> void visitar(f32 x0, f32 z0, f32 x1, f32 z1, F f) const;
-    void inserir(int i);
+    void montar_grade() const;  // grade compacta (CSR), refeita quando algo foi adicionado
+    void celulas(const Colisor& c, int* x0, int* z0, int* x1, int* z1) const;
     Colisor col_[MAX_COLISORES];
     int n_ = 0, descartados_ = 0;
-    u16 celula_[GRADE][GRADE][MAX_POR_CELULA];
-    u8 n_celula_[GRADE][GRADE];
+    mutable u16 refs_[MAX_REFS];
+    mutable u16 inicio_[GRADE * GRADE + 1];  // refs da célula k: [inicio_[k], inicio_[k+1])
+    mutable int n_refs_ = 0;
+    mutable bool sujo_ = true;
     f32 meia_ = 256;
     bool tem_chao_ = true;
     f32 chao_y_ = 0;
+    const Relevo* relevo_ = nullptr;
     mutable u32 marca_[MAX_COLISORES];
     mutable u32 visita_ = 0;
 };

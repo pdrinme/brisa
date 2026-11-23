@@ -204,7 +204,7 @@ def converter(caminho_glb, paleta):
         pts = []
         for prim in j["meshes"][n["mesh"]]["primitives"]:
             pts += [mat.ponto(mw, p) for p in g.accessor(prim["attributes"]["POSITION"])]
-        m.colisoes.append(classificar_colisao(pts))
+        m.colisoes += decompor_colisao(pts)
     return m
 
 
@@ -244,6 +244,94 @@ def classificar_colisao(pts, tol=0.01):
             tipo = sinal_tipo[0] if sobe_para_max else sinal_tipo[1]
             return (mn, mx, tipo, round(esp_a, 4))
     return (mn, mx, 0, 0.0)
+
+
+def decompor_colisao(pts, tol=0.01):
+    """Convexo de colisão → lista de (min, max, tipo, espessura). Caixas e rampas
+    simples saem de classificar_colisao; um prisma extrudado (perfil convexo num
+    plano vertical, como os lances das escadas do Ventania em gerar_interiores.py)
+    é cortado nos vértices do perfil em caixas, rampas (lajes) e cunhas (tipos
+    5–8: topo inclinado com a base plana). O resto vira a caixa envolvente."""
+    r = classificar_colisao(pts, tol)
+    unicos = {tuple(round(c, 3) for c in p) for p in pts}
+    mn, mx = r[0], r[1]
+    if r[2] != 0 or all(all(abs(p[q] - mn[q]) < tol or abs(p[q] - mx[q]) < tol for q in range(3)) for p in unicos):
+        return [r]
+    pedacos = _prisma(unicos, tol)
+    return pedacos if pedacos else [r]
+
+
+def _cadeias(perfil):
+    """Perfil convexo (u, y) → (cadeia de cima, cadeia de baixo), de u mínimo a máximo."""
+    pts = sorted(set(perfil))
+    def vira(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    baixo, cima = [], []
+    for p in pts:
+        while len(baixo) >= 2 and vira(baixo[-2], baixo[-1], p) <= 1e-9:
+            baixo.pop()
+        baixo.append(p)
+    for p in reversed(pts):
+        while len(cima) >= 2 and vira(cima[-2], cima[-1], p) <= 1e-9:
+            cima.pop()
+        cima.append(p)
+    cima.reverse()
+    # pontos com o mesmo u nas pontas: a cadeia de cima pega o mais alto, a de baixo o mais baixo
+    return cima, baixo
+
+
+def _em(cadeia, u, maior):
+    """Altura da cadeia em u (interpolada); nas verticais, a mais alta (cima) ou a mais baixa (baixo)."""
+    ys = []
+    for a, b in zip(cadeia, cadeia[1:]):
+        if a[0] - 1e-6 <= u <= b[0] + 1e-6:
+            if abs(b[0] - a[0]) < 1e-9:
+                ys += [a[1], b[1]]
+            else:
+                ys.append(a[1] + (b[1] - a[1]) * (u - a[0]) / (b[0] - a[0]))
+    if not ys:
+        ys = [p[1] for p in cadeia if abs(p[0] - u) < 1e-6] or [cadeia[0][1]]
+    return max(ys) if maior else min(ys)
+
+
+def _prisma(unicos, tol):
+    for e, u_eixo, tipos in ((2, 0, (1, 2)), (0, 2, (3, 4))):  # e: eixo da extrusão; u: eixo do perfil
+        lados = sorted({round(p[e], 2) for p in unicos})
+        if len(lados) != 2:
+            continue
+        perfis = [sorted({(round(p[u_eixo], 3), round(p[1], 3)) for p in unicos if abs(round(p[e], 2) - lado) < 1e-6}) for lado in lados]
+        if perfis[0] != perfis[1] or len(perfis[0]) < 3:
+            continue
+        cima, baixo = _cadeias(perfis[0])
+        us = sorted({p[0] for p in cima} | {p[0] for p in baixo})
+        out = []
+        for ua, ub in zip(us, us[1:]):
+            if ub - ua < 0.02:
+                continue
+            ta, tb = _em(cima, ua + 1e-4, True), _em(cima, ub - 1e-4, True)
+            ba, bb = _em(baixo, ua + 1e-4, False), _em(baixo, ub - 1e-4, False)
+            y0, y1 = min(ba, bb), max(ta, tb)
+            lo = [0.0, y0, 0.0]
+            hi = [0.0, y1, 0.0]
+            lo[u_eixo], hi[u_eixo] = ua, ub
+            lo[e], hi[e] = lados[0], lados[1]
+            sobe = tb > ta
+            if abs(tb - ta) < tol and abs(bb - ba) < tol:
+                out.append((tuple(lo), tuple(hi), 0, 0.0))
+            elif abs(bb - ba) < tol:
+                # cunha: base plana em y0, topo de min(ta, tb) a max(ta, tb)
+                out.append((tuple(lo), tuple(hi), (tipos[0] if sobe else tipos[1]) + 4, round(min(ta, tb) - y0, 4)))
+            elif abs(tb - ta) >= tol:
+                # laje inclinada (rampa): o topo é exato; a espessura é a da ponta baixa
+                # (numa laje de espessura variável, a base fica um pouco mais alta na outra ponta)
+                t_baixo, b_baixo = (ta, ba) if sobe else (tb, bb)
+                lo[1] = b_baixo
+                out.append((tuple(lo), tuple(hi), tipos[0] if sobe else tipos[1], round(t_baixo - b_baixo, 4)))
+            else:
+                out.append((tuple(lo), tuple(hi), 0, 0.0))  # topo plano: caixa
+        if out:
+            return out
+    return None
 
 
 def animacoes(caminho_glb, modelo, fps=30):

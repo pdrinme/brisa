@@ -167,3 +167,47 @@ START** alterna treino → vitrine → benchmark.
 
 Se algo atravessar, travar ou tremer, anote onde (os valores X, Y e Z do
 painel) e o que você estava fazendo.
+
+---
+
+# Etapa 5 — A Ilha Ventania
+
+O ELF agora abre **na ilha**, no primeiro ponto de início de partida do
+Ventania. **L1 + R1 + START** alterna ilha → campo de treino (Etapa 4) →
+vitrine (Etapa 3) → benchmark (Etapa 2).
+
+Os controles são os do treino (Etapa 4), com estas mudanças:
+
+| Botão | Efeito |
+|---|---|
+| ▲ no direcional | Mapa completo (com os nomes das regiões) |
+| ▼ no direcional | Caminho de desenho VU1 ↔ EE |
+| START | Mostra/esconde o painel |
+
+**Conferir e me mandar.** Este é o teste que confirma a decisão do tamanho da
+ilha (BR-ADR-16), então os números do painel importam:
+
+1. **FPS e "3D" no painel**, pelo **VU1**, em cada lugar abaixo (parado, com a câmera para a frente). Anote também o número de "TRI".
+   - Na **Vila Brisa**, chegando pela estrada e no cruzamento do centro. É o pior caso: no PC e no emulador, cerca de 42 mil triângulos.
+   - No **alto do Mirante do Vento** (o morro do meio), girando a câmera devagar.
+   - No **Porto Ferrugem** e na **Fazenda Girassol**.
+2. **Andar e correr** pela ilha:
+   - o personagem acompanha o chão nas subidas e descidas, sem afundar nem flutuar?
+   - a câmera não entra no morro?
+3. **Casas:**
+   - entrar pela porta, bater numa parede, olhar pela janela (não dá para passar);
+   - **subir a escada até o andar de cima** e descer de volta.
+4. **Praia:** correr para o mar. O personagem para na água rasa, a poucos metros da areia.
+5. **Minimapa e mapa:**
+   - a seta acompanha para onde a câmera olha;
+   - o nome da região aparece no painel ao entrar num POI;
+   - o mapa completo (▲) mostra a ilha inteira com os 6 nomes.
+6. **Visual:**
+   - aparecem buracos no chão entre áreas perto e longe? Peças "piscando" (LOD) perto demais?
+   - a neblina no horizonte cobre o fim do desenho?
+   - uma foto da Vila e uma do Mirante.
+7. **Pelo ps2link:** a linha `BRISA_ILHA carregada_us=...` (tempo de carga no console) e as linhas `BRISA: quadro ...`.
+
+Se o FPS na Vila ficar abaixo de 30, anote o "3D" e o "TRI". A ordem do corte
+já está planejada (BR-ADR-16): distâncias de LOD e de visão, depois o descarte
+de faces no VU1 e, por último, a ilha compacta.

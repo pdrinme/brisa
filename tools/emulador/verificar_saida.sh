@@ -26,8 +26,16 @@ else
   confere "correu" "^BRISA_MARCO correndo .*anim=correr"
   confere "campo pelo VU1 (roteiro)" "BRISA_ROTEIRO caminho=VU1 .*lotes_vu1=[1-9]"
   confere "campo pelo EE (roteiro)" "BRISA_ROTEIRO caminho=EE .*desenhados_ee=[1-9]"
+  # Ilha (Etapa 5)
+  confere "ilha carregada (mapa, colisão, relevo)" "^BRISA_ILHA carregada_us=[0-9]+ instancias=1944 .*colisores=[0-9]+"
+  confere "vista da Vila Brisa pelo VU1" "^BRISA_ILHA_VISTA vila_brisa_chegando caminho=VU1 .*tris=[1-9][0-9]+"
+  confere "vista do Mirante (norte)" "^BRISA_ILHA_VISTA mirante_0 caminho=VU1 "
   # A captura encerra o programa no último quadro salvo; o fim só aparece no --completo.
   if [ "$modo" = "--completo" ]; then
+    n=$(grep -c "^BRISA_ILHA_VISTA .*caminho=VU1 " "$r")
+    if [ "$n" -eq 16 ]; then echo "[OK] 16 vistas da ilha medidas"; else echo "[ERRO] vistas da ilha: $n de 16"; falhas=$((falhas + 1)); fi
+    confere "caminhada no relevo (no chão, sobre o relevo)" "^BRISA_MARCO ilha_caminhada .*no_chao=1 acima_do_relevo=0\.0[0-9] anim=correr"
+    confere "roteiro da ilha até o fim" "^BRISA_ILHA_OK"
     confere "acenou" "^BRISA_MARCO acenou .*no_chao=1"
     confere "roteiro do treino até o fim" "^BRISA_TREINO_OK"
     confere "terminou sem travar" "^BRISA_FIM_OK"

@@ -221,8 +221,9 @@ static void desenhar_2d(const ListaDesenho2D& l) {
         case TipoPrim::SPRITE_TEX:
             if (p.textura >= 0 && p.textura < g_n_tex) {
                 const GSTEXTURE& t = g_tex[p.textura];
-                gsKit_prim_sprite_texture(g_gs, &t, p.x[0], p.y[0], 0.0f, 0.0f, p.x[1], p.y[1], static_cast<f32>(t.Width),
-                                          static_cast<f32>(t.Height), 1,
+                f32 w = static_cast<f32>(t.Width), h = static_cast<f32>(t.Height);
+                gsKit_prim_sprite_texture(g_gs, &t, p.x[0], p.y[0], p.x[2] * w, p.y[2] * h, p.x[1], p.y[1], p.x[3] * w,
+                                          p.y[3] * h, 1,
                                           GS_SETREG_RGBAQ(p.cor[0].r, p.cor[0].g, p.cor[0].b, p.cor[0].a, 0x00));
             }
             break;

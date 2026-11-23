@@ -150,7 +150,8 @@ void Rasterizador::desenhar(const ListaDesenho2D& l, bool limpar) {
             for (int y = ya; y < yb; y++)
                 for (int x = xa; x < xb; x++) {
                     f32 rgba[4];
-                    amostrar(t, (x - p.x[0] + 0.5f) / (p.x[1] - p.x[0]), (y - p.y[0] + 0.5f) / (p.y[1] - p.y[0]), mod, rgba);
+                    f32 su = (x - p.x[0] + 0.5f) / (p.x[1] - p.x[0]), sv = (y - p.y[0] + 0.5f) / (p.y[1] - p.y[0]);
+                    amostrar(t, p.x[2] + (p.x[3] - p.x[2]) * su, p.y[2] + (p.y[3] - p.y[2]) * sv, mod, rgba);
                     misturar(x, y, rgba[0], rgba[1], rgba[2], rgba[3]);
                 }
         } else if (p.tipo == TipoPrim::RETANGULO) {

@@ -79,7 +79,7 @@ build/autoteste/brisa_autoteste.elf: $(call objetos_ps2,autoteste)
 
 build/autoteste/%.o: src/%.cpp
 	@mkdir -p $(@D)
-	$(EE_CXX) $(EE_CXXFLAGS) -DBRISA_AUTOTESTE=3000 -DBRISA_BENCH_AQUECER=3 -DBRISA_BENCH_MEDIR=6 -c $< -o $@
+	$(EE_CXX) $(EE_CXXFLAGS) -DBRISA_AUTOTESTE=5000 -DBRISA_BENCH_AQUECER=3 -DBRISA_BENCH_MEDIR=6 -c $< -o $@
 
 build/%/irx/sio2man_irx.c: $(PS2SDK)/iop/irx/sio2man.irx
 	@mkdir -p $(@D)
@@ -122,7 +122,7 @@ emulador: autoteste build/host/brisa_previa
 	@rm -rf build/emulador
 	@mkdir -p build/emulador
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
-	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 200,680,1250
+	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 200,680,1250,1326,1738
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
 	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/controle 150 botoes
 	python3 tools/emulador/ppm_para_png.py --todos build/emulador
@@ -133,6 +133,11 @@ emulador: autoteste build/host/brisa_previa
 	@# contra a prévia do PC no mesmo passo. Pega o "VU1 não desenhou" que a contagem de lotes não pega.
 	./build/host/brisa_previa --roteiro=1 --png=build/emulador/pc_338.png --png-quadro=338 > /dev/null
 	python3 tools/emulador/comparar_quadros.py build/emulador/cena_680.png build/emulador/pc_338.png
+	@# Ilha (Etapa 5): 1ª vista (Vila Brisa) e Mirante a 90°, contra o PC no mesmo passo do roteiro da ilha.
+	./build/host/brisa_previa --roteiro=2 --png=build/emulador/pc_ilha_10.png --png-quadro=10 > /dev/null
+	./build/host/brisa_previa --roteiro=2 --png=build/emulador/pc_ilha_216.png --png-quadro=216 > /dev/null
+	python3 tools/emulador/comparar_quadros.py build/emulador/cena_1326.png build/emulador/pc_ilha_10.png
+	python3 tools/emulador/comparar_quadros.py build/emulador/cena_1738.png build/emulador/pc_ilha_216.png
 	tools/emulador/verificar_saida.sh build/emulador/controle.log --controle
 
 # emulador-completo: os 600 quadros até o fim do programa (AutoTest: GS nulo, sem controle).

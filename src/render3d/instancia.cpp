@@ -3,8 +3,13 @@
 int adicionar_modelo(Cena3D& cena, const ModeloBrisa& m, const Pose* pose, const Mat4& inst) {
     static Pose repouso;
     if (!pose) {
-        pose_repouso(m, repouso);
-        pose = &repouso;
+        // Pose de repouso só se alguma parte segue um nó (modelos estáticos não precisam).
+        bool precisa = false;
+        for (int i = 0; i < m.n_partes() && !precisa; i++) precisa = m.no_da_parte(i) >= 0;
+        if (precisa) {
+            pose_repouso(m, repouso);
+            pose = &repouso;
+        }
     }
     int n = 0;
     for (int i = 0; i < m.n_partes(); i++) {

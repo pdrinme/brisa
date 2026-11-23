@@ -23,6 +23,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
 import decimar  # noqa: E402
 import formatos  # noqa: E402
+import mapa  # noqa: E402
 import modelo  # noqa: E402
 import textura  # noqa: E402
 
@@ -56,7 +57,7 @@ def main():
     commit = subprocess.run(["git", "-C", v, "log", "-1", "--format=%h"], capture_output=True, text=True).stdout.strip()
     paleta = modelo.carregar_paleta(os.path.join(v, "tools/assets/kit/paleta.json"))
     cat_v = {x["id"]: x for x in json.load(open(os.path.join(v, "assets_catalog.json"), encoding="utf-8"))["assets"]}
-    for sub in ("modelos", "animacoes", "texturas"):
+    for sub in ("modelos", "animacoes", "texturas", "mapa"):
         os.makedirs(os.path.join(a.saida, sub), exist_ok=True)
     catalogo = []
     relatorio = []
@@ -70,6 +71,7 @@ def main():
                               "crc32": "%08x" % zlib.crc32(dados)}, **origem, **extra))
 
     assinatura_humanoide = None
+    convertidos = {}  # id → Modelo (para o mapa: LODs e paredes com aberturas)
     for cat in sorted(ORCAMENTO):
         pasta = os.path.join(v, "game/assets", cat)
         for nome in sorted(os.listdir(pasta)):
@@ -101,6 +103,8 @@ def main():
                       {"triangulos": m.triangulos(), "triangulos_ventania": tris0, "partes": len(m.partes),
                        "nos": len(m.nos), "marcadores": [k["nome"] for k in m.marcadores], "notas": "; ".join(notas)})
             linha = f"{m.triangulos()} tris" + (f" (de {tris0})" if simplificado else "")
+            if cat != "personagens":
+                convertidos[aid] = m
             clipes = modelo.animacoes(glb, m) if any(n.animado for n in m.nos) else []
             if cat == "personagens":
                 ass = zlib.crc32("|".join(n.nome for n in m.nos[:]).encode())
@@ -146,6 +150,12 @@ def main():
                   {"largura": 64, "altura": 64, "formato": "PSMT8", "notas": f"reduzido de {larg}×{alt}; {len(pal)} cores"})
         relatorio.append((f"icone_{ic}", "texturas", f"64×64 PSMT8, {len(pal)} cores (de {larg}×{alt})"))
         _ = info
+
+    # Mapa (Etapa 5): a Ilha Ventania a partir do layout extraído.
+    layout = json.load(open(os.path.join(RAIZ, "docs/auditoria/ilha_ventania_layout.json"), encoding="utf-8"))
+    t_mapa = time.time()
+    mapa.construir(v, paleta, commit, layout, convertidos, registrar, relatorio)
+    relatorio.append(("(tempo)", "mapa", f"{time.time() - t_mapa:.1f} s"))
 
     catalogo.sort(key=lambda x: x["arquivo"])
     json.dump({"_doc": "Catálogo dos assets do Brisa (gerado por tools/conversor/construir.py; ver ASSET_LICENSES.md). "

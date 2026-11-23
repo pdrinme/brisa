@@ -5,7 +5,7 @@ import math
 import struct
 import zlib
 
-VERSAO_MODELO = 3  # v2: colisões com tipo e espessura; v3: posições int16 com escala
+VERSAO_MODELO = 4  # v2: colisões com tipo e espessura; v3: posições int16 com escala; v4: cunhas (tipos 5–8)
 VERSAO_ANIM = 1
 VERSAO_TEXTURA = 1
 VERSAO_PAK = 1

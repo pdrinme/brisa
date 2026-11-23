@@ -260,8 +260,78 @@ EE), mas a proporção real só o console dá.
 
 **⏳ Falta para o aceite:** jogar o campo de treino no console (`docs/TESTE_NO_CONSOLE.md`, Etapa 4).
 
-### Etapa 5 — Mapa ⬜
-Relevo, vegetação, construções do mapa, baús, POIs, estradas, setores, LOD e culling, minimapa. **Decisão do tamanho da ilha** com medições (BRISA_GAME_DESIGN §6).
+### Etapa 5 — Mapa 🟡 (pronta e testada no PC e no emulador; ⏳ falta jogar no console)
+**Feito:**
+- **Memória dos modelos (pendência da Etapa 3):** posições em int16 com escala por modelo (BMOD v3, BR-ADR-14). O VU1 lê V4-16 e converte com ITOF0. Os mesmos modelos foram de 4,6 para 3,1 MB, e o vértice caiu de 24 para 16 bytes.
+- **A Ilha Ventania inteira** (o layout do gerador do Ventania `7864cd7`, extraído sem alterar o Ventania):
+  - relevo 201×201 com cores do chão do `terreno.gdshader` e mar;
+  - 646 peças da grade (paredes com porta, janela e vitrine recortadas por ladrilho, como no `grade.gd`), 1.219 props (vegetação, pedras, mobília, contêineres, escadas), 37 baús;
+  - estradas pré-malhadas com faixas, calçadas com meio-fio e faixas de pedestres;
+  - 6 regiões com nome no HUD, 24 pontos de início.
+- **Desenho** (§18):
+  - relevo com LOD1 gerado na carga e LOD0 em cache em volta da câmera, sem frestas entre os dois (BR-ADR-15);
+  - corte por setor de 30 m, distância máxima por categoria (móveis só até 24 m) e cadeia de LODs por QEM (peças: LOD1 a 45 m e LOD2 a 110 m);
+  - neblina de 60 a 240 m.
+- **Colisão:**
+  - o relevo (altura bilinear, igual à do Ventania) e as 2.727 caixas, rampas e **cunhas** dos modelos, com escala;
+  - o limite da costa do Ventania (160 caixas a 9 m da praia);
+  - grade compacta montada uma vez (4.461 referências);
+  - as **escadas em U sobem** até o andar de cima (BMOD v4).
+- **HUD:** região atual, minimapa em volta do jogador (textura 256×256 recortada por UV) e mapa completo com os nomes dos POIs (▲ no direcional).
+- **Decisão do tamanho da ilha (BR-ADR-16):** a ilha inteira, com as condições do console (ver BRISA_GAME_DESIGN §6).
+- **Roteiro do autoteste da ilha:** 16 vistas medidas (cada POI chegando e de dentro, e o Mirante nas 4 direções) e uma caminhada correndo sobre o relevo. O ELF abre na ilha; L1 + R1 + START alterna ilha → treino → vitrine → benchmark.
+- **Corrigido no caminho:** o Makefile não remontava o microprograma do VU1 quando o `.vsm` mudava (a regra não tinha dependência). O `make emulador` passava mesmo com o VU1 sem desenhar nada, porque só contava lotes; agora ele **compara a imagem** do emulador com a do PC no mesmo passo.
+
+**Testes executados:**
+- `make testes`: 53 testes, 18.603 verificações, 0 falhas. Os 9 novos (`tests/teste_mapa.cpp`, mais um em `teste_3d.cpp`) cobrem:
+  - o mapa com os números do Ventania, regiões e costa;
+  - setores e cadeia de LODs;
+  - o relevo sem frestas entre LODs;
+  - o jogador no relevo;
+  - a **porta passa e a parede inteira bloqueia**;
+  - a costa segura quem corre para o mar;
+  - o corte com orçamento (pior vista abaixo de 50 mil triângulos) e móveis só de perto;
+  - **subir a escada em U** em 3 prédios;
+  - o minimapa e a quantização int16.
+- `python3 tools/conversor/testes.py`: 21 testes OK (novos: posições int16 dentro da AABB e a decomposição da escada em cunha, patamar e laje).
+- Extração da ilha: duas execuções idênticas byte a byte. Conversão reprodutível (o mesmo pacote byte a byte), em 12,4 s.
+- `make emulador`: `EMULADOR_OK`, com comparação de imagem PS2 × PC: treino 0,15%, Vila Brisa 0,87%, Mirante 0,61% dos pixels.
+- `make emulador-completo`: `EMULADOR_OK`, com as **16 vistas da ilha** e a caminhada (no chão, 0,00 m acima do relevo). Os números de cada vista (triângulos, objetos, instâncias, LODs) saem **iguais** no PC e no PS2.
+- Imagens em `docs/etapa5/`.
+
+**Medido** (contagens e bytes valem para o console; **tempos são do emulador**):
+- **Triângulos por vista:**
+  - pior caso: chegando na Vila Brisa, 41.893 (460 objetos);
+  - Vila do centro: 38.340;
+  - outros POIs: 9.815 a 28.231;
+  - Mirante (4 direções): 14.478 a 25.915;
+  - o relevo é 2,7 a 4,9 mil disso.
+- O corte por quadro olha de 98 a 964 instâncias e põe 81 a 523 na cena; leva 0,5 a 1,3 ms do EE emulado.
+- **Memória:**
+  - pacote de 4,4 MB (231 arquivos);
+  - ELF de 4,9 MB (11,5 MB na RAM com a arena de 4 MB);
+  - **16,5 MB livres no boot**;
+  - ilha em jogo: arena de 1,2 MB (relevo 888 KB) e colisão de 341 KB.
+- Carga da ilha: 72 ms no emulador.
+
+**Problemas encontrados e resolvidos:**
+- o microprograma não era remontado (Makefile), e por isso o VU1 desenhava inteiros como se fossem floats (nada na tela). A verificação que deveria pegar isso só contava lotes; agora compara imagens;
+- a extensão padrão da quantização (64 m) estourava no chão de 242 m do treino;
+- as paredes com aberturas ficaram com 3–4× os triângulos depois do recorte; a QEM as voltou para ~1,7×;
+- a primeira vista "chegando" caía dentro de uma casa;
+- as peças de construção dominavam a Vila (50 mil triângulos), o que levou ao LOD2 e aos móveis até 24 m;
+- os lances das escadas viravam caixas de 2 m (os andares de cima ficavam inacessíveis), o que levou às cunhas do BMOD v4;
+- um teste supunha que 495 era porta (é janela; a porta é 493).
+
+**Limitações conhecidas:**
+- os **tempos** de desenho e de corte só valem medidos no console; a decisão do tamanho da ilha fica condicionada a eles (BR-ADR-16);
+- sem culling de oclusão (paredes internas da Vila são desenhadas);
+- o VU1 ainda não descarta faces traseiras;
+- telhados em pirâmide colidem como bloco;
+- o relevo é sempre andável (sem limite de inclinação);
+- ainda não há loot nos pontos de loot (Etapa 6), nem o grafo de navegação (Etapa 7).
+
+**⏳ Falta para o aceite:** jogar a ilha no console e mandar as medições (`docs/TESTE_NO_CONSOLE.md`, Etapa 5).
 
 ### Etapa 6 — Combate e inventário ⬜
 As 5 armas, munição, dano, raridade, cura, escudo, inventário de 5 espaços, picareta, loot e baús.

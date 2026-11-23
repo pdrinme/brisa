@@ -253,7 +253,7 @@ pixel a pixel nas áreas estáticas.
 | Peça | Arquivo | Papel |
 |---|---|---|
 | Matemática | `src/nucleo/mat.*` | Vec3/Mat4 (coluna principal), perspectiva e câmera no estilo OpenGL, inversa rígida, frustum por planos |
-| Malha | `src/render3d/malha.*` | Lista de triângulos em SoA no formato do VU1 (posição V4-32, normal V4-8 com sinal, cor V4-8), geradores procedurais com normal plana |
+| Malha | `src/render3d/malha.*` | Lista de triângulos em SoA no formato do VU1 (posição V4-16 com escala desde a Etapa 5 — era V4-32 —, normal V4-8 com sinal, cor V4-8), geradores procedurais com normal plana |
 | Cena | `src/render3d/cena3d.h` | Câmera, luz toon (luz, sombra azulada, limiar, suavidade), neblina, objetos |
 | Pipeline de referência | `src/render3d/pipeline_sw.*` | Transforma, ilumina, recorta (plano perto + faixa de guarda ±4w), descarta faces traseiras e projeta. É o **caminho A** no PS2 e a referência no PC |
 | Caminho A (EE) | `src/plataforma/ps2/render_ee.*` | Triângulos → GIFtag PACKED (RGBAQ + XYZF2) em 2 buffers de 192 KB → DMA do GIF (PATH3) |
@@ -353,7 +353,7 @@ Vale fazer antes do mapa (Etapa 5), quando o orçamento do mundo entrar.
 | Campo de treino | `src/jogo/treino.*` | Cena, controles, HUD de depuração e o roteiro do autoteste |
 
 **Colisão** (sem física de corpos rígidos, BRISA_GAME_DESIGN §7):
-- **Formato:** o conversor classifica cada `-colonly` do Ventania como caixa ou **rampa** (laje inclinada, com sentido de subida e espessura; BMOD v2). As escadas e os telhados em cunha ainda viram AABB, e as escadas ganham forma própria na Etapa 5.
+- **Formato:** o conversor classifica cada `-colonly` do Ventania como caixa ou **rampa** (laje inclinada, com sentido de subida e espessura; BMOD v2). Desde a Etapa 5 (BMOD v4), os prismas extrudados, como os lances das escadas em U de `gerar_interiores.py`, são cortados em caixas, rampas e **cunhas** (topo inclinado, base plana). Os telhados em pirâmide continuam como AABB (dá para andar em cima, como num bloco).
 - **Consultas:** `chao` (o maior topo sob um círculo, até um limite), `empurrar` (tira o cilindro das paredes, e obstáculos com topo até pés + degrau não bloqueiam), `teto`, `livre` e `raio` (slab test no espaço do colisor; nas rampas, 12 amostras).
 - **Movimento:** primeiro o horizontal, em subpassos de até 0,2 m (empurra, sobe degrau e rampa, mantém a velocidade ao longo do piso); depois o vertical (teto, chão e "grudar" a até 0,45 m ao descer). A velocidade guardada é a que as paredes deixaram andar, para a animação não "correr parada".
 - **Custo:** ~545 KB de bss. Com a ilha (Etapa 5), a grade passa para a de 4 m do §7, com as peças por célula.
@@ -365,4 +365,81 @@ chegar ao chão depois da queda livre ou do planador. No Brisa, que ainda não
 tem ônibus nem planador (Etapa 8), ela toca em qualquer queda de 6 m ou mais
 (`mov::QUEDA_PESADA`). Quando o planador entrar, o pouso dele também vai
 disparar a aterrissagem pesada.
+
+## 18. Mapa (Etapa 5, implementado)
+
+| Peça | Arquivo | Papel |
+|---|---|---|
+| Extração | `tools/auditoria/extrair_ilha.{sh,gd}` | O gerador do Ventania na Godot headless, numa cópia: layout, pesos do chão por amostra, costa e faixas de pedestres (`docs/auditoria/ilha_ventania_layout.json`) |
+| Conversor | `tools/conversor/mapa.py` | Layout → `mapa/ilha.bmap`, paredes com porta/janela, estradas por setor, cadeia de LODs, minimapa |
+| Leitor | `src/mundo/mapa.*` | BMAP sem cópia; regiões (ponto no contorno do POI) e costa |
+| Relevo 3D | `src/mundo/terreno.*` | Malhas do relevo geradas na carga (LOD1) e sob demanda (LOD0), mar em ladrilhos |
+| Colisão | `src/mundo/colisao.*` | Relevo bilinear (o `ground_height` do Ventania) + caixas e rampas com escala, grade compacta |
+| Ilha | `src/jogo/ilha.*` | Carga, corte por setor/distância/LOD, HUD com região, minimapa e mapa completo |
+
+**Conteúdo da ilha** (o mesmo layout do Ventania `7864cd7`): 646 peças da grade
+de 4 m (com as máscaras de porta e janela), 1.219 props, 37 baús, 6 POIs com
+contorno, 24 pontos de início e as estradas. Ao todo, 1.944 instâncias de 162
+modelos e 266 mil triângulos, sem contar o relevo.
+
+**Corte por quadro:**
+1. **Setores de 30 m** (20 × 20): a esfera do setor (com as alturas) contra a distância de visão (240 m) e o frustum.
+2. **Instâncias** do setor: distância máxima por categoria (peças 230 m, árvores 210, props grandes 190, baús 90, props pequenos 85, **móveis 24**: a mobília só é vista de perto, o que faz o papel do "só por dentro").
+3. **Cadeia de LODs** na tabela de modelos: peças com LOD1 (30%) a partir de 45 m e LOD2 (12%) a partir de 110 m; árvores e props grandes com LOD1 a partir de 70 m; baús a partir de 40 m.
+4. **Neblina** linear de 60 a 240 m na cor do Ventania (`cfe9ff`), com o céu `8fd3ff`.
+
+**Medido nas 16 vistas do roteiro** (os números de triângulos e objetos valem
+para o console; os iguais no PC e no emulador):
+
+| Vista | Triângulos | Objetos na cena |
+|---|---|---|
+| Vila Brisa, chegando | **41.893** (pior caso) | 460 |
+| Vila Brisa, do centro | 38.340 | 411 |
+| Porto Ferrugem | 25.753 / 28.231 | 247 / 337 |
+| Fazenda Girassol | 27.079 / 26.238 | 301 / 382 |
+| Mirante do Vento (4 direções) | 14.478 a 25.915 | 306 a 581 |
+| Pedreira Cinza | 11.463 / 16.136 | 177 / 310 |
+| Acampamento Coral | 9.815 / 20.481 | 135 / 480 |
+
+As peças de construção são a maior parte na Vila (27 a 40 mil triângulos antes
+do corte por parte); o relevo fica entre 2,7 e 4,9 mil.
+
+**BR-ADR-14: posições dos modelos em int16 com escala (BMOD v3).** Com posições
+em 4 × f32, os modelos ocupavam 4,6 MB (orçamento: 3 MB). Agora cada vértice
+guarda `x, y, z` em i16 × uma escala por modelo (erro abaixo de 0,1 mm num
+personagem e de 1 mm numa peça de 4 m). O VU1 desempacota com UNPACK V4-16 com
+sinal, converte com um ITOF0 e a escala entra nas colunas x, y, z da matriz
+MVP; o EE e o PC usam `Malha::posicao`. O vértice cai de 24 para 16 bytes, e
+os mesmos modelos foram de 4,6 para 3,1 MB. As tiras de triângulos ficam para
+quando o VU1 for o gargalo medido no console.
+
+**BR-ADR-15: o relevo é gerado na carga, não vem pronto no pacote.** A malha de
+3 m da ilha inteira daria cerca de 2,3 MB. O BMAP leva só as alturas (80 KB) e
+as cores (160 KB):
+- o LOD1 (quadrados de 6 m) de todos os 281 blocos com terra é montado na carga (com o cache do LOD0, 888 KB);
+- o LOD0 (3 m) é montado sob demanda, no máximo 4 blocos por quadro, num cache de 28 blocos em volta da câmera;
+- as bordas do LOD0 usam só as amostras pares (as amostras ímpares da borda seguem a reta entre as pares), então os dois LODs se encontram sem frestas (teste `relevo_sem_frestas_entre_lods`);
+- as posições usam a escala de 1/512 m: 30 m são 15.360 unidades exatas, e blocos vizinhos quantizam a borda comum do mesmo jeito.
+
+A colisão usa o relevo bilinear (`ground_height`). A diferença para a malha
+triangulada fica em poucos centímetros.
+
+**BR-ADR-16: tamanho da ilha.** Decisão provisória: **(a) a Ilha Ventania
+inteira**, com distância de visão de 240 m e neblina. Motivos medidos:
+- **Memória:** o mapa inteiro cabe. São 316 KB do BMAP, cerca de 0,5 MB de modelos gerados (paredes com aberturas, estradas, LODs) e 65 KB de minimapa no pacote; em jogo, 1,2 MB de arena (relevo e biblioteca de modelos) e 341 KB de colisão. O orçamento do mapa é de 4 MB (§6).
+- **Desenho:** a pior vista (chegando na Vila Brisa) envia 41,9 mil triângulos e as outras de 10 a 28 mil, dentro da meta de 40–70 mil do §5.2.
+- **Identidade:** a ilha compacta (b) exigiria um layout novo, diferente do Ventania.
+
+**Condições** (o aceite depende do console):
+- se o benchmark do console (Etapa 2) mostrar que o VU1 não sustenta cerca de 42 mil triângulos a 30 FPS, a ordem de corte é: distância dos LODs e de visão (parâmetros prontos), depois o descarte de faces no microprograma, e só então a ilha compacta;
+- a densidade de jogadores (12–16 em 600 m) é questão de partida, e entra na Etapa 8 (Tormenta e pontos de início), com medição do tempo até o primeiro encontro.
+
+**Memória medida na Etapa 5** (contagem de bytes; vale para o console):
+
+| Item | Medido | Orçamento (§6) |
+|---|---|---|
+| Pacote | 4,4 MB (231 arquivos): modelos 3,6 MB (trajes com LODs 2,5 MB; gerados para o mapa 0,5 MB), mapa 316 KB, animações 228 KB, texturas 121 KB | — |
+| ELF na RAM | 11,5 MB (4,8 MB de código e pacote, 6,9 MB de bss, com a arena de 4 MB) | — |
+| Livre no boot | 16,5 MB (eram 19,5 MB depois do int16 e 18,1 MB na Etapa 4) | Reserva ≥ 11 MB |
+| Ilha em jogo | arena 1,2 MB (relevo 888 KB, biblioteca de 175 modelos ~300 KB) + colisão 341 KB | Mapa: 4 MB |
 
