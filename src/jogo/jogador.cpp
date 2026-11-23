@@ -3,6 +3,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#include <string.h>
+
 #include "render3d/instancia.h"
 
 namespace {
@@ -21,6 +23,14 @@ bool Jogador::iniciar(const Pacote& pak, BibliotecaModelos& bib, char* erro, int
         snprintf(erro, ne, "animações do personagem: %s", d ? e : "ausente");
         return false;
     }
+    d = pak.arquivo("dados/itens.bdat", &tam);
+    if (!d || !itens_.carregar(d, tam, e, sizeof e)) { snprintf(erro, ne, "itens: %s", d ? e : "dados/itens.bdat ausente"); return false; }
+    if (itens_.n_itens() > MAX_ITENS) { snprintf(erro, ne, "itens demais (%d)", itens_.n_itens()); return false; }
+    for (int i = 0; i < MAX_ITENS; i++) modelo_item_[i] = -1;
+    for (int i = 1; i < itens_.n_itens(); i++)
+        if ((modelo_item_[i] = bib.carregar(itens_.modelo(i), erro, ne)) < 0) return false;
+    bib_ = &bib;
+    comb_.iniciar(&itens_, 1);
     reposicionar(Vec3(), 0);
     return true;
 }
@@ -34,11 +44,17 @@ void Jogador::reposicionar(Vec3 pes, f32 yaw, f32 pitch) {
     agachar_ = false;
 }
 
-void Jogador::passo(const Controle& c, const MundoColisao& m) {
+Mat4 Jogador::matriz() const {
+    // O modelo olha para +z; o jogo usa −z como frente (como no Ventania).
+    return Mat4::translacao(p_.pos) * Mat4::rotacao_y(p_.yaw + 3.14159265f);
+}
+
+void Jogador::passo(const Controle& c, const MundoColisao& m, Loot& loot, AlvoCombate* alvos, int n, u32 tick, bool bloquear,
+                    EventosCombate& ev) {
     const f32 dt = 1.0f / 30.0f;
     const EstadoControle& e = c.estado();
     if (c.pressionou(BT_R3)) agachar_ = !agachar_;  // R3 alterna (Ventania)
-    cam_.mirando = c.segurando(BT_L2);
+    cam_.mirando = c.segurando(BT_L2) && !bloquear;
     cam_.olhar(Controle::eixo(e.rx), Controle::eixo(e.ry), dt);
     ComandoMovimento cmd;
     cmd.x = Controle::eixo(e.lx);
@@ -50,15 +66,62 @@ void Jogador::passo(const Controle& c, const MundoColisao& m) {
     passo_movimento(p_, cmd, m, dt);  // sem espaço para levantar, continua agachado
     anim_.atualizar(p_, c.pressionou(BT_ESQUERDA), dt);
     cam_.atualizar(p_.pos, p_.agachado, m, dt);
+    // Combate (R1/L1 só trocam de item sozinhos: os dois juntos são os atalhos de depuração).
+    EntradaCombate ec;
+    ec.yaw = cam_.yaw_rad();
+    ec.pitch = cam_.pitch * 3.14159265f / 180.0f;
+    if (!bloquear) {
+        ec.atirar = c.segurando(BT_R2);
+        ec.mirar = c.segurando(BT_L2);
+        ec.recarregar = c.pressionou(BT_QUADRADO);
+        ec.interagir = c.segurando(BT_TRIANGULO);
+        if (c.pressionou(BT_R1) && !c.segurando(BT_L1)) ec.ciclo = 1;
+        if (c.pressionou(BT_L1) && !c.segurando(BT_R1)) ec.ciclo = -1;
+        ec.picareta = c.pressionou(BT_DIREITA);
+    }
+    comb_.passo(ec, p_, m, loot, alvos, n, tick, ev);
+    if (ev.atirou) {
+        const char* id = itens_.id(comb_.inv.atual().item);
+        port_.disparou(!strcmp(id, "trovao") || !strcmp(id, "gaviao"));
+    }
+    // Item na mão e ação para o visual.
+    int item = comb_.inv.atual().item;
+    port_.pedir_item(item, item > 0 && modelo_item_[item] >= 0 ? &(*bib_)[modelo_item_[item]] : nullptr, itens_.pose(item), itens_.id(item));
+    Vec3 alcance;
+    bool alcancar = false;
+    int b = comb_.bau_interagindo();
+    if (b >= 0) {
+        const BauMundo& bau = loot.bau(b);
+        Vec3 para_mim = p_.pos - bau.pos;
+        para_mim.y = 0;
+        f32 l = sqrtf(ponto(para_mim, para_mim));
+        Vec3 alca = bau.pos + Vec3(0, 0.62f, 0) + (l > 0.01f ? para_mim * (0.35f / l) : Vec3());
+        Mat4 inv = inversa_rigida(matriz());
+        Vec4 q = transformar(inv, alca);
+        alcance = Vec3(q.x, q.y, q.z);
+        alcancar = true;
+    }
+    port_.atualizar(dt, ec.pitch, cam_.mirando, sqrtf(p_.vel.x * p_.vel.x + p_.vel.z * p_.vel.z), comb_.acao(), comb_.progresso(),
+                    alcancar, alcance);
 }
 
-void Jogador::montar(Cena3D& cena, const BibliotecaModelos& bib, const MundoColisao& m, f32 aspecto) const {
+void Jogador::montar(Cena3D& cena, const BibliotecaModelos& bib, const MundoColisao& m, const Loot*, f32 aspecto) {
     cam_.aplicar(cena.camera, aspecto);
-    // O modelo olha para +z; o jogo usa −z como frente (como no Ventania).
     static Pose pose;
     const ModeloBrisa& mod = bib[trajes_[traje_]];
     anim_.pose(mod, pose);
-    adicionar_modelo(cena, mod, &pose, Mat4::translacao(p_.pos) * Mat4::rotacao_y(p_.yaw + 3.14159265f));
+    Mat4 mm = matriz(), item;
+    int ii = port_.item_na_mao();
+    if (port_.aplicar(mod, pose, &item) && ii > 0 && modelo_item_[ii] >= 0) adicionar_modelo(cena, bib[modelo_item_[ii]], nullptr, mm * item);
+    adicionar_modelo(cena, mod, &pose, mm);
+    Vec3 c;
+    if (port_.cano(&c)) {
+        Vec4 w = transformar(mm, c);
+        cano_ = Vec3(w.x, w.y, w.z);
+    } else {
+        tiro::Raio r = tiro::mira(p_.pos, p_.agachado, cam_.yaw_rad(), cam_.pitch * 3.14159265f / 180.0f);
+        cano_ = r.origem;
+    }
     f32 y_chao = 0;
     if (m.chao(p_.pos.x, p_.pos.z, 0.1f, p_.pos.y + 0.05f, &y_chao)) {
         f32 h = p_.pos.y - y_chao;

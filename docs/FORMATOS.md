@@ -65,7 +65,7 @@ Cabeçalho de 128 bytes:
 | Offset | Tipo | Campo |
 |---|---|---|
 | 0 | char[4] | `BMAP` |
-| 4 | u32 | versão (1) |
+| 4 | u32 | versão (2) |
 | 8 | u32 | n de amostras do relevo por lado (201) |
 | 12 | f32 | passo do relevo (3 m) |
 | 16 | f32 | x e z da amostra (0, 0) (−300) |
@@ -74,6 +74,7 @@ Cabeçalho de 128 bytes:
 | 28 | f32 | lado do setor (30 m) |
 | 32 | u32 ×6 | n de modelos, instâncias, POIs, pontos de início, pontos de contorno, amostras da costa |
 | 56 | u32 ×9 | offsets: relevo, cores, costa, modelos, setores, instâncias, POIs, pontos, pontos de início |
+| 92 | u32, u32 | n de pontos de loot e offset (v2) |
 
 Blocos:
 
@@ -88,6 +89,7 @@ Blocos:
 | POIs | 96 B | `id[24]`, `nome[40]` (UTF-8), `x, y, z, raio f32`, `cor u32` (0xRRGGBB), `inicio u32`, `n_pontos u32` (contorno), 4 B |
 | Pontos | 8 B | `x, z f32` dos contornos das regiões |
 | Pontos de início | 16 B | `x, y, z f32`, 4 B |
+| Pontos de loot | 16 B | `x, y, z f32`, 4 B (v2: os 102 do Ventania) |
 
 Categorias: 0 peça de construção, 1 árvore, 2 prop pequeno, 3 móvel, 4 prop
 grande, 5 baú, 6 estrada. A malha do relevo **não** vai no arquivo: o jogo a

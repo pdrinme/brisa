@@ -26,6 +26,16 @@ else
   confere "correu" "^BRISA_MARCO correndo .*anim=correr"
   confere "campo pelo VU1 (roteiro)" "BRISA_ROTEIRO caminho=VU1 .*lotes_vu1=[1-9]"
   confere "campo pelo EE (roteiro)" "BRISA_ROTEIRO caminho=EE .*desenhados_ee=[1-9]"
+  # Combate no campo de treino (Etapa 6): as mesmas expectativas de tests/teste_combate.cpp.
+  confere "abriu o baú (segurando ▲)" "^BRISA_COMBATE bau_aberto .*baus_abertos=1 "
+  confere "pegou a arma e o consumível do baú" "^BRISA_COMBATE pegou .*espacos=[a-z_]+:[0-5]:1:[0-9]+,[a-z_]+:0:[0-9]+:0,-,-,- "
+  confere "sacou a arma (R1)" "^BRISA_COMBATE na_mao .*na_mao=(rajada|trovao|zumbido|faisca|gaviao) "
+  confere "atirou no boneco (dano >= 300)" "^BRISA_COMBATE atirou .*dano_bonecos=([3-9][0-9]{2}|[0-9]{4,}) "
+  confere "recarregou o pente" "^BRISA_COMBATE recarregou .*espacos=[a-z_]+:[0-5]:1:30,"
+  confere "usou o consumível" "^BRISA_COMBATE consumivel .*escudo=25 "
+  confere "golpes da picareta no boneco" "^BRISA_COMBATE golpes .*dano_bonecos=[0-9]+ boneco2=90/0 .*golpes=3 "
+  confere "largou pelo inventário" "^BRISA_COMBATE inventario .*espacos=-,"
+  confere "roteiro de combate até o fim" "^BRISA_COMBATE_OK"
   # Ilha (Etapa 5)
   confere "ilha carregada (mapa, colisão, relevo)" "^BRISA_ILHA carregada_us=[0-9]+ instancias=1944 .*colisores=[0-9]+"
   confere "vista da Vila Brisa pelo VU1" "^BRISA_ILHA_VISTA vila_brisa_chegando caminho=VU1 .*tris=[1-9][0-9]+"

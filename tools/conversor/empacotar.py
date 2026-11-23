@@ -20,8 +20,8 @@ import formatos  # noqa: E402
 
 RAIZ = os.path.abspath(os.path.join(AQUI, "..", ".."))
 LICENCAS_OK = {"Original", "CC0-1.0", "CC-BY-4.0", "CC-BY-3.0", "OFL-1.1", "MIT", "Apache-2.0"}
-PASTAS = ("modelos", "animacoes", "texturas", "mapa")
-TIPO = {"modelo": "BMOD", "animacao": "BANI", "textura": "BTEX", "mapa": "BMAP"}
+PASTAS = ("modelos", "animacoes", "texturas", "mapa", "dados")
+TIPO = {"modelo": "BMOD", "animacao": "BANI", "textura": "BTEX", "mapa": "BMAP", "dados": "BDAT"}
 
 
 def main():

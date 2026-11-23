@@ -52,11 +52,26 @@
    "notas": "esqueleto padrão de 20 ossos, compartilhado por todos os trajes"
   },
   {
+   "id": "dados_itens",
+   "arquivo": "assets/dados/itens.bdat",
+   "tipo": "dados",
+   "bytes": 1856,
+   "crc32": "37369698",
+   "origem": "data/itens.json (cópia revisada de ventania:game/data/itens.json@7864cd7)",
+   "autor": "Projeto Ventania / Projeto Brisa",
+   "licenca": "Original",
+   "autorizacao": "titular (ASSET_LICENSES.md §2)",
+   "categoria": "dados",
+   "armas": 5,
+   "consumiveis": 4,
+   "raridades": 6
+  },
+  {
    "id": "mapa_ilha",
    "arquivo": "assets/mapa/ilha.bmap",
    "tipo": "mapa",
-   "bytes": 323072,
-   "crc32": "0f185be3",
+   "bytes": 324704,
+   "crc32": "ad26aa0c",
    "origem": "ventania:game/world/ilha/ilha_ventania.gd@7864cd7 (layout extraído; tools/auditoria/extrair_ilha.sh)",
    "autor": "Projeto Ventania",
    "licenca": "Original",

@@ -175,6 +175,9 @@ def main():
     open(os.path.join(RAIZ, "docs/auditoria/CONVERSAO.md"), "w", encoding="utf-8").write("\n".join(linhas) + "\n")
     print("\n".join(linhas[-6:]))
     print(f"CONVERSAO_OK {len(catalogo)} arquivos, {tot} bytes")
+    # Dados de jogo (não dependem do Ventania; também rodam sozinhos por `make dados`).
+    import dados
+    dados.main()
 
 
 if __name__ == "__main__":

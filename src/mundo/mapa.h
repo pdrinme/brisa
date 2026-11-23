@@ -42,7 +42,7 @@ static_assert(sizeof(PoiMapa) == 96, "PoiMapa");
 
 class MapaBrisa {
 public:
-    static const u32 VERSAO = 1;
+    static const u32 VERSAO = 2;
     bool carregar(const u8* dados, u32 tamanho, char* erro, int n_erro);
     const Relevo& relevo() const { return relevo_; }
     f32 nivel_mar() const { return nivel_mar_; }
@@ -59,6 +59,8 @@ public:
     const PoiMapa& poi(int i) const { return pois_[i]; }
     int n_spawns() const { return n_spawns_; }
     Vec3 spawn(int i) const { return Vec3(spawns_[i * 4], spawns_[i * 4 + 1], spawns_[i * 4 + 2]); }
+    int n_pontos_loot() const { return n_loot_; }
+    Vec3 ponto_loot(int i) const { return Vec3(loot_[i * 4], loot_[i * 4 + 1], loot_[i * 4 + 2]); }
     f32 raio_costa(f32 angulo) const;   // atan2(z, x), como coast_radius do Ventania
     int regiao(f32 x, f32 z) const;     // POI cujo contorno contém o ponto, ou −1
 private:
@@ -73,4 +75,6 @@ private:
     const PoiMapa* pois_ = nullptr;
     const f32* pontos_ = nullptr;
     const f32* spawns_ = nullptr;
+    const f32* loot_ = nullptr;
+    int n_loot_ = 0;
 };

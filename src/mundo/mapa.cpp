@@ -13,8 +13,9 @@ struct CabecalhoMapa {
     f32 tam_setor;
     u32 n_modelos, n_inst, n_pois, n_spawns, n_pontos, n_costa;
     u32 off_relevo, off_cores, off_costa, off_modelos, off_setores, off_inst, off_pois, off_pontos, off_spawns;
+    u32 n_loot, off_loot;  // v2
 };
-static_assert(sizeof(CabecalhoMapa) == 92, "CabecalhoMapa");
+static_assert(sizeof(CabecalhoMapa) == 100, "CabecalhoMapa");
 }  // namespace
 
 bool MapaBrisa::carregar(const u8* d, u32 t, char* erro, int ne) {
@@ -26,7 +27,8 @@ bool MapaBrisa::carregar(const u8* d, u32 t, char* erro, int ne) {
     struct { u32 off, bytes; } blocos[] = {{c->off_relevo, nn * 2}, {c->off_cores, nn * 4}, {c->off_costa, c->n_costa * 4},
                                            {c->off_modelos, c->n_modelos * 48}, {c->off_setores, c->setores * c->setores * 16},
                                            {c->off_inst, c->n_inst * 32}, {c->off_pois, c->n_pois * 96},
-                                           {c->off_pontos, c->n_pontos * 8}, {c->off_spawns, c->n_spawns * 16}};
+                                           {c->off_pontos, c->n_pontos * 8}, {c->off_spawns, c->n_spawns * 16},
+                                           {c->off_loot, c->n_loot * 16}};
     for (auto& b : blocos)
         if (b.off + b.bytes > t || (b.off & 3)) { snprintf(erro, ne, "mapa truncado"); return false; }
     relevo_.alturas_cm = reinterpret_cast<const i16*>(d + c->off_relevo);
@@ -49,6 +51,8 @@ bool MapaBrisa::carregar(const u8* d, u32 t, char* erro, int ne) {
     pois_ = reinterpret_cast<const PoiMapa*>(d + c->off_pois);
     pontos_ = reinterpret_cast<const f32*>(d + c->off_pontos);
     spawns_ = reinterpret_cast<const f32*>(d + c->off_spawns);
+    loot_ = reinterpret_cast<const f32*>(d + c->off_loot);
+    n_loot_ = static_cast<int>(c->n_loot);
     for (int i = 0; i < n_inst_; i++)
         if (inst_[i].modelo >= n_mod_) { snprintf(erro, ne, "instância %d com modelo inválido", i); return false; }
     for (int i = 0; i < n_mod_; i++)

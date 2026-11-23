@@ -32,6 +32,13 @@ const Lugar BAUS[] = {
 const Lugar PROPS[] = {
 #include "campo_treino_props.inc"
 };
+// CampoTreino.LOOT_POINTS e DUMMIES (bonecos de treino: alvos que não revidam).
+const Vec3 PONTOS_LOOT[] = {
+    Vec3(-16, 0.1f, -9), Vec3(0, 4.1f, -18), Vec3(16, 0.1f, -9), Vec3(16, 4.1f, -11.2f), Vec3(-16, 1.6f, 6), Vec3(-24, 0, 12),
+    Vec3(24, 0, 12), Vec3(-26, 0, -18), Vec3(26, 0, -20), Vec3(0, 0, 22), Vec3(-10, 0, 24), Vec3(12, 0, 24), Vec3(-40, 0, 0),
+    Vec3(40, 0, 0), Vec3(0, 0, -40), Vec3(-3, 0, 8), Vec3(3, 0, 8),
+};
+const Vec3 BONECOS[Treino::N_BONECOS] = {Vec3(-5, 0, -2), Vec3(0, 0, -4), Vec3(5, 0, -2)};
 f32 chao_plano(f32, f32) { return 0; }
 void card(ListaDesenho2D& l, f32 x, f32 y, f32 w, f32 h) {
     l.retangulo(x + 4, y + 4, w, h, rgb(0x15161c, 140));
@@ -52,7 +59,10 @@ bool Treino::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
         return true;
     };
     for (const Lugar& l : CONSTRUCOES) if (!colocar(l)) return false;
-    for (const Lugar& l : BAUS) if (!colocar(l)) return false;
+    for (const Lugar& l : BAUS) {
+        if (!colocar(l)) return false;
+        inst_[n_inst_ - 1].bau = static_cast<int>(&l - BAUS);
+    }
     for (const Lugar& l : PROPS) if (!colocar(l)) return false;
     // Bordas do campo (paredes invisíveis de CampoTreino._chao).
     mundo_.adicionar_caixa(Vec3(LIMITE, 0, 0), 0, Vec3(-1, 0, -LIMITE), Vec3(1, 60, LIMITE));
@@ -60,6 +70,21 @@ bool Treino::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
     mundo_.adicionar_caixa(Vec3(0, 0, LIMITE), 0, Vec3(-LIMITE, 0, -1), Vec3(LIMITE, 60, 1));
     mundo_.adicionar_caixa(Vec3(0, 0, -LIMITE), 0, Vec3(-LIMITE, 0, -1), Vec3(LIMITE, 60, 1));
     if (!jogador_.iniciar(pak, bib_, erro, ne)) return false;
+    if (!hc_.iniciar(pak, bib_, arena, jogador_.itens(), erro, ne)) return false;
+    // Loot do campo: baús (reabastecem em 45 s) e pontos de loot, com semente fixa.
+    loot_.iniciar(&jogador_.itens(), 42);
+    loot_.reabastecer = true;
+    for (const Lugar& l : BAUS) loot_.adicionar_bau(Vec3(l.x, l.y, l.z), l.rot);
+    for (const Vec3& p : PONTOS_LOOT) loot_.adicionar_ponto(p);
+    loot_.sortear_pontos();
+    for (int i = 0; i < N_BONECOS; i++) {
+        bonecos_[i].pos = BONECOS[i];
+        bonecos_[i].vit = Vitais();
+        bonecos_[i].vit.escudo = 50;
+        bonecos_[i].ultimo = 0;
+    }
+    if ((modelo_boneco_ = bib_.carregar("recruta_base_01", erro, ne)) < 0) return false;
+    clipe_idle_ = jogador_.animacoes().achar("idle");
     u32 tam = 0;
     char e[96];
     const u8* d = nullptr;
@@ -73,15 +98,49 @@ bool Treino::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
     return mundo_.descartados() == 0;
 }
 
+void Treino::posicionar(Vec3 pes, f32 yaw, f32 pitch) { jogador_.reposicionar(pes, yaw, pitch); }
+
 void Treino::passo(const Controle& c) {
     passos_++;
     if (c.pressionou(BT_START)) hud_ = !hud_;
-    if (c.pressionou(BT_SELECT)) definir_traje(jogador_.traje() + 1);
-    if (c.pressionou(BT_BAIXO)) {
+    // Atalhos de depuração (L1 + R1 + …): SELECT troca o caminho de desenho; ● troca o traje.
+    bool atalho = c.segurando(BT_L1) && c.segurando(BT_R1);
+    if (atalho && c.pressionou(BT_SELECT)) {
         Caminho3D o = caminho_ == Caminho3D::VU1 ? Caminho3D::EE : Caminho3D::VU1;
         if (plataforma::caminho_disponivel(o)) caminho_ = o;
     }
-    jogador_.passo(c, mundo_);
+    if (atalho && c.pressionou(BT_CIRCULO)) definir_traje(jogador_.traje() + 1);
+    bool bloquear = !atalho && hc_.controlar_inventario(c, jogador_, loot_, mundo_);
+    bloquear = bloquear || hc_.inventario_aberto();
+    AlvoCombate alvos[N_BONECOS];
+    for (int i = 0; i < N_BONECOS; i++) {
+        alvos[i].id = static_cast<u16>(60001 + i);  // DUMMY_ID_BASE do Ventania
+        alvos[i].pes = bonecos_[i].pos;
+        alvos[i].vit = &bonecos_[i].vit;
+        alvos[i].ultimo_acerto = &bonecos_[i].ultimo;
+    }
+    ev_ = EventosCombate();
+    jogador_.passo(c, mundo_, loot_, alvos, N_BONECOS, passos_, bloquear, ev_);
+    for (int k = 0; k < ev_.n_acertos; k++) {
+        int b = ev_.acertos[k].alvo - 60001;
+        if (b >= 0 && b < N_BONECOS) {
+            dano_bonecos_ += ev_.acertos[k].dano;
+            if (ev_.acertos[k].eliminou) {  // bonecos não morrem: voltam inteiros
+                bonecos_[b].vit.reiniciar();
+                bonecos_[b].vit.escudo = 50;
+                eliminacoes_++;
+            }
+        }
+    }
+    // Bonecos se recuperam 3 s depois do último acerto (update_dummies).
+    for (Boneco& b : bonecos_)
+        if (passos_ - b.ultimo > 90 && (b.vit.vida < Vitais::VIDA_MAX || b.vit.escudo != 50)) {
+            b.vit.reiniciar();
+            b.vit.escudo = 50;
+        }
+    loot_.atualizar(passos_, 1.0f / 30.0f);
+    hc_.registrar(ev_, jogador_);
+    hc_.passo();
 }
 
 void Treino::montar(Cena3D& cena, ListaDesenho2D& l, const EstatisticasQuadro& est, const Estatisticas3D& e3d,
@@ -98,14 +157,23 @@ void Treino::montar(Cena3D& cena, ListaDesenho2D& l, const EstatisticasQuadro& e
     cena.luz.sombra = Vec3(0.74f, 0.82f, 0.95f);
     cena.textura_sombra = textura_sombra_;
     cena.adicionar(&chao_, Mat4::identidade());
-    for (int i = 0; i < n_inst_; i++)
-        adicionar_modelo(cena, bib_[inst_[i].modelo], nullptr,
-                         Mat4::translacao(inst_[i].pos) * Mat4::rotacao_y(inst_[i].rot * GRAUS));
-    jogador_.montar(cena, bib_, mundo_, 4.0f / 3.0f);
-    for (int i = 0; i < n_inst_; i++)
-        if (strncmp(bib_[inst_[i].modelo].no(0).nome, "bau", 3) == 0) cena.sombra(inst_[i].pos, 0.75f);
+    for (int i = 0; i < n_inst_; i++) {
+        const Pose* pose = inst_[i].bau >= 0 ? hc_.pose_bau(loot_.bau(inst_[i].bau).tampa) : nullptr;
+        adicionar_modelo(cena, bib_[inst_[i].modelo], pose, Mat4::translacao(inst_[i].pos) * Mat4::rotacao_y(inst_[i].rot * GRAUS));
+        if (inst_[i].bau >= 0) cena.sombra(inst_[i].pos, 0.75f);
+    }
+    jogador_.montar(cena, bib_, mundo_, &loot_, 4.0f / 3.0f);
+    // Bonecos de treino: o traje padrão parado (idle).
+    static Pose pose_boneco;
+    jogador_.animacoes().amostrar(clipe_idle_, passos_ / 30.0f, bib_[modelo_boneco_], pose_boneco);
+    for (const Boneco& b : bonecos_) {
+        adicionar_modelo(cena, bib_[modelo_boneco_], &pose_boneco, Mat4::translacao(b.pos) * Mat4::rotacao_y(3.14159265f));
+        cena.sombra(b.pos, 0.55f);
+    }
+    hc_.montar_loot(cena, loot_, bib_, jogador_, passos_ / 30.0f);
     l.limpar(cena.ceu);
     if (hud_) hud(l, est, e3d, info);
+    hc_.desenhar(l, jogador_, loot_, cena.camera);
 }
 
 void Treino::hud(ListaDesenho2D& l, const EstatisticasQuadro& est, const Estatisticas3D& e3d, const InfoPlataforma& info) const {
@@ -126,7 +194,9 @@ void Treino::hud(ListaDesenho2D& l, const EstatisticasQuadro& est, const Estatis
     snprintf(linha, sizeof linha, "%s · %u TRI · 3D %s MS · %s FPS", p.no_chao ? "NO CHÃO" : "NO AR",
              static_cast<unsigned>(e3d.triangulos_enviados), a, d);
     fonte::desenhar(l, 26, 64, 2, rgb(0xf6f3ec, 190), linha);
-    card(l, 16, 388, 608, 48);
-    fonte::desenhar(l, 26, 392, 2, AMARELO, "X PULA · L3 CORRE · R3 AGACHA · L2 MIRA");
-    fonte::desenhar(l, 26, 414, 2, AMARELO, "ESQ. ACENA · SELECT TRAJE · BAIXO 3D · START HUD");
+    // vida dos bonecos (canto direito do painel)
+    for (int i = 0; i < N_BONECOS; i++) {
+        snprintf(linha, sizeof linha, "BONECO %d: %d/%d", i + 1, bonecos_[i].vit.vida, bonecos_[i].vit.escudo);
+        fonte::desenhar(l, 474, 20 + i * 14, 1, BRANCO, linha);
+    }
 }

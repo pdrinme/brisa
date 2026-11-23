@@ -326,10 +326,8 @@ TESTE(ilha_sobe_a_escada_em_u) {
         Personagem p = andar(w, Vec3(x, y, z), dx, dz, 30);  // até a parede do fundo do patamar
         VERIFICA(p.no_chao && fabsf(p.pos.y - (k.y + 2.1f)) < 0.05f);  // no patamar
         // vai para a faixa do lance 2 (z local −1) e sobe para +x
-        f32 lx, lz;
         f32 qx = p.pos.x - k.x, qz = p.pos.z - k.z;
-        lx = c * qx - s * qz;
-        lz = s * qx + c * qz;
+        f32 lx = c * qx - s * qz;
         VERIFICA(lx < -0.7f);
         dir(0, -1, &dx, &dz);
         p = andar(w, p.pos, dx, dz, 14);  // ~2 m para −z local (meio da faixa do lance 2)

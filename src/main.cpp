@@ -50,6 +50,30 @@ static void log_marco(const char* marco, const Treino& t) {
     plataforma::log(msg);
 }
 
+// Estado do combate no log (roteiro da Etapa 6): inventário, munição, bonecos e baús.
+static void log_combate(const char* marco, const Treino& t, u32 passo) {
+    char msg[400];
+    const Jogador& j = t.jogador();
+    const Inventario& inv = j.combate().inv;
+    const BancoItens& b = j.itens();
+    int k = snprintf(msg, sizeof msg, "BRISA_COMBATE %s passo=%u na_mao=%s espacos=", marco, static_cast<unsigned>(passo),
+                     b.id(inv.atual().item));
+    for (int i = 0; i < Inventario::ESPACOS; i++) {
+        const Espaco& e = inv.espacos[i];
+        if (e.vazio()) k += snprintf(msg + k, sizeof msg - k, "%s-", i ? "," : "");
+        else k += snprintf(msg + k, sizeof msg - k, "%s%s:%u:%u:%u", i ? "," : "", b.id(e.item), static_cast<unsigned>(e.raridade),
+                           static_cast<unsigned>(e.qtd), static_cast<unsigned>(e.pente));
+    }
+    k += snprintf(msg + k, sizeof msg - k, " municao=");
+    for (int i = 0; i < b.n_municoes(); i++) k += snprintf(msg + k, sizeof msg - k, "%s%u", i ? "," : "", static_cast<unsigned>(inv.municao[i]));
+    int abertos = 0;
+    for (int i = 0; i < t.loot().n_baus(); i++) abertos += t.loot().bau(i).aberto;
+    snprintf(msg + k, sizeof msg - k, " vida=%d escudo=%d dano_bonecos=%d boneco2=%d/%d baus_abertos=%d golpes=%u acao=%d\n",
+             j.combate().vit.vida, j.combate().vit.escudo, t.dano_nos_bonecos(), t.boneco(1).vit.vida, t.boneco(1).vit.escudo,
+             abertos, static_cast<unsigned>(j.combate().golpes()), j.combate().acao());
+    plataforma::log(msg);
+}
+
 int main(int argc, char** argv) {
     InfoPlataforma info;
     if (!plataforma::iniciar(info, argc, argv)) {
@@ -146,7 +170,9 @@ int main(int argc, char** argv) {
     Estatisticas3D e3d;
     u64 anterior = plataforma::tempo_us();
     u32 quadro = 0;
-    int faixa = 0;
+    int faixa = 0, faixa_combate = 0;
+    u32 inicio_combate = 0;
+    bool fim_treino = false;
     bool registrar_3d = false;  // depois de um marco do roteiro: registra o 3D do próximo quadro
     bool viu_conectado = false;
 
@@ -193,16 +219,36 @@ int main(int argc, char** argv) {
                     faixa++;
                 }
                 if (faixa >= N_ROTEIRO_TREINO) {
-                    plataforma::log("BRISA_TREINO_OK\n");
-                    if (!tem_ilha) break;
-                    modo = ILHA;  // segue para o roteiro da ilha
-                    continue;
+                    // Etapa 6: o roteiro de combate, no mesmo campo.
+                    if (inicio_combate == 0) {
+                        plataforma::log("BRISA_TREINO_OK\n");
+                        inicio_combate = k;
+                    }
+                    u32 kc = k - inicio_combate;
+                    while (faixa_combate < N_ROTEIRO_COMBATE && kc >= ROTEIRO_COMBATE[faixa_combate].fim) {
+                        if (ROTEIRO_COMBATE[faixa_combate].marco) { log_combate(ROTEIRO_COMBATE[faixa_combate].marco, g_treino, kc); registrar_3d = true; }
+                        faixa_combate++;
+                    }
+                    if (faixa_combate >= N_ROTEIRO_COMBATE) {
+                        plataforma::log("BRISA_COMBATE_OK\n");
+                        if (!tem_ilha) { fim_treino = true; break; }
+                        modo = ILHA;  // segue para o roteiro da ilha
+                        continue;
+                    }
+                    const FaixaCombate& fc = ROTEIRO_COMBATE[faixa_combate];
+                    if (kc == fc.inicio && fc.lugar == 1) g_treino.posicionar(Vec3(-6.2f, 0, 4.386f), 30.0f, -15.0f);  // em frente ao baú 4
+                    if (kc == fc.inicio && fc.lugar == 2) g_treino.posicionar(Vec3(-0.55f, 0, 4), 0, -3.9f);         // ombro alinhado ao boneco 2
+                    if (kc == fc.inicio && fc.lugar == 3) g_treino.posicionar(Vec3(-0.55f, 0, -2.2f), 0, -10.0f);    // ao alcance da picareta
+                    bruto = EstadoControle();
+                    bruto.modo = ModoControle::ANALOGICO;
+                    bruto.botoes = fc.botoes;
+                } else {
+                    const FaixaRoteiro& f = ROTEIRO_TREINO[faixa];
+                    bruto = EstadoControle();
+                    bruto.modo = ModoControle::ANALOGICO;
+                    bruto.botoes = f.botoes;
+                    bruto.lx = f.lx; bruto.ly = f.ly; bruto.rx = f.rx; bruto.ry = f.ry;
                 }
-                const FaixaRoteiro& f = ROTEIRO_TREINO[faixa];
-                bruto = EstadoControle();
-                bruto.modo = ModoControle::ANALOGICO;
-                bruto.botoes = f.botoes;
-                bruto.lx = f.lx; bruto.ly = f.ly; bruto.rx = f.rx; bruto.ry = f.ry;
             }
             controle.ler(bruto);
             controle.iniciar_passo();
@@ -226,7 +272,7 @@ int main(int argc, char** argv) {
             plataforma::log("BRISA_ILHA_OK\n");
             break;
         }
-        if (roteiro && !tem_ilha && faixa >= N_ROTEIRO_TREINO) break;
+        if (roteiro && fim_treino) break;
         Caminho3D caminho;
         if (modo == ILHA) { g_ilha.montar(g_cena, g_hud, est, e3d, info); caminho = g_ilha.caminho(); }
         else if (modo == TREINO) { g_treino.montar(g_cena, g_hud, est, e3d, info); caminho = g_treino.caminho(); }

@@ -14,7 +14,7 @@ PS2DEV ?= /opt/ps2dev
 PS2SDK ?= $(PS2DEV)/ps2sdk
 GSKIT ?= $(PS2DEV)/gsKit
 
-NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp) $(wildcard src/conteudo/*.cpp) $(wildcard src/mundo/*.cpp) $(wildcard src/personagem/*.cpp)
+NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp) $(wildcard src/conteudo/*.cpp) $(wildcard src/mundo/*.cpp) $(wildcard src/personagem/*.cpp) $(wildcard src/combate/*.cpp)
 PAK := build/conteudo/BRISA.PAK
 ASSETS := assets/catalogo_brisa.json $(wildcard assets/*/*)
 PS2_SRC := src/main.cpp $(NUCLEO) $(wildcard src/plataforma/ps2/*.cpp)
@@ -50,7 +50,11 @@ build/ps2/brisa.elf: $(call objetos_ps2,ps2)
 # make conteudo-ventania VENTANIA=../ventania  reconverte os assets a partir do Ventania (Etapa 3).
 VENTANIA ?= ../ventania
 conteudo: $(PAK)
-$(PAK): $(ASSETS) tools/conversor/empacotar.py tools/conversor/formatos.py
+# Dados de jogo (Etapa 6): data/*.json → assets/dados/*.bdat (+ registro no catálogo).
+dados: assets/dados/itens.bdat
+assets/dados/itens.bdat: data/itens.json tools/conversor/dados.py
+	python3 tools/conversor/dados.py
+$(PAK): assets/dados/itens.bdat $(ASSETS) tools/conversor/empacotar.py tools/conversor/formatos.py
 	python3 tools/conversor/empacotar.py --saida $@
 conteudo-ventania:
 	python3 tools/conversor/construir.py --ventania $(VENTANIA)
@@ -79,7 +83,7 @@ build/autoteste/brisa_autoteste.elf: $(call objetos_ps2,autoteste)
 
 build/autoteste/%.o: src/%.cpp
 	@mkdir -p $(@D)
-	$(EE_CXX) $(EE_CXXFLAGS) -DBRISA_AUTOTESTE=5000 -DBRISA_BENCH_AQUECER=3 -DBRISA_BENCH_MEDIR=6 -c $< -o $@
+	$(EE_CXX) $(EE_CXXFLAGS) -DBRISA_AUTOTESTE=8000 -DBRISA_BENCH_AQUECER=3 -DBRISA_BENCH_MEDIR=6 -c $< -o $@
 
 build/%/irx/sio2man_irx.c: $(PS2SDK)/iop/irx/sio2man.irx
 	@mkdir -p $(@D)
@@ -122,7 +126,7 @@ emulador: autoteste build/host/brisa_previa
 	@rm -rf build/emulador
 	@mkdir -p build/emulador
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
-	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 200,680,1250,1326,1738
+	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 200,680,1788,2250,2306,2730
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
 	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/controle 150 botoes
 	python3 tools/emulador/ppm_para_png.py --todos build/emulador
@@ -134,10 +138,15 @@ emulador: autoteste build/host/brisa_previa
 	./build/host/brisa_previa --roteiro=1 --png=build/emulador/pc_338.png --png-quadro=338 > /dev/null
 	python3 tools/emulador/comparar_quadros.py build/emulador/cena_680.png build/emulador/pc_338.png
 	@# Ilha (Etapa 5): 1ª vista (Vila Brisa) e Mirante a 90°, contra o PC no mesmo passo do roteiro da ilha.
+	@# Combate (Etapa 6): Rajada na mão depois da recarga e a tela de inventário aberta.
+	./build/host/brisa_previa --roteiro=1 --png=build/emulador/pc_920.png --png-quadro=920 > /dev/null
+	./build/host/brisa_previa --roteiro=1 --png=build/emulador/pc_1144.png --png-quadro=1144 > /dev/null
+	python3 tools/emulador/comparar_quadros.py build/emulador/cena_1788.png build/emulador/pc_920.png
+	python3 tools/emulador/comparar_quadros.py build/emulador/cena_2250.png build/emulador/pc_1144.png
 	./build/host/brisa_previa --roteiro=2 --png=build/emulador/pc_ilha_10.png --png-quadro=10 > /dev/null
 	./build/host/brisa_previa --roteiro=2 --png=build/emulador/pc_ilha_216.png --png-quadro=216 > /dev/null
-	python3 tools/emulador/comparar_quadros.py build/emulador/cena_1326.png build/emulador/pc_ilha_10.png
-	python3 tools/emulador/comparar_quadros.py build/emulador/cena_1738.png build/emulador/pc_ilha_216.png
+	python3 tools/emulador/comparar_quadros.py build/emulador/cena_2306.png build/emulador/pc_ilha_10.png
+	python3 tools/emulador/comparar_quadros.py build/emulador/cena_2730.png build/emulador/pc_ilha_216.png
 	tools/emulador/verificar_saida.sh build/emulador/controle.log --controle
 
 # emulador-completo: os 600 quadros até o fim do programa (AutoTest: GS nulo, sem controle).
@@ -153,6 +162,6 @@ emulador-completo: autoteste
 limpar:
 	rm -rf build
 
-.PHONY: all autoteste testes previa emulador emulador-completo limpar conteudo conteudo-ventania
+.PHONY: all autoteste testes previa emulador emulador-completo limpar conteudo conteudo-ventania dados
 
 -include $(shell find build -name '*.d' 2>/dev/null)

@@ -26,7 +26,7 @@ PASSO = 3.0
 ORIGEM = -300.0
 SETOR = 30.0
 S = 20  # setores por lado (20 × 30 m = 600 m)
-VERSAO_MAPA = 1
+VERSAO_MAPA = 2  # v2: pontos de loot
 MATERIAIS = ["madeira", "pedra", "metal"]
 TIPOS = {0: "parede", 1: "parede", 2: "piso", 3: "rampa", 4: "teto"}
 
@@ -588,7 +588,8 @@ def construir(v, paleta, commit, layout, modelos_convertidos, registrar, relator
         pontos += [tuple(q) for q in p["limite"]]
     b_pts = b"".join(struct.pack("<2f", *q) for q in pontos)
     b_spw = b"".join(struct.pack("<3f4x", *s) for s in layout["spawns"])
-    blocos = [b_rel, b_cor, b_costa, b_mod, b_set, b_inst, b_poi, b_pts, b_spw]
+    b_loot = b"".join(struct.pack("<3f4x", *p) for p in layout["loot"])
+    blocos = [b_rel, b_cor, b_costa, b_mod, b_set, b_inst, b_poi, b_pts, b_spw, b_loot]
     corpo, offs, off = b"", [], 128
     for b in blocos:
         b = formatos._alinhar(b)
@@ -598,7 +599,7 @@ def construir(v, paleta, commit, layout, modelos_convertidos, registrar, relator
     cab = b"BMAP" + struct.pack("<IIfffIfIIIIII", VERSAO_MAPA, N, PASSO, ORIGEM, layout["nivel_mar"], S, SETOR,
                                 len(nomes), len(inst), len(layout["pois"]), len(layout["spawns"]), len(pontos),
                                 len(layout["costa"]))
-    cab += struct.pack("<9I", *offs)
+    cab += struct.pack("<9I", *offs[:9]) + struct.pack("<II", len(layout["loot"]), offs[9])
     cab = cab + b"\0" * (128 - len(cab))
     dados = cab + corpo
     tris_mapa = sum(todos[nomes[t[0]]].triangulos() for t in inst)

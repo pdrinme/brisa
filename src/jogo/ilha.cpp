@@ -48,13 +48,28 @@ bool Ilha::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
     const u8* d = pak.arquivo("mapa/ilha.bmap", &tam);
     if (!d || !mapa_.carregar(d, tam, e, sizeof e)) { snprintf(erro, ne, "mapa: %s", d ? e : "mapa/ilha.bmap ausente"); return false; }
     if (mapa_.n_modelos() > MAX_MODELOS) { snprintf(erro, ne, "mapa com %d modelos (máximo %d)", mapa_.n_modelos(), MAX_MODELOS); return false; }
-    if (!bib_.iniciar(&pak, arena, mapa_.n_modelos() + Jogador::N_TRAJES + 2)) { snprintf(erro, ne, "sem memória para os modelos do mapa"); return false; }
+    if (mapa_.n_instancias() > MAX_INSTANCIAS) { snprintf(erro, ne, "mapa com instâncias demais"); return false; }
+    if (!bib_.iniciar(&pak, arena, mapa_.n_modelos() + Jogador::N_TRAJES + Jogador::MAX_ITENS + 4)) { snprintf(erro, ne, "sem memória para os modelos do mapa"); return false; }
     for (int i = 0; i < mapa_.n_modelos(); i++) {
         int k = bib_.carregar(mapa_.modelo(i).nome, erro, ne);
         if (k < 0) return false;
         bib_de_[i] = static_cast<i16>(k);
     }
     if (!jogador_.iniciar(pak, bib_, erro, ne)) return false;
+    if (!hc_.iniciar(pak, bib_, arena, jogador_.itens(), erro, ne)) return false;
+    // Loot da partida (loot_server.gd): os baús do mapa e os pontos de loot; sem reabastecer.
+    loot_.iniciar(&jogador_.itens(), 20261116);  // a semente da ilha do Ventania
+    loot_.reabastecer = false;
+    for (int i = 0; i < mapa_.n_instancias() && i < MAX_INSTANCIAS; i++) {
+        const InstanciaMapa& k = mapa_.instancia(i);
+        bau_da_inst_[i] = -1;
+        if (k.categoria == CAT_BAU) {
+            bau_da_inst_[i] = static_cast<i16>(loot_.n_baus());
+            loot_.adicionar_bau(Vec3(k.x, k.y, k.z), k.rot);
+        }
+    }
+    for (int i = 0; i < mapa_.n_pontos_loot(); i++) loot_.adicionar_ponto(mapa_.ponto_loot(i));
+    loot_.sortear_pontos();
     // Colisão: peças, props e baús (as estradas não colidem), o relevo e o limite da
     // costa (ilha_ventania.gd _limite_costa: 160 caixas a 9 m da praia).
     mundo_.limpar(304.0f);
@@ -97,21 +112,29 @@ void Ilha::ir_para(f32 x, f32 z, f32 yaw, f32 pitch) {
     e.modo = ModoControle::ANALOGICO;
     parado.ler(e);
     parado.iniciar_passo();
-    for (int i = 0; i < 8; i++) jogador_.passo(parado, mundo_);
+    EventosCombate ev;
+    for (int i = 0; i < 8; i++) jogador_.passo(parado, mundo_, loot_, nullptr, 0, passos_, true, ev);
     jogador_.reposicionar(jogador_.personagem().pos, yaw, pitch);
-    for (int i = 0; i < 2; i++) jogador_.passo(parado, mundo_);
+    for (int i = 0; i < 2; i++) jogador_.passo(parado, mundo_, loot_, nullptr, 0, passos_, true, ev);
 }
 
 void Ilha::passo(const Controle& c) {
     passos_++;
     if (c.pressionou(BT_START)) hud_ = !hud_;
-    if (c.pressionou(BT_SELECT)) jogador_.definir_traje(jogador_.traje() + 1);
-    if (c.pressionou(BT_CIMA)) mapa_cheio_ = !mapa_cheio_;
-    if (c.pressionou(BT_BAIXO)) {
+    // Atalhos de depuração (L1 + R1 + …): SELECT troca o caminho de desenho; ● troca o traje.
+    bool atalho = c.segurando(BT_L1) && c.segurando(BT_R1);
+    if (atalho && c.pressionou(BT_SELECT)) {
         Caminho3D o = caminho_ == Caminho3D::VU1 ? Caminho3D::EE : Caminho3D::VU1;
         if (plataforma::caminho_disponivel(o)) caminho_ = o;
     }
-    jogador_.passo(c, mundo_);
+    if (atalho && c.pressionou(BT_CIRCULO)) jogador_.definir_traje(jogador_.traje() + 1);
+    if (c.pressionou(BT_CIMA) && !hc_.inventario_aberto()) mapa_cheio_ = !mapa_cheio_;
+    bool bloquear = (!atalho && hc_.controlar_inventario(c, jogador_, loot_, mundo_)) || hc_.inventario_aberto() || mapa_cheio_;
+    ev_ = EventosCombate();
+    jogador_.passo(c, mundo_, loot_, nullptr, 0, passos_, bloquear, ev_);
+    loot_.atualizar(passos_, 1.0f / 30.0f);
+    hc_.registrar(ev_, jogador_);
+    hc_.passo();
     // Caiu para fora do mundo (não deveria): volta para o início.
     if (jogador_.personagem().pos.y < mapa_.nivel_mar() - 30.0f) {
         Vec3 s = mapa_.spawn(0);
@@ -156,7 +179,9 @@ void Ilha::montar_mapa(Cena3D& cena) {
                     do { qual = mapa_.modelo(qual).lod; } while (mapa_.modelo(qual).lod >= 0 && dist > mapa_.modelo(qual).dist_lod);
                 }
                 const ModeloBrisa& m = bib_[bib_de_[qual]];
-                if (adicionar_modelo(cena, m, nullptr, matriz_instancia(k)) > 0) {
+                const Pose* pose = k.categoria == CAT_BAU && bau_da_inst_[i] >= 0 && qual == k.modelo
+                                       ? hc_.pose_bau(loot_.bau(bau_da_inst_[i]).tampa) : nullptr;
+                if (adicionar_modelo(cena, m, pose, matriz_instancia(k)) > 0) {
                     est_.desenhadas++;
                     est_.triangulos_instancias += m.triangulos();
                     if (k.categoria < N_CATEGORIAS) est_.tris_categoria[k.categoria] += m.triangulos();
@@ -180,8 +205,9 @@ void Ilha::montar(Cena3D& cena, ListaDesenho2D& l, const EstatisticasQuadro& est
     cena.luz.luz = Vec3(1.32f, 1.28f, 1.36f);
     cena.luz.sombra = Vec3(0.74f, 0.82f, 0.95f);
     cena.textura_sombra = tex_sombra_;
-    jogador_.montar(cena, bib_, mundo_, 4.0f / 3.0f);
+    jogador_.montar(cena, bib_, mundo_, &loot_, 4.0f / 3.0f);
     montar_mapa(cena);
+    hc_.montar_loot(cena, loot_, bib_, jogador_, passos_ / 30.0f);
     est_.cpu_corte_us = static_cast<u32>(plataforma::tempo_us() - t0);
     l.limpar(cena.ceu);
     if (mapa_cheio_) {
@@ -194,6 +220,7 @@ void Ilha::montar(Cena3D& cena, ListaDesenho2D& l, const EstatisticasQuadro& est
         }
     }
     if (hud_) hud(l, est, e3d, info);
+    if (!mapa_cheio_) hc_.desenhar(l, jogador_, loot_, cena.camera);
 }
 
 // Minimapa (norte para cima): a textura de 600 m recortada em volta do jogador.
@@ -233,7 +260,4 @@ void Ilha::hud(ListaDesenho2D& l, const EstatisticasQuadro& est, const Estatisti
         card(l, 484, 92, 140, 140);
         minimapa(l, 486, 94, 136, 110.0f);
     }
-    card(l, 16, 388, 608, 48);
-    fonte::desenhar(l, 26, 392, 2, AMARELO, "X PULA · L3 CORRE · R3 AGACHA · L2 MIRA");
-    fonte::desenhar(l, 26, 414, 2, AMARELO, "CIMA MAPA · SELECT TRAJE · BAIXO 3D · START");
 }

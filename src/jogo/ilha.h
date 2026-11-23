@@ -4,6 +4,8 @@
 // e LOD1 (BRISA_ARCHITECTURE §18).
 #pragma once
 #include "conteudo/biblioteca.h"
+#include "combate/loot.h"
+#include "hud_combate.h"
 #include "jogador.h"
 #include "mundo/mapa.h"
 #include "mundo/terreno.h"
@@ -24,6 +26,7 @@ struct EstatisticasIlha {
 class Ilha {
 public:
     static const int MAX_MODELOS = 192;
+    static const int MAX_INSTANCIAS = 2048;
     f32 dist_visao = 240.0f;    // neblina termina aqui
     bool iniciar(const Pacote& pak, Arena& arena, char* erro, int n_erro);
     void passo(const Controle& c);   // 30 Hz
@@ -43,6 +46,7 @@ public:
     const Terreno& terreno() const { return terreno_; }
     const EstatisticasIlha& estatisticas() const { return est_; }
     const BibliotecaModelos& biblioteca() const { return bib_; }
+    const Loot& loot() const { return loot_; }
     u32 passos() const { return passos_; }
     // Região (POI) onde o personagem está, ou nullptr.
     const char* regiao() const;
@@ -56,6 +60,10 @@ private:
     MundoColisao mundo_;
     Terreno terreno_;
     Jogador jogador_;
+    Loot loot_;
+    HudCombate hc_;
+    EventosCombate ev_;
+    i16 bau_da_inst_[MAX_INSTANCIAS];
     EstatisticasIlha est_;
     int tex_minimapa_ = -1, tex_sombra_ = -1;
     Caminho3D caminho_ = Caminho3D::VU1;
