@@ -14,7 +14,7 @@ PS2DEV ?= /opt/ps2dev
 PS2SDK ?= $(PS2DEV)/ps2sdk
 GSKIT ?= $(PS2DEV)/gsKit
 
-NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp) $(wildcard src/conteudo/*.cpp) $(wildcard src/mundo/*.cpp) $(wildcard src/personagem/*.cpp) $(wildcard src/combate/*.cpp)
+NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp) $(wildcard src/conteudo/*.cpp) $(wildcard src/mundo/*.cpp) $(wildcard src/personagem/*.cpp) $(wildcard src/combate/*.cpp) $(wildcard src/ia/*.cpp)
 PAK := build/conteudo/BRISA.PAK
 ASSETS := assets/catalogo_brisa.json $(wildcard assets/*/*)
 PS2_SRC := src/main.cpp $(NUCLEO) $(wildcard src/plataforma/ps2/*.cpp)
@@ -52,7 +52,7 @@ VENTANIA ?= ../ventania
 conteudo: $(PAK)
 # Dados de jogo (Etapa 6): data/*.json → assets/dados/*.bdat (+ registro no catálogo).
 dados: assets/dados/itens.bdat
-assets/dados/itens.bdat: data/itens.json tools/conversor/dados.py
+assets/dados/itens.bdat: data/itens.json data/bots.json data/nomes_jogadores.txt tools/conversor/dados.py
 	python3 tools/conversor/dados.py
 $(PAK): assets/dados/itens.bdat $(ASSETS) tools/conversor/empacotar.py tools/conversor/formatos.py
 	python3 tools/conversor/empacotar.py --saida $@
@@ -126,7 +126,7 @@ emulador: autoteste build/host/brisa_previa
 	@rm -rf build/emulador
 	@mkdir -p build/emulador
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
-	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 200,680,1788,2250,2306,2730
+	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/cena 200,680,1788,2250,2306,2730,3150
 	xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1 \
 	  $(CAPTURA) build/autoteste/brisa_autoteste.elf build/emulador/controle 150 botoes
 	python3 tools/emulador/ppm_para_png.py --todos build/emulador
@@ -147,6 +147,9 @@ emulador: autoteste build/host/brisa_previa
 	./build/host/brisa_previa --roteiro=2 --png=build/emulador/pc_ilha_216.png --png-quadro=216 > /dev/null
 	python3 tools/emulador/comparar_quadros.py build/emulador/cena_2306.png build/emulador/pc_ilha_10.png
 	python3 tools/emulador/comparar_quadros.py build/emulador/cena_2730.png build/emulador/pc_ilha_216.png
+	@# Bots (Etapa 7): o jogador parado atrás do primeiro bot, no começo da fase dos bots.
+	./build/host/brisa_previa --roteiro=2 --png=build/emulador/pc_bots_424.png --png-quadro=424 > /dev/null
+	python3 tools/emulador/comparar_quadros.py build/emulador/cena_3150.png build/emulador/pc_bots_424.png
 	tools/emulador/verificar_saida.sh build/emulador/controle.log --controle
 
 # emulador-completo: os 600 quadros até o fim do programa (AutoTest: GS nulo, sem controle).

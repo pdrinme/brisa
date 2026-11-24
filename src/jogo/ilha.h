@@ -5,7 +5,9 @@
 #pragma once
 #include "conteudo/biblioteca.h"
 #include "combate/loot.h"
+#include "grupo_bots.h"
 #include "hud_combate.h"
+#include "mundo/navegacao.h"
 #include "jogador.h"
 #include "mundo/mapa.h"
 #include "mundo/terreno.h"
@@ -47,6 +49,14 @@ public:
     const EstatisticasIlha& estatisticas() const { return est_; }
     const BibliotecaModelos& biblioteca() const { return bib_; }
     const Loot& loot() const { return loot_; }
+    // Etapa 7: os bots (15, nos pontos de início 1–15). Desligados até ativar (as vistas de medida não têm bots).
+    void ativar_bots(int n, u32 semente, bool reaparecer = true, bool com_jogador = true);
+    bool bots_ativos() const { return bots_ativos_; }
+    GrupoBots& bots() { return grupo_; }
+    const GrupoBots& bots() const { return grupo_; }
+    Navegacao& navegacao() { return nav_; }
+    // Teste de aceite: passo só dos bots (sem desenhar), o jogador de fora.
+    void passo_sem_jogador();
     u32 passos() const { return passos_; }
     // Região (POI) onde o personagem está, ou nullptr.
     const char* regiao() const;
@@ -63,6 +73,13 @@ private:
     Loot loot_;
     HudCombate hc_;
     EventosCombate ev_;
+    Navegacao nav_;
+    GrupoBots grupo_;
+    bool bots_ativos_ = false, com_jogador_ = true;
+    u32 jogador_reviver_ = 0;
+    void passo_bots(bool com_jogador);
+    void montar_bots(Cena3D& cena);
+    void hud_bots(ListaDesenho2D& l, const Camera3D& cam) const;
     i16 bau_da_inst_[MAX_INSTANCIAS];
     EstatisticasIlha est_;
     int tex_minimapa_ = -1, tex_sombra_ = -1;

@@ -386,7 +386,9 @@ TESTE(treino_roteiro_de_combate) {
     char e[160];
     if (!d || !pak.abrir(d, tam, e, sizeof e)) return;
     Arena arena(memoria, sizeof memoria);
-    VERIFICA(t.iniciar(pak, arena, e, sizeof e));
+    bool ok = t.iniciar(pak, arena, e, sizeof e);
+    VERIFICA(ok);
+    if (!ok) { printf("    treino: %s\n", e); return; }
     Controle ctl;
     auto passo = [&](u16 botoes) {
         EstadoControle s;

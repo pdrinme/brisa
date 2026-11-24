@@ -251,3 +251,28 @@ baús que reabastecem.
 8. **Desempenho:** o FPS e o "3D" do painel no campo de treino durante um tiroteio e na Vila Brisa com o loot no chão.
 
 Anote também se algum botão não responde, ou responde em dobro.
+
+---
+
+# Etapa 7 — Bots
+
+O ELF abre na ilha com **15 bots**. Eles reaparecem 4 s depois de eliminados,
+e você também (ainda não é a partida Battle Royale, que vem na Etapa 8).
+
+**Conferir e me mandar:**
+1. **Comportamento:** os bots andam pela ilha, entram nas casas pelas portas, sobem e descem escadas, abrem baús (param em frente e a tampa abre) e pegam itens do chão.
+2. **Combate:**
+   - chegue perto de um bot armado: ele vira, mira e atira em rajadas;
+   - os Fáceis erram mais e demoram a reagir, os Difíceis acertam mais;
+   - ao levar tiro, a barra de vida/escudo cai, e o curativo agora funciona com vida abaixo de 75;
+   - ao ser eliminado, aparece "ELIMINADO POR (nome)" e a contagem "VOLTA EM N S".
+3. **Cobertura e recuo:** atire num bot com pouca vida. Ele deve recuar ou se esconder atrás de uma parede, e às vezes se curar.
+4. **HUD:** o nome acima dos bots a até 30 m, "N VIVOS" abaixo do minimapa e o feed "A > B" das eliminações.
+5. **Travamentos:** anote onde um bot ficar parado empurrando uma parede ou indo e voltando por mais de 5 s (a região e, se possível, X/Y/Z do painel quando você estiver lá).
+6. **Desempenho:**
+   - o FPS e o "CPU" do painel na Vila Brisa com bots por perto e num tiroteio;
+   - se der, rode o **ELF de autoteste** pelo ps2link: no fim, as linhas `BRISA_BOTS ...` (com o jogador) e `BRISA_BOTS_PARTIDA ...` (a partida só de bots, que roda sem desenhar por uns segundos) trazem a CPU da IA medida no console. Me mande essas linhas.
+
+**Valores do emulador** (só referência): IA de 15 bots de 0,69 a 0,77 ms por
+passo com o jogador; partida só de bots com 0,33 ms por passo, pior 5,2 ms;
+vencedor em 4,8 min, preso 0,00%; 15,7 MB livres no boot.

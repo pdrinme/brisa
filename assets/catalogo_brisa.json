@@ -52,6 +52,20 @@
    "notas": "esqueleto padrão de 20 ossos, compartilhado por todos os trajes"
   },
   {
+   "id": "dados_bots",
+   "arquivo": "assets/dados/bots.bdat",
+   "tipo": "dados",
+   "bytes": 24432,
+   "crc32": "f3c8f6c9",
+   "origem": "data/bots.json + data/nomes_jogadores.txt (cópias de ventania:game/data/@7864cd7)",
+   "autor": "Projeto Ventania / Projeto Brisa",
+   "licenca": "Original",
+   "autorizacao": "titular (ASSET_LICENSES.md §2)",
+   "categoria": "dados",
+   "dificuldades": 3,
+   "nomes": 1000
+  },
+  {
    "id": "dados_itens",
    "arquivo": "assets/dados/itens.bdat",
    "tipo": "dados",
@@ -81,6 +95,24 @@
    "modelos": 162,
    "triangulos_instancias": 266303,
    "notas": "646 peças, 1219 props, 37 baús, 42 setores com estrada; relevo 201×201 a 3.0 m"
+  },
+  {
+   "id": "mapa_navegacao",
+   "arquivo": "assets/mapa/ilha.bnav",
+   "tipo": "nav",
+   "bytes": 120928,
+   "crc32": "d35db6d6",
+   "origem": "ventania:game/world/ilha/ilha_ventania.gd@7864cd7 (layout extraído; tools/auditoria/extrair_ilha.sh) + game/gameplay/ai/nav_grade.gd (construção do grafo)",
+   "autor": "Projeto Ventania",
+   "licenca": "Original",
+   "autorizacao": "titular (ASSET_LICENSES.md §2)",
+   "categoria": "mapa",
+   "andares": 111,
+   "ligacoes": 15,
+   "escadas": 7,
+   "bloqueadas": 11776,
+   "pendentes": 0,
+   "notas": "grafo dos bots: 150×150 células de 4 m, andares e ligações (escadas, rampas)"
   },
   {
    "id": "ancora_01",

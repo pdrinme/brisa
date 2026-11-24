@@ -163,6 +163,12 @@ int main(int argc, char** argv) {
     if (argumento(argc, argv, "--sem-hud=", 0) && modo == ILHA) g_ilha.mostrar_hud(false);
     if (argumento(argc, argv, "--mapa-cheio=", 0)) g_ilha.mostrar_mapa(true);
     if (modo == BENCH && argumento(argc, argv, "--bench=", 0)) g_cena_teste.iniciar_bench();
+    // Etapa 7: 15 bots na ilha (treino livre: reaparecem em 4 s). O roteiro liga os bots só na fase dele.
+    if (tem_ilha && !roteiro && !argumento(argc, argv, "--sem-bots=", 0))
+        g_ilha.ativar_bots(GrupoBots::MAX_BOTS, argumento(argc, argv, "--semente=", 1), true, true);
+    int fase_bots = 0;        // roteiro: 0 antes, 1 com o jogador (desenhando), 2 terminou
+    u32 passos_bots = 0, bots_max_pensar = 0, bots_max_simular = 0;
+    u64 bots_soma = 0;
 
     Controle controle;
     PassoFixo passo(30, 2);
@@ -193,7 +199,9 @@ int main(int argc, char** argv) {
                 // Roteiro da ilha: vistas fixas (mede o desenho) e depois uma caminhada.
                 bruto = EstadoControle();
                 bruto.modo = ModoControle::ANALOGICO;
-                if (vista < 0 || (!caminhando && passo_vista >= PASSOS_POR_VISTA)) {
+                if (fase_bots > 0) {
+                    // fase dos bots: o jogador fica parado
+                } else if (vista < 0 || (!caminhando && passo_vista >= PASSOS_POR_VISTA)) {
                     vista++;
                     passo_vista = 0;
                     if (vista < n_vistas) {
@@ -208,7 +216,7 @@ int main(int argc, char** argv) {
                     bruto.botoes = BT_L3;
                     bruto.ly = 0;  // frente, correndo
                     if (++passos_caminhada > PASSOS_CAMINHADA) break;
-                } else if (++passo_vista == PASSOS_POR_VISTA) {
+                } else if (fase_bots == 0 && ++passo_vista == PASSOS_POR_VISTA) {
                     medir_vista = true;
                 }
             } else if (roteiro) {
@@ -270,7 +278,74 @@ int main(int argc, char** argv) {
                      g_ilha.jogador().animador().estado());
             plataforma::log(msg);
             plataforma::log("BRISA_ILHA_OK\n");
-            break;
+            caminhando = false;
+            passos_caminhada = 0;
+            // Etapa 7: fase dos bots. O jogador fica parado atrás do primeiro bot, olhando para ele.
+            fase_bots = 1;
+            g_ilha.ativar_bots(GrupoBots::MAX_BOTS, 1, true, true);
+            Vec3 b0 = g_ilha.bots().bot(0).p.pos;
+            Vec3 s1 = g_ilha.mapa().spawn(1);
+            f32 dx = -s1.x, dz = -s1.z, dl = sqrtf(dx * dx + dz * dz) + 1e-3f;
+            dx /= dl; dz /= dl;   // do início 1 para o centro da ilha
+            g_ilha.ir_para(b0.x - dx * 7.0f, b0.z - dz * 7.0f, atan2f(-dx, -dz) * 57.29578f, -8.0f);
+            snprintf(msg, sizeof msg, "BRISA_BOTS_INICIO bots=15 semente=1 quadro=%u\n", static_cast<unsigned>(quadro));
+            plataforma::log(msg);
+        }
+        if (roteiro && fase_bots == 1 && modo == ILHA) {
+            const GrupoBots& g = g_ilha.bots();
+            passos_bots = g_ilha.passos();
+            static u32 primeiro = 0, ultimo_log = 0, n_amostras = 0;
+            if (primeiro == 0) primeiro = passos_bots;
+            u32 k = passos_bots - primeiro;
+            if (g.us_pensar > bots_max_pensar) bots_max_pensar = g.us_pensar;
+            if (g.us_simular > bots_max_simular) bots_max_simular = g.us_simular;
+            bots_soma += g.us_pensar + g.us_simular;
+            n_amostras++;
+            if (k >= ultimo_log + PASSOS_BOTS_LOG || k >= PASSOS_BOTS_JOGADOR) {
+                ultimo_log = k;
+                const Lutador& j = g_ilha.jogador().lutador();
+                snprintf(msg, sizeof msg, "BRISA_BOTS passo=%u vivos=%d elims=%u jogador_vida=%d escudo=%d us_ia_medio=%u us_pensar_max=%u "
+                         "us_simular_max=%u quadro_us=%u\n", static_cast<unsigned>(k), g.vivos(&j), static_cast<unsigned>(g.eliminacoes()),
+                         j.comb.vit.vida, j.comb.vit.escudo, static_cast<unsigned>(bots_soma / (n_amostras ? n_amostras : 1)),
+                         static_cast<unsigned>(bots_max_pensar), static_cast<unsigned>(bots_max_simular),
+                         static_cast<unsigned>(est.media_quadro_us()));
+                plataforma::log(msg);
+                registrar_3d = true;
+            }
+            if (k >= PASSOS_BOTS_JOGADOR) {
+                // Critério de aceite (GAME_DESIGN §8) no próprio console: partida só de bots, sem desenhar.
+                fase_bots = 2;
+                g_ilha.ativar_bots(GrupoBots::MAX_BOTS, 1, false, false);
+                GrupoBots& gb = g_ilha.bots();
+                u64 t0 = plataforma::tempo_us();
+                u32 pior = 0, n = 0;
+                for (; n < PASSOS_BOTS_PARTIDA && gb.vivos(nullptr) > 1; n++) {
+                    u64 a = plataforma::tempo_us();
+                    g_ilha.passo_sem_jogador();
+                    u32 d = static_cast<u32>(plataforma::tempo_us() - a);
+                    if (d > pior) pior = d;
+                }
+                u64 total = plataforma::tempo_us() - t0;
+                u32 vivo = 0, preso = 0, man = 0, ab = 0, caminhos = 0, ticks[N_ESTADOS_BOT] = {};
+                for (int i = 0; i < gb.n_bots(); i++) {
+                    const EstatisticasBot& e = gb.cerebro(i).est;
+                    vivo += e.vivo_ticks; preso += e.preso_ticks; man += e.manobras; ab += e.abandonos; caminhos += e.caminhos;
+                    for (int q = 0; q < N_ESTADOS_BOT; q++) ticks[q] += e.ticks_estado[q];
+                }
+                const char* venc = "-";
+                for (int i = 0; i < gb.n_bots(); i++) if (gb.bot(i).vivo) venc = gb.bot(i).nome;
+                int kk = snprintf(msg, sizeof msg, "BRISA_BOTS_PARTIDA vivos=%d elims=%u vencedor=%s minutos=%.2f preso_pct=%.2f manobras=%u "
+                         "abandonos=%u caminhos=%u us_passo_medio=%u us_passo_pior=%u estados=", gb.vivos(nullptr),
+                         static_cast<unsigned>(gb.eliminacoes()), venc, static_cast<double>(n / 1800.0f),
+                         static_cast<double>(100.0f * preso / (vivo ? vivo : 1)), static_cast<unsigned>(man), static_cast<unsigned>(ab),
+                         static_cast<unsigned>(caminhos), static_cast<unsigned>(total / (n ? n : 1)), static_cast<unsigned>(pior));
+                for (int q = 0; q < N_ESTADOS_BOT && kk < static_cast<int>(sizeof msg) - 24; q++)
+                    if (ticks[q]) kk += snprintf(msg + kk, sizeof msg - kk, "%s:%u,", nome_estado_bot(q), static_cast<unsigned>(100u * ticks[q] / (vivo ? vivo : 1)));
+                snprintf(msg + kk, sizeof msg - kk, "\n");
+                plataforma::log(msg);
+                plataforma::log(gb.vivos(nullptr) == 1 && 100.0f * preso < 1.0f * (vivo ? vivo : 1) ? "BRISA_BOTS_OK\n" : "BRISA_BOTS_FALHOU\n");
+                break;
+            }
         }
         if (roteiro && fim_treino) break;
         Caminho3D caminho;

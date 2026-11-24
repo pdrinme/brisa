@@ -19,6 +19,7 @@ import struct
 import decimar
 import formatos
 import modelo
+import navegacao
 import textura
 
 N = 201
@@ -609,6 +610,15 @@ def construir(v, paleta, commit, layout, modelos_convertidos, registrar, relator
                         f"{len(por_setor)} setores com estrada; relevo {N}×{N} a {PASSO} m"})
     relatorio.append(("mapa_ilha", "mapa", f"{len(inst)} instâncias de {len(nomes)} modelos, {tris_mapa} triângulos "
                                            f"(sem o relevo), {len(gerados)} modelos gerados, {len(lods)} LODs (LOD1 e LOD2)"))
+
+    # Navegação dos bots (Etapa 7): o NavGrade do Ventania calculado offline.
+    dados_nav, info_nav = navegacao.construir(layout, relevo)
+    registrar("mapa_navegacao", "mapa/ilha.bnav", dados_nav, "nav",
+              dict(origem_mapa, origem=origem_mapa["origem"] + " + game/gameplay/ai/nav_grade.gd (construção do grafo)"),
+              dict(info_nav, notas="grafo dos bots: 150×150 células de 4 m, andares e ligações (escadas, rampas)"))
+    relatorio.append(("mapa_navegacao", "mapa", f"{info_nav['andares']} andares, {info_nav['ligacoes']} ligações "
+                                                f"({info_nav['escadas']} escadas), {info_nav['bloqueadas']} células bloqueadas, "
+                                                f"{info_nav['pendentes']} pendentes"))
 
     # Minimapa.
     px = minimapa(layout, relevo, cores)

@@ -398,8 +398,60 @@ EE), mas a proporção real só o console dá.
 
 **⏳ Falta para o aceite:** jogar o combate no console (`docs/TESTE_NO_CONSOLE.md`, Etapa 6).
 
-### Etapa 7 — Bots ⬜
-Navegação (grafo do pipeline), exploração, saque, coleta, combate, cobertura, Tormenta, dificuldades. Custo por bot medido no console. **Aceite:** partida só com bots termina e o tempo preso fica < 1%.
+### Etapa 7 — Bots 🟡 (pronta e testada no PC e no emulador; ⏳ falta jogar no console)
+**Feito** (detalhes em BRISA_ARCHITECTURE §20):
+- **Dados dos bots** (`data/bots.json` e os 1.000 nomes do Ventania → `dados/bots.bdat`): as 3 dificuldades com os 21 parâmetros do Ventania, a mistura, os orçamentos e a audição, validados pelo compilador.
+- **Grafo de navegação calculado no pipeline** (`tools/conversor/navegacao.py` → `mapa/ilha.bnav`, BR-ADR-19): a construção do `NavGrade` do Ventania sobre o layout da ilha. São 150×150 células de 4 m, paredes e portas, 111 andares e 30 ligações (7 escadas). O extrator da ilha agora grava os obstáculos e os 149 cômodos.
+- **A\*** no jogo (`src/mundo/navegacao.*`) com o custo, a heurística ×1,3 e o limite de 7.000 expansões do Ventania, pontos precisos em portas e degraus, e a saída do meio de uma escada (BR-ADR-21).
+- **Cérebro do bot** (`src/ia/cerebro.*`), o `bot_cerebro.gd` portado:
+  - percepção: cone de visão com raio de visibilidade, memória da última posição, audição de tiros a 70 m, reação ao levar dano;
+  - decisão por pontuação: explorar (pontos e cômodos), saquear, abrir baú, combater, cobertura, recuar, perseguir, investigar e curar;
+  - execução: mira com o erro da dificuldade que assenta com o tempo de visada, rajadas, escolha da arma pela distância, recarga, consumível útil, troca de espaço;
+  - andar com desvio local, manobra quando trava, arestas evitadas, replanejamento e abandono do objetivo.
+- **Lutador** (`src/jogo/lutador.*`): o jogador e os bots são o mesmo tipo de personagem, com o mesmo movimento, colisão, combate e inventário. O jogador passa a **levar dano**, é eliminado e reaparece em 4 s.
+- **Grupo de bots** (`src/jogo/grupo_bots.*`), o papel do servidor: 15 bots nos pontos de início, com nomes sem repetir, os trajes dos bots e a mistura de dificuldades; orçamento de 24 raios e 2 A* por passo; eliminações largam o inventário; feed de eliminações.
+- **Na tela:** os bots desenhados com LOD por distância (18 m / 55 m, até 150 m) e sombra perto; nomes acima dos bots a até 30 m; "N VIVOS"; feed "A > B"; "ELIMINADO POR X · VOLTA EM N S".
+- **Colisão em cápsula no topo** (BR-ADR-20): o personagem não bate mais a cabeça em bordas que pegam só os 20 cm de cima (o patamar da escada empilhada travava quem descia).
+- **Roteiro do autoteste**, depois da caminhada na ilha: 15 s com 15 bots e o jogador parado (desenhando) e, depois, **a partida só de bots no próprio console**, sem desenhar, até sobrar um. O log traz o tempo preso, os estados e a CPU.
+- No jogo normal, a ilha abre com 15 bots que reaparecem (`--sem-bots=1` desliga).
+
+**Testes executados:**
+- **Aceite (GAME_DESIGN §8)**, partida só de bots, 15 bots, sem Tormenta:
+  - no PC, 12 sementes: todas com vencedor (de 2,0 a 10,8 min), tempo preso de 0,09% a 0,31% do tempo vivo, nenhuma falha de rota;
+  - no emulador: vencedor em 4,8 min, preso 0,00%.
+- `make testes`: 72 testes, 19.317 verificações, 0 falhas. Os 6 novos cobrem:
+  - o grafo: andares, ligações e cômodos; chão × andar; A* pela escada nos dois sentidos; a saída do patamar; sem rota quando as saídas estão evitadas;
+  - um bot com destino fixo subindo e descendo a escada empilhada do prédio e a do galpão, sem travar;
+  - nomes sem repetir, trajes dos bots, mistura e valores das dificuldades;
+  - dois bots Difíceis frente a frente: entram em combate e um elimina o outro;
+  - o jogador leva dano de um bot, é eliminado (o feed e o "eliminado por" certos) e reaparece com vida cheia em 4 s;
+  - a partida só de bots com 3 sementes (vencedor, 14 eliminações, preso < 1%, houve combate).
+- `make emulador-completo`: `EMULADOR_OK` (fase dos bots e a partida no log). O combate e os marcos continuam **iguais linha a linha** no PC e no PS2.
+- `make emulador`: `EMULADOR_OK`, com 6 comparações de imagem PS2 × PC; a nova (o jogador atrás de um bot, com o nome e "16 VIVOS") difere 1,16%, e as 5 anteriores seguem iguais (0,36% a 1,01%).
+
+**Medido** (tempos do emulador, não do console):
+- IA de 15 bots com o jogador, desenhando a ilha: 0,69 a 0,77 ms por passo em média; pior passo de pensar 1,34 ms e de simular 1,40 ms;
+- partida só de bots: 0,33 ms por passo, pior 5,2 ms (dois A* longos no mesmo passo);
+- 15,7 MB livres no boot (16,4 MB na Etapa 6); pacote de 4,5 MB (234 arquivos);
+- no PC: 8 µs por passo para os 15 bots; 250 a 330 A* por partida, de 15 a 30 expansões em média cada.
+
+**Problemas encontrados e resolvidos:**
+- o cabeçalho do BNAV tinha 68 bytes, não 64 (passou a 96);
+- os testes do treino quebravam porque a biblioteca de modelos lotava com os LODs dos trajes (capacidade aumentada; o teste agora para se a carga falhar);
+- tempo preso de 2% na primeira simulação: a cabeça batia no patamar da escada do prédio (BR-ADR-20);
+- bots presos no patamar do meio da escada do galpão (BR-ADR-21);
+- um bot ficou numa sala porque as arestas evitadas fechavam a única porta (agora esvazia a lista e replaneja);
+- as contas de eliminações não zeravam ao repovoar.
+
+**Limitações conhecidas:**
+- sem ônibus, queda e Tormenta (Etapa 8), por isso as partidas de bots levam de 2 a 11 min;
+- os bots não coletam materiais nem constroem (Etapa 9);
+- a partida dos bots não sai igual no PC e no PS2 (a FPU do EE não é IEEE); os testes conferem propriedades;
+- os personagens não colidem entre si (como os bonecos);
+- sem som de tiro (Etapa 10); os bots "ouvem" pela regra do servidor;
+- o pior passo da IA (5 ms no emulador) precisa ser medido no console.
+
+**⏳ Falta para o aceite:** jogar contra os bots no console e medir a CPU da IA (`docs/TESTE_NO_CONSOLE.md`, Etapa 7).
 
 ### Etapa 8 — Battle Royale ⬜
 Fluxo da partida, Tormenta de 7 fases, zona segura, eliminações, espectador, vitória e resultados. Ônibus e planador se o desempenho permitir. Número de participantes definido por medição (12 → 16).

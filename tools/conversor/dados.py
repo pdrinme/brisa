@@ -115,6 +115,62 @@ def compilar_itens(d):
     return cab + corpo
 
 
+CAMPOS_DIF = ["reacao_s", "erro_mira_graus", "alcance_visao_m", "campo_visao_graus", "engaja_m", "cura_abaixo", "constroi",
+              "coleta", "salto_cedo", "decisao_hz", "mira_assenta_s", "memoria_s", "investiga", "usa_cobertura",
+              "cobertura_vida", "recua_vida", "atira_andando", "rajada_ticks", "pausa_ticks", "ritmo_lateral", "explora_predios"]
+
+
+def validar_bots(d, nomes, modelos_existentes):
+    erros = []
+    difs = list(d["dificuldades"])
+    for k in d["mistura"]:
+        if k not in difs:
+            erros.append(f"bots: mistura cita a dificuldade '{k}', que não existe")
+    for k, v in d["dificuldades"].items():
+        for c in CAMPOS_DIF:
+            if c not in v:
+                erros.append(f"bots: dificuldade {k} sem '{c}'")
+    for t in d["trajes_dos_bots"]:
+        if t not in modelos_existentes:
+            erros.append(f"bots: traje '{t}' não está em assets/modelos")
+    if len(nomes) < d["preencher_ate"]:
+        erros.append("bots: nomes de menos para encher a partida")
+    if erros:
+        raise ErroDados("\n".join(erros))
+
+
+def compilar_bots(d, nomes):
+    difs = list(d["dificuldades"])
+    b_dif = b""
+    for k in difs:
+        v = d["dificuldades"][k]
+        b_dif += _texto(v["nome"], 16, "dificuldade") + struct.pack(f"<{len(CAMPOS_DIF)}f", *[float(v[c]) for c in CAMPOS_DIF])
+    b_mis = bytes(difs.index(k) for k in d["mistura"])
+    b_nom = b"".join(_texto(n, 24, "nome de jogador") for n in nomes)
+    b_tra = b"".join(_texto(t, 24, "traje") for t in d["trajes_dos_bots"])
+    blocos = [b_dif, b_mis, b_nom, b_tra]
+    corpo, offs, off = b"", [], 64
+    for b in blocos:
+        b = formatos._alinhar(b)
+        offs.append(off)
+        corpo += b
+        off += len(b)
+    cab = b"BBOT" + struct.pack("<IIIIIIfffIf", 1, d["preencher_ate"], len(difs), len(d["mistura"]), len(nomes),
+                                len(d["trajes_dos_bots"]), d["decisao_hz"], d["decisao_longe_hz"], d["lod_distancia_m"],
+                                d["raios_visao_por_tick"], d["audicao_tiro_m"])
+    cab += struct.pack("<4I", *offs)
+    assert len(cab) <= 64
+    cab += b"\0" * (64 - len(cab))
+    return cab + corpo
+
+
+def registrar_dados(cat, id_, arquivo, dados, origem, extra):
+    cat["assets"] = [x for x in cat["assets"] if x["id"] != id_]
+    cat["assets"].append(dict({"id": id_, "arquivo": arquivo, "tipo": "dados", "bytes": len(dados), "crc32": "%08x" % zlib.crc32(dados),
+                               "origem": origem, "autor": "Projeto Ventania / Projeto Brisa", "licenca": "Original",
+                               "autorizacao": "titular (ASSET_LICENSES.md §2)", "categoria": "dados"}, **extra))
+
+
 def main():
     d = json.load(open(os.path.join(RAIZ, "data/itens.json"), encoding="utf-8"))
     modelos = {n[:-5] for n in os.listdir(os.path.join(RAIZ, "assets/modelos")) if n.endswith(".bmod")}
@@ -135,7 +191,19 @@ def main():
                           "armas": len(d["armas"]), "consumiveis": len(d["consumiveis"]), "raridades": len(d["raridades"])})
     cat["assets"].sort(key=lambda x: x["arquivo"])
     json.dump(cat, open(cat_p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    print(f"DADOS_OK itens.bdat {len(dados)} bytes ({len(d['armas'])} armas, {len(d['consumiveis'])} consumíveis)")
+    # Bots (Etapa 7): data/bots.json + data/nomes_jogadores.txt.
+    db = json.load(open(os.path.join(RAIZ, "data/bots.json"), encoding="utf-8"))
+    nomes = [l.strip() for l in open(os.path.join(RAIZ, "data/nomes_jogadores.txt"), encoding="utf-8") if l.strip()]
+    validar_bots(db, nomes, modelos)
+    dados_b = compilar_bots(db, nomes)
+    open(os.path.join(RAIZ, "assets/dados/bots.bdat"), "wb").write(dados_b)
+    registrar_dados(cat, "dados_bots", "assets/dados/bots.bdat", dados_b,
+                    f"data/bots.json + data/nomes_jogadores.txt (cópias de ventania:game/data/@{cat.get('ventania_commit', '')})",
+                    {"dificuldades": len(db["dificuldades"]), "nomes": len(nomes)})
+    cat["assets"].sort(key=lambda x: x["arquivo"])
+    json.dump(cat, open(cat_p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print(f"DADOS_OK itens.bdat {len(dados)} bytes ({len(d['armas'])} armas, {len(d['consumiveis'])} consumíveis); "
+          f"bots.bdat {len(dados_b)} bytes ({len(db['dificuldades'])} dificuldades, {len(nomes)} nomes)")
 
 
 if __name__ == "__main__":

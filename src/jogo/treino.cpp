@@ -48,7 +48,7 @@ void card(ListaDesenho2D& l, f32 x, f32 y, f32 w, f32 h) {
 }  // namespace
 
 bool Treino::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
-    if (!bib_.iniciar(&pak, arena, 48)) { snprintf(erro, ne, "sem memória para a biblioteca de modelos"); return false; }
+    if (!bib_.iniciar(&pak, arena, 96)) { snprintf(erro, ne, "sem memória para a biblioteca de modelos"); return false; }
     mundo_.limpar(128.0f);
     mundo_.definir_chao(true, 0.0f);
     auto colocar = [&](const Lugar& l) -> bool {

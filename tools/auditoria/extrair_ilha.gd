@@ -61,7 +61,19 @@ func _init() -> void:
 	var faixas := []
 	for f in m._faixas:
 		faixas.append([snappedf(f[0].x, 0.01), snappedf(f[0].y, 0.01), snappedf(f[1].x, 0.001), snappedf(f[1].y, 0.001), f[2]])
+	# Etapa 7: cômodos (exploração dos bots) e obstáculos grandes da navegação.
+	var comodos := []
+	for cm in m.rooms():
+		var c3: Vector3 = cm["centro"]
+		comodos.append([snappedf(c3.x, 0.01), snappedf(c3.y, 0.01), snappedf(c3.z, 0.01)])
+	var obst := []
+	for o in m.nav_obstacles():
+		if o.size() == 3:
+			obst.append([snappedf(o[0].x, 0.01), snappedf(o[0].y, 0.01), snappedf(o[1].x, 0.01), snappedf(o[1].y, 0.01), snappedf(o[2], 0.0001)])
+		else:
+			obst.append([snappedf(o[0].x, 0.01), snappedf(o[0].y, 0.01), snappedf(o[1], 0.01)])
 	var d := {"fonte": "ventania game/world/ilha/ilha_ventania.gd", "pesos": pesos, "costa": costa, "faixas": faixas,
+		"comodos": comodos, "obstaculos_nav": obst,
 		"nivel_mar": m.NIVEL_MAR, "semente": m.SEMENTE, "relevo": {"n": 201, "passo": 3.0, "origem": -300.0, "alturas": alt},
 		"pecas": pecas, "props": props, "baus": baus, "loot": loot, "pois": pois, "estradas": estradas, "escadas": esc, "spawns": spawns, "mobilia_n": mob.size(), "mobilia_amostra": mob.slice(0, 3)}
 	var f := FileAccess.open(out_path, FileAccess.WRITE)

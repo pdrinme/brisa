@@ -47,6 +47,7 @@ void Combatente::passo(const EntradaCombate& e, const Personagem& p, const Mundo
     int pedido = inv.selecionado;
     if (e.ciclo) pedido = Inventario::proximo_no_ciclo(inv.selecionado, e.ciclo);
     if (e.picareta) pedido = Inventario::PICARETA;
+    if (e.selecionar >= -1) pedido = e.selecionar;
     if (pedido != inv.selecionado && inv.selecionar(pedido)) {
         cancelar();
         if (disparo_ < passos_ + PASSOS_TROCA) disparo_ = passos_ + PASSOS_TROCA;

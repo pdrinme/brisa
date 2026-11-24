@@ -104,6 +104,15 @@ Todos têm a licença do titular (§2), e nenhum asset de terceiros entrou.
 `game/data/itens.json` do Ventania, com os mesmos valores. O binário
 `assets/dados/itens.bdat` está no catálogo, com essa origem.
 
+**Etapa 7 (bots):** `data/bots.json` é uma cópia revisada de
+`game/data/bots.json` do Ventania (mesmos valores; só acrescenta a lista
+`trajes_dos_bots`), e `data/nomes_jogadores.txt` é o
+`game/data/nomes_jogadores.txt` do Ventania (1.000 nomes inventados). O grafo
+`assets/mapa/ilha.bnav` é calculado pelo conversor a partir do layout da ilha
+do Ventania. Os três estão no catálogo com a origem. Nenhum asset novo de
+terceiros: os bots usam os trajes `recruta_base_01` e `recruta_brisa_01` já
+convertidos na Etapa 3.
+
 ## 5. Dependências de código e ferramentas
 
 | Componente | Uso | Licença |

@@ -120,8 +120,15 @@ lê os GLB das peças de construção do Ventania.
 6. **POIs** com contorno (para a região no HUD) e a costa (para o limite de movimento do Ventania, a 9 m da praia).
 7. **Minimapa** 256×256 PSMT8 (2,34 m por pixel): chão com sombreado, mar, estradas, plantas das casas, árvores e contornos das regiões.
 
-Ficam para depois: o **grafo de navegação** dos bots (Etapa 7) e os pontos de
-loot (Etapa 6).
+8. **Grafo de navegação dos bots** (Etapa 7, `tools/conversor/navegacao.py`): a construção do `NavGrade` do Ventania (`nav_grade.gd`) portada e rodada offline, gravada em `mapa/ilha.bnav` (formato BNAV):
+   - 150×150 células de 4 m, bloqueadas no mar, a menos de 3 m da costa e nos obstáculos do layout (`nav_obstacles()`: círculos e retângulos girados);
+   - arestas fechadas por desnível > 3,4 m e pelas paredes das peças, com as portas marcadas (ponto "preciso" no meio da porta);
+   - andares acima de 2,5 m (pisos das casas) com vizinhos, rampas e as escadas (a `ROTA_ESCADA` do Ventania: degraus e patamares como pontos da ligação);
+   - os centros dos cômodos (`rooms()`), para a exploração de prédios.
+
+   A extração (`extrair_ilha.gd`) passou a gravar `comodos` e `obstaculos_nav`; duas execuções seguem dando o mesmo arquivo. Resultado: 111 andares, 30 ligações (15 pares, 7 de escada), 11.776 células bloqueadas, nenhuma escada sem os dois pisos.
+
+Os pontos de loot entraram na Etapa 6 (BMAP v2).
 
 ## 5. Dados de jogo (Etapa 6 — `tools/conversor/dados.py`)
 
@@ -130,7 +137,11 @@ Ventania) → `tools/conversor/dados.py` → `assets/dados/*.bdat` (formato BDAT
 `FORMATOS.md`), registrado no catálogo. `make dados` recompila só os dados,
 sem o Ventania; o `make conteudo-ventania` também os inclui. Implementado na
 Etapa 6: `data/itens.json` (armas, consumíveis, munição, materiais, picareta,
-raridades, baú, dispersão), com a validação das referências. Os outros arquivos
+raridades, baú, dispersão), com a validação das referências. Etapa 7:
+`data/bots.json` (as 3 dificuldades com os 21 parâmetros do Ventania, a
+mistura, os orçamentos de raios e de decisão, a audição) e
+`data/nomes_jogadores.txt` (os 1.000 nomes) → `dados/bots.bdat` (BBOT), com
+os trajes que os bots podem usar (`trajes_dos_bots`). Os outros arquivos
 entram com os sistemas que os usam. Validador com as regras do Ventania:
 - temporada: níveis 1..N com uma recompensa cada, itens existentes, estimativa de horas;
 - loja: itens com visual, preços por raridade;

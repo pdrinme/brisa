@@ -127,7 +127,7 @@ de uso em cada medição.
 - **Relevo:** 201×201 amostras a cada 3 m (o mesmo do Ventania), com altura bilinear. Visual em blocos de 32 m com 2 LODs.
 - **Colisão do personagem:** cilindro vertical (raio 0,35 m, altura 1,8 m; agachado 1,15 m, o valor do Ventania) contra o relevo, as caixas finas das peças (paredes de 0,24 m, pisos com topo a 0,10 m), planos inclinados (rampas), cilindros ou caixas dos props e a colisão simplificada das escadas.
 - **Tiro:** raio por DDA na grade (como um voxel traversal) e, depois, contra as hitboxes (cabeça e corpo) dos personagens próximos ao raio.
-- **Navegação dos bots:** o grafo estático (150×150 células de 4 m mais nós de andar, escadas e portas) sai **pronto do pipeline**. Em jogo, só se atualizam as arestas das células tocadas por construção ou destruição. A* com limite de expansões por tick.
+- **Navegação dos bots** (Etapa 7, §20): o grafo estático (150×150 células de 4 m mais nós de andar, escadas e portas) sai **pronto do pipeline**. Em jogo, só se atualizam as arestas das células tocadas por construção ou destruição. A* com limite de expansões por tick.
 
 ## 8. Dados e formatos (todos little-endian, alinhados a 16 bytes)
 
@@ -505,3 +505,81 @@ Com ela aberta, o personagem anda, mas não atira nem interage.
 - livres no boot: 16,4 MB (16,5 MB na Etapa 5);
 - dados de itens: 1.856 bytes.
 
+
+## 20. Bots (Etapa 7, implementado)
+
+| Peça | Arquivo | Papel (no Ventania) |
+|---|---|---|
+| Dados | `data/bots.json` + `data/nomes_jogadores.txt` → `assets/dados/bots.bdat` | `game/data/bots.json` e a lista de 1.000 nomes, com os mesmos valores |
+| Grafo | `tools/conversor/navegacao.py` → `assets/mapa/ilha.bnav` | a construção do `nav_grade.gd` (células, andares, portas, escadas, rampas), feita offline |
+| Navegação | `src/mundo/navegacao.*` | o A* do `nav_grade.gd`: custo, heurística ×1,3, limite de 7.000 expansões, pontos "precisos" |
+| Cérebro | `src/ia/cerebro.*` | `bot_cerebro.gd`: percepção, decisão por pontuação, execução, desvio e recuperação |
+| Lutador | `src/jogo/lutador.*` | o jogador do servidor: personagem + animador + combatente + item na mão, comandado por entradas |
+| Grupo | `src/jogo/grupo_bots.*` | o papel do `game_server.gd`: `add_bot`, orçamentos por passo, `bots_hear`, eliminações, reaparecer |
+
+**Um bot é um jogador.** O cérebro só produz um `ComandoLutador` (movimento,
+mira, gatilho, recarga, interação, espaço do inventário), como o `InputCmd` do
+Ventania. Movimento, colisão, tiro, loot e inventário são os mesmos sistemas do
+jogador; o jogador virou um `Lutador` com câmera. Ordem do passo (30 Hz), a do
+servidor do Ventania: **todos os bots pensam** → o jogador anda e atira → os
+eventos do jogador → **os bots andam e atiram** → eventos (dano avisa a vítima,
+tiro é ouvido a até 70 m, eliminação larga o inventário e entra no feed).
+
+**Decisão por pontuação** (a cada 1/`decisao_hz` s perto do jogador, 1 Hz longe
+dele: o LOD de IA do Ventania): combater, cobertura, recuar, perseguir,
+investigar, curar, baú, saquear e explorar, com os 21 parâmetros de cada
+dificuldade (reação, erro de mira que assenta com o tempo de visada, alcance e
+cone de visão, memória, chance de investigar e de buscar cobertura, limites de
+vida para recuar e curar, rajadas, exploração de cômodos). A mistura do
+`bots.json` reparte as dificuldades entre os 15 bots.
+
+**Orçamentos por passo** (os do Ventania): 24 raios de visibilidade e 2
+planejamentos de A*. Quem não ganha orçamento tenta no passo seguinte.
+
+**Andar:** segue os pontos do caminho (precisos: porta, degrau e patamar, a
+0,7 m; os outros a 1,7 m), com um raio de desvio local à frente. Sem progresso
+por 45 passos: manobra lateral; com 90 ou mais: a aresta onde travou entra na
+lista a evitar e o caminho é refeito; na 3ª recuperação, o objetivo é
+abandonado (o baú ou item vai para uma lista a ignorar). "Preso" = sem
+progresso, contado em `EstatisticasBot`.
+
+**Ficam para as próximas etapas** (o cérebro já tem os parâmetros, que ficam
+sem uso até lá): ônibus, queda e Tormenta (Etapa 8); coleta com a picareta e
+construção ao levar tiro (Etapa 9). Fora da partida BR, os bots e o jogador
+reaparecem em 4 s (`RESPAWN_TICKS` do treino do Ventania).
+
+**BR-ADR-19: grafo de navegação calculado no pipeline.** O Ventania monta o
+`NavGrade` ao carregar a ilha. No PS2 isso custaria segundos de CPU e memória
+temporária a cada carga. O conversor faz a mesma construção em Python sobre o
+layout extraído (os obstáculos e os cômodos passaram a sair do
+`extrair_ilha.gd`), e o jogo só carrega 121 KB e roda o A*. Quando a construção
+entrar (Etapa 9), as arestas das células tocadas serão atualizadas em jogo
+(§7).
+
+**BR-ADR-20: o personagem colide como uma cápsula no topo.** O personagem do
+Ventania é uma cápsula. O cilindro de topo reto do Brisa batia a cabeça nas
+bordas que só pegam os 20 cm de cima, como o patamar da escada empilhada acima
+do 2º lance no prédio: os bots (e o jogador) travavam ao descer. A colisão
+lateral agora ignora caixas cuja base esteja nos 20 cm de cima do corpo
+(`MundoColisao::empurrar`). Os testes de colisão da Etapa 4 continuam passando.
+
+**BR-ADR-21: no meio de uma escada, a rota começa pelo resto dela.** No
+patamar do meio, o nó mais perto é a célula do chão 2 m abaixo, e a rota mandava
+pular do patamar (o maior ponto de travamento nas simulações). O A* agora
+procura o ponto de escada mais perto (a menos de 1,6 m e 0,8 m de altura) e
+começa na ponta da escada que dá o menor custo até o destino, com os pontos
+restantes na frente. Um bot cuja lista de arestas evitadas fecha a única saída
+de uma sala esvazia a lista e replaneja.
+
+**Determinismo:** o sorteio é PCG32 com semente por bot. No PC a partida é
+idêntica a cada execução. O combate e o movimento do roteiro saem iguais no PC
+e no PS2, mas **a partida dos bots não**: a FPU do EE não é IEEE (sem
+denormais, arredondamento por truncamento), e as decisões em cadeia ampliam a
+diferença (no PC vence um bot em 2,7 min; no PS2, outro em 4,8 min). Os dois
+cumprem o aceite. Para um jogo offline isso não pesa; os testes conferem
+propriedades (vencedor, tempo preso), não o resultado exato.
+
+**Medido** (emulador Play!; os tempos de CPU são do emulador, não do console):
+- 15 bots com o jogador, desenhando a ilha: IA de 0,69 a 0,77 ms por passo em média (pensar até 1,34 ms, simular até 1,40 ms);
+- partida só de bots, sem desenhar: 0,33 ms por passo em média, pior 5,2 ms (um passo com dois A* longos); 359 caminhos;
+- memória: livres no boot 15,7 MB (16,4 MB na Etapa 6); `bots.bdat` 24 KB, `ilha.bnav` 121 KB; estado estático do A* de ~430 KB (custos, origem e marcas de 23.524 nós, mais o heap de 16.384 abertos).

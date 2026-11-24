@@ -46,6 +46,11 @@ else
     if [ "$n" -eq 16 ]; then echo "[OK] 16 vistas da ilha medidas"; else echo "[ERRO] vistas da ilha: $n de 16"; falhas=$((falhas + 1)); fi
     confere "caminhada no relevo (no chão, sobre o relevo)" "^BRISA_MARCO ilha_caminhada .*no_chao=1 acima_do_relevo=0\.0[0-9] anim=correr"
     confere "roteiro da ilha até o fim" "^BRISA_ILHA_OK"
+    # Bots (Etapa 7): 15 s com o jogador e a partida só de bots (critério de aceite do GAME_DESIGN §8).
+    confere "fase dos bots começou (15 bots)" "^BRISA_BOTS_INICIO bots=15 "
+    confere "bots com o jogador por 15 s" "^BRISA_BOTS passo=450 vivos=[0-9]+ "
+    confere "partida só de bots: um vencedor, 14 eliminações, preso < 1%" "^BRISA_BOTS_PARTIDA vivos=1 elims=14 vencedor=[^ ]+ minutos=[0-9.]+ preso_pct=0\.[0-9]+ "
+    confere "bots até o fim" "^BRISA_BOTS_OK"
     confere "acenou" "^BRISA_MARCO acenou .*no_chao=1"
     confere "roteiro do treino até o fim" "^BRISA_TREINO_OK"
     confere "terminou sem travar" "^BRISA_FIM_OK"

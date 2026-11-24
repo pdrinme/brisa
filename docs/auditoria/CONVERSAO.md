@@ -1,6 +1,6 @@
 # Conversão Ventania → Brisa (gerado)
 
-Ventania `7864cd7`. 231 arquivos, 4274 KB no total. Tempo: 11.9 s.
+Ventania `7864cd7`. 232 arquivos, 4392 KB no total. Tempo: 11.7 s.
 
 | id | categoria | resultado |
 |---|---|---|
@@ -107,12 +107,14 @@ Ventania `7864cd7`. 231 arquivos, 4274 KB no total. Tempo: 11.9 s.
 | icone_celula_g | texturas | 64×64 PSMT8, 252 cores (de 256×256) |
 | icone_municao | texturas | 64×64 PSMT8, 256 cores (de 256×256) |
 | mapa_ilha | mapa | 1944 instâncias de 162 modelos, 266303 triângulos (sem o relevo), 52 modelos gerados, 52 LODs (LOD1 e LOD2) |
+| mapa_navegacao | mapa | 111 andares, 15 ligações (7 escadas), 11776 células bloqueadas, 0 pendentes |
 | minimapa | texturas | 256×256 PSMT8, 256 cores |
-| (tempo) | mapa | 3.5 s |
+| (tempo) | mapa | 3.6 s |
 
 | tipo | KB |
 |---|---|
 | animacao | 228 |
 | mapa | 317 |
 | modelo | 3608 |
+| nav | 118 |
 | textura | 121 |

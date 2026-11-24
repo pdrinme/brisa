@@ -119,6 +119,52 @@ Os textos são UTF-8 com o zero no fim; o compilador recusa nomes que não cabem
 Índices de item no jogo: 0 = vazio, depois as armas, os consumíveis e as
 ferramentas, na ordem do JSON (os mesmos do `ItemDB` do Ventania).
 
+### BBOT — dados dos bots (Etapa 7)
+
+Também é um arquivo `dados/` (`assets/dados/bots.bdat`, 24.432 bytes), escrito
+por `tools/conversor/dados.py` a partir de `data/bots.json` (cópia revisada do
+`game/data/bots.json` do Ventania, com os mesmos valores) e de
+`data/nomes_jogadores.txt` (os 1.000 nomes do Ventania); lido por
+`src/ia/dados_bots.h`. O compilador confere que a mistura só cita dificuldades
+existentes, que cada dificuldade tem os 21 campos, que os nomes não se repetem e
+cabem em 24 bytes, e que os trajes dos bots existem no pacote. Cabeçalho de 64
+bytes: `BBOT`, versão (1), `preencher_ate`, n de dificuldades, da mistura, de
+nomes e de trajes (u32 ×6), `decisao_hz`, `decisao_longe_hz`, `lod_distancia_m`
+(f32), `raios_visao_por_tick` (u32), `audicao_tiro_m` (f32) e os offsets dos 4
+blocos (u32 ×4).
+
+| Bloco | Registro | Campos |
+|---|---|---|
+| Dificuldades | 100 B | `nome[16]` e 21 f32: `reacao_s`, `erro_mira_graus`, `alcance_visao_m`, `campo_visao_graus`, `engaja_m`, `cura_abaixo`, `constroi`, `coleta`, `salto_cedo`, `decisao_hz`, `mira_assenta_s`, `memoria_s`, `investiga`, `usa_cobertura`, `cobertura_vida`, `recua_vida`, `atira_andando`, `rajada_ticks`, `pausa_ticks`, `ritmo_lateral`, `explora_predios` |
+| Mistura | 1 B | índice da dificuldade do bot *i* (cíclico) |
+| Nomes | 24 B | UTF-8 com o zero no fim |
+| Trajes | 24 B | id do traje (`recruta_base_01`, `recruta_brisa_01`) |
+
+## BNAV — grafo de navegação dos bots (Etapa 7)
+
+Escrito por `tools/conversor/navegacao.py` (chamado por `mapa.py`), que porta a
+construção do `NavGrade` do Ventania (`game/gameplay/ai/nav_grade.gd`) e roda
+**offline** sobre o layout extraído da ilha; lido por `src/mundo/navegacao.cpp`
+(`mapa/ilha.bnav`, 120.928 bytes). Cabeçalho de 96 bytes: `BNAV`, versão (1), `N`
+(150), tamanho da célula `T` (4 m, f32), `LIMITE` (300 m, f32), n de andares,
+de ligações, de pontos e de cômodos (u32 ×4) e os offsets dos 8 blocos (u32 ×8).
+
+| Bloco | Registro | Campos |
+|---|---|---|
+| Alturas | i16 × N² | altura do chão no centro de cada célula, em cm |
+| Bloqueio | u8 × N² | 1 = célula fora do mapa (mar, costa < 3 m, desnível, obstáculo) |
+| Arestas | u8 × N² | bits N, L, S, O (0–3): parede ou desnível > 3,4 m naquele lado |
+| Portas | u8 × N² | bits N, L, S, O: a parede daquele lado tem porta (passa, ponto "preciso") |
+| Andares | 36 B | `x, y, z` (f32), `i, j, nivel` (i16), 2 B, `viz[4]` (i32; −1 = sem vizinho) |
+| Ligações | 16 B | `a, b` (i32, nós), `custo` (f32), `ponto` (u16, primeiro), `n_pontos` (u16) |
+| Pontos | 12 B | `x, y, z` (f32) da rota da ligação (degraus e patamares da escada, rampa) |
+| Cômodos | 16 B | centro `x, y, z` (f32), 4 B (exploração de prédios) |
+
+Nós: `0..N²−1` são as células do chão (`j·N + i`), e `N² + k` é o andar *k*.
+As ligações têm um sentido (cada escada ou rampa gera as duas). A ilha atual tem
+111 andares, 30 ligações (15 pares, 7 deles de escada), 118 pontos, 149
+cômodos e 11.776 células bloqueadas.
+
 ## BANI — animações
 
 | Offset | Tipo | Campo |

@@ -49,7 +49,7 @@ bool Ilha::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
     if (!d || !mapa_.carregar(d, tam, e, sizeof e)) { snprintf(erro, ne, "mapa: %s", d ? e : "mapa/ilha.bmap ausente"); return false; }
     if (mapa_.n_modelos() > MAX_MODELOS) { snprintf(erro, ne, "mapa com %d modelos (máximo %d)", mapa_.n_modelos(), MAX_MODELOS); return false; }
     if (mapa_.n_instancias() > MAX_INSTANCIAS) { snprintf(erro, ne, "mapa com instâncias demais"); return false; }
-    if (!bib_.iniciar(&pak, arena, mapa_.n_modelos() + Jogador::N_TRAJES + Jogador::MAX_ITENS + 4)) { snprintf(erro, ne, "sem memória para os modelos do mapa"); return false; }
+    if (!bib_.iniciar(&pak, arena, mapa_.n_modelos() + Jogador::N_TRAJES * 3 + Jogador::MAX_ITENS + 4)) { snprintf(erro, ne, "sem memória para os modelos do mapa"); return false; }
     for (int i = 0; i < mapa_.n_modelos(); i++) {
         int k = bib_.carregar(mapa_.modelo(i).nome, erro, ne);
         if (k < 0) return false;
@@ -57,6 +57,9 @@ bool Ilha::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
     }
     if (!jogador_.iniciar(pak, bib_, erro, ne)) return false;
     if (!hc_.iniciar(pak, bib_, arena, jogador_.itens(), erro, ne)) return false;
+    d = pak.arquivo("mapa/ilha.bnav", &tam);
+    if (!d || !nav_.carregar(d, tam, e, sizeof e)) { snprintf(erro, ne, "navegação: %s", d ? e : "mapa/ilha.bnav ausente"); return false; }
+    if (!grupo_.iniciar(pak, &jogador_.recursos(), &mapa_, &nav_, erro, ne)) return false;
     // Loot da partida (loot_server.gd): os baús do mapa e os pontos de loot; sem reabastecer.
     loot_.iniciar(&jogador_.itens(), 20261116);  // a semente da ilha do Ventania
     loot_.reabastecer = false;
@@ -131,7 +134,24 @@ void Ilha::passo(const Controle& c) {
     if (c.pressionou(BT_CIMA) && !hc_.inventario_aberto()) mapa_cheio_ = !mapa_cheio_;
     bool bloquear = (!atalho && hc_.controlar_inventario(c, jogador_, loot_, mundo_)) || hc_.inventario_aberto() || mapa_cheio_;
     ev_ = EventosCombate();
-    jogador_.passo(c, mundo_, loot_, nullptr, 0, passos_, bloquear, ev_);
+    if (bots_ativos_) grupo_.pensar(&jogador_.lutador(), mundo_, loot_, passos_);
+    AlvoCombate alvos[GrupoBots::MAX_LUTADORES];
+    int na = bots_ativos_ ? grupo_.alvos(&jogador_.lutador(), nullptr, alvos) : 0;
+    jogador_.passo(c, mundo_, loot_, alvos, na, passos_, bloquear, ev_);
+    if (bots_ativos_) {
+        grupo_.processar(jogador_.lutador(), ev_, &jogador_.lutador(), loot_, passos_);
+        grupo_.simular(&jogador_.lutador(), mundo_, loot_, passos_);
+        // o jogador eliminado reaparece em 4 s (fora da partida BR, como no treino do Ventania)
+        Lutador& j = jogador_.lutador();
+        if (!j.vivo && jogador_reviver_ == 0) jogador_reviver_ = passos_ + GrupoBots::REAPARECER;
+        if (!j.vivo && grupo_.reaparecer && passos_ >= jogador_reviver_) {
+            jogador_reviver_ = 0;
+            j.vivo = true;
+            j.comb.iniciar(&jogador_.itens(), Jogador::ID);
+            Vec3 s = mapa_.spawn(static_cast<int>(passos_ % static_cast<u32>(mapa_.n_spawns())));
+            ir_para(s.x, s.z, atan2f(s.x, s.z) / GRAUS);
+        }
+    }
     loot_.atualizar(passos_, 1.0f / 30.0f);
     hc_.registrar(ev_, jogador_);
     hc_.passo();
@@ -139,6 +159,56 @@ void Ilha::passo(const Controle& c) {
     if (jogador_.personagem().pos.y < mapa_.nivel_mar() - 30.0f) {
         Vec3 s = mapa_.spawn(0);
         ir_para(s.x, s.z, 0);
+    }
+}
+
+void Ilha::ativar_bots(int n, u32 semente, bool reaparecer, bool com_jogador) {
+    grupo_.reaparecer = reaparecer;
+    grupo_.povoar(n, semente, 1);
+    bots_ativos_ = n > 0;
+    com_jogador_ = com_jogador;
+    Lutador& j = jogador_.lutador();
+    j.vivo = com_jogador;  // fora: partida só de bots (teste de aceite)
+    if (com_jogador) {
+        j.comb.vit = Vitais();
+        jogador_reviver_ = 0;
+    }
+}
+
+void Ilha::passo_sem_jogador() {
+    passos_++;
+    grupo_.pensar(nullptr, mundo_, loot_, passos_);
+    grupo_.simular(nullptr, mundo_, loot_, passos_);
+    loot_.atualizar(passos_, 1.0f / 30.0f);
+}
+
+void Ilha::montar_bots(Cena3D& cena) {
+    if (!bots_ativos_) return;
+    Frustum fr = Frustum::de(cena.camera.vp);
+    Vec3 cam = cena.camera.posicao;
+    for (int i = 0; i < grupo_.n_bots(); i++) {
+        Lutador& b = grupo_.bot(i);
+        if (!b.vivo) continue;
+        Vec3 d = b.p.pos - cam;
+        f32 dist = sqrtf(ponto(d, d));
+        if (dist > 150.0f || fr.esfera(b.p.pos + Vec3(0, 0.9f, 0), 1.1f) == 0) continue;
+        b.montar(cena, mundo_, dist < 18.0f ? 0 : (dist < 55.0f ? 1 : 2), dist < 40.0f);
+    }
+}
+
+// Nomes acima dos bots perto (como os jogadores do Ventania).
+void Ilha::hud_bots(ListaDesenho2D& l, const Camera3D& cam) const {
+    if (!bots_ativos_) return;
+    for (int i = 0; i < grupo_.n_bots(); i++) {
+        const Lutador& b = grupo_.bot(i);
+        if (!b.vivo) continue;
+        Vec3 p = b.p.pos + Vec3(0, 2.05f, 0), d = p - cam.posicao;
+        if (ponto(d, d) > 30.0f * 30.0f) continue;
+        Vec4 c = transformar(cam.vp, p);
+        if (c.w < cam.perto) continue;
+        f32 x = 320.0f + 320.0f * c.x / c.w, y = 224.0f - 224.0f * c.y / c.w;
+        if (x < 0 || x > 640 || y < 0 || y > 448) continue;
+        fonte::desenhar_adesivo(l, x - fonte::largura(b.nome, 1) * 0.5f, y - 10, 1, BRANCO, TINTA, 1, 0, b.nome);
     }
 }
 
@@ -207,6 +277,7 @@ void Ilha::montar(Cena3D& cena, ListaDesenho2D& l, const EstatisticasQuadro& est
     cena.textura_sombra = tex_sombra_;
     jogador_.montar(cena, bib_, mundo_, &loot_, 4.0f / 3.0f);
     montar_mapa(cena);
+    montar_bots(cena);
     hc_.montar_loot(cena, loot_, bib_, jogador_, passos_ / 30.0f);
     est_.cpu_corte_us = static_cast<u32>(plataforma::tempo_us() - t0);
     l.limpar(cena.ceu);
@@ -220,7 +291,32 @@ void Ilha::montar(Cena3D& cena, ListaDesenho2D& l, const EstatisticasQuadro& est
         }
     }
     if (hud_) hud(l, est, e3d, info);
-    if (!mapa_cheio_) hc_.desenhar(l, jogador_, loot_, cena.camera);
+    if (!mapa_cheio_) {
+        hud_bots(l, cena.camera);
+        hc_.desenhar(l, jogador_, loot_, cena.camera);
+    }
+    if (bots_ativos_ && hud_) {
+        // vivos e o feed de eliminações (canto direito, abaixo do minimapa)
+        char t[64];
+        snprintf(t, sizeof t, "%d VIVOS", grupo_.vivos(com_jogador_ ? &jogador_.lutador() : nullptr));
+        fonte::desenhar_adesivo(l, 624 - fonte::largura(t, 2), 240, 2, BRANCO, TINTA, 1, 1, t);
+        for (int i = 0; i < grupo_.n_feed(); i++) {
+            const Eliminacao& f = grupo_.feed(i);
+            if (passos_ - f.tick > 30 * 8) continue;
+            char linha[80];
+            snprintf(linha, sizeof linha, "%s > %s", f.quem, f.vitima);
+            fonte::desenhar_adesivo(l, 624 - fonte::largura(linha, 1), 262 + i * 12, 1, BRANCO, TINTA, 1, 0, linha);
+        }
+    }
+    if (bots_ativos_ && com_jogador_ && !jogador_.lutador().vivo) {
+        char t[64];
+        snprintf(t, sizeof t, "ELIMINADO POR %s", grupo_.nome_quem_eliminou);
+        fonte::desenhar_adesivo(l, 320 - fonte::largura(t, 3) * 0.5f, 180, 3, rgb(0xff6b6b), TINTA, 2, 2, t);
+        if (grupo_.reaparecer) {
+            snprintf(t, sizeof t, "VOLTA EM %u S", static_cast<unsigned>((jogador_reviver_ > passos_ ? jogador_reviver_ - passos_ : 0) / 30 + 1));
+            fonte::desenhar_adesivo(l, 320 - fonte::largura(t, 2) * 0.5f, 214, 2, BRANCO, TINTA, 1, 1, t);
+        }
+    }
 }
 
 // Minimapa (norte para cima): a textura de 600 m recortada em volta do jogador.

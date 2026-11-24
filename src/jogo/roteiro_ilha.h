@@ -47,3 +47,8 @@ inline int vistas_da_ilha(const MapaBrisa& m, VistaIlha* v, int max) {
 
 const u32 PASSOS_POR_VISTA = 16;   // o cache do LOD0 enche (4 blocos por quadro) antes de medir
 const u32 PASSOS_CAMINHADA = 150;  // correndo a partir do início, sobre o relevo
+// Etapa 7: fase dos bots (15 s com o jogador parado, desenhando; log a cada 5 s) e depois a
+// partida só de bots sem desenhar, até sobrar um (no máximo 25 minutos de jogo).
+const u32 PASSOS_BOTS_JOGADOR = 450;
+const u32 PASSOS_BOTS_LOG = 150;
+const u32 PASSOS_BOTS_PARTIDA = 25 * 60 * 30;

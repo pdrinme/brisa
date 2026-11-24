@@ -25,6 +25,7 @@ struct EntradaCombate {
     bool recarregar = false;      // ■ (borda)
     bool interagir = false;       // ▲ (segurado)
     int ciclo = 0;                // R1 = +1, L1 = −1 (borda)
+    int selecionar = -2;          // espaço direto (bots): −1 = picareta, 0..4; −2 = nada
     bool picareta = false;        // ▶ (borda)
     f32 yaw = 0, pitch = 0;       // rad, da câmera
 };

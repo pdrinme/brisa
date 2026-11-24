@@ -12,19 +12,25 @@ código, motor, pipeline, build e documentação são próprios.
 
 ## Status
 
-**Etapa 6 (combate e inventário): pronta e testada no PC e no emulador; falta
-jogar no console.** O ELF abre na **Ilha Ventania inteira** (Etapa 5), agora com:
+**Etapa 7 (bots): pronta e testada no PC e no emulador; falta jogar no
+console.** A ilha agora tem **15 bots** do Ventania: as 3 dificuldades com os
+mesmos parâmetros, que exploram, saqueiam, abrem baús, lutam, buscam cobertura,
+recuam e se curam, navegando por um grafo calculado no pipeline. O jogador leva
+dano e reaparece em 4 s. Uma partida só de bots termina com um vencedor, e os
+bots ficam presos menos de 1% do tempo.
+
+Da Etapa 6, o ELF abre na **Ilha Ventania inteira** (Etapa 5) com:
 - loot no chão e baús que abrem;
 - as 5 armas do Ventania com raridades, munição, curas e escudos;
 - a picareta e o inventário de 5 espaços com a tela de inventário;
 - a arma nas duas mãos (IK) e o HUD de combate.
 
 O campo de treino (L1 + R1 + START) tem os bonecos de treino para testar o
-combate. Os testes no console das Etapas 1 a 6 continuam pendentes
+combate. Os testes no console das Etapas 1 a 7 continuam pendentes
 ([docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md)). Veja
 [BRISA_ROADMAP.md](BRISA_ROADMAP.md).
 
-![Inventário no emulador, pelo VU1](docs/etapa6/emulador_inventario_vu1.png)
+![Bots na ilha no emulador, pelo VU1](docs/etapa7/emulador_bots_vu1.png)
 
 ## Compilar e testar
 
@@ -110,16 +116,17 @@ brisa-ps2/
 ├── src/
 │   ├── nucleo/              ✅ tipos, arena, passo fixo, controle, estatísticas, lista 2D, fonte, formato, mat (3D)
 │   ├── render3d/            ✅ malhas, cena, luz toon, pipeline de referência (caminho EE)
-│   ├── jogo/                ✅ telas (tela_boot, cena_teste, vitrine, treino, ilha, jogador, roteiros do autoteste)
+│   ├── jogo/                ✅ telas (tela_boot, cena_teste, vitrine, treino, ilha), lutador, jogador, grupo de bots, roteiros do autoteste
 │   ├── plataforma/ps2/      ✅ IOP/IRX, gsKit, libpad, relógio, caminho EE (GIF), caminho VU1 (VIF1 + vu1/toon.vsm)
 │   ├── plataforma/host/     ✅ PC: rasterizador de software, PNG, controle por roteiro
 │   ├── main.cpp             ✅
 │   ├── conteudo/            ✅ pacote, modelos, animações (mistura de poses), texturas, biblioteca de modelos
-│   ├── mundo/               ✅ colisão (caixas, rampas, cunhas, relevo, grade, raio), mapa (BMAP), relevo 3D
+│   ├── mundo/               ✅ colisão (caixas, rampas, cunhas, relevo, grade, raio), mapa (BMAP), relevo 3D, navegação (BNAV + A*)
 │   ├── personagem/          ✅ movimento, câmera em 3ª pessoa, animador, portador (item na mão, IK)
 │   ├── combate/             ✅ itens, inventário, vida/escudo, tiro, loot
-│   └── (planejado) armas/ inventario/ construcao/ bots/ partida/ ui/ audio/ progressao/ save/
-├── data/                    ✅ JSON de jogo (itens.json; cosméticos, temporadas e loja depois)
+│   ├── ia/                  ✅ cérebro dos bots (bot_cerebro.gd), dados das dificuldades
+│   └── (planejado) construcao/ partida/ ui/ audio/ progressao/ save/
+├── data/                    ✅ JSON de jogo (itens.json, bots.json, nomes_jogadores.txt; cosméticos, temporadas e loja depois)
 ├── assets/                  ✅ assets convertidos (modelos, animações, texturas) + catalogo_brisa.json
 ├── tools/
 │   ├── ambiente/            ✅ instalar e verificar o toolchain (+ sonda)

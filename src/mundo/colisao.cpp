@@ -182,7 +182,9 @@ bool MundoColisao::empurrar(Vec3& p, f32 altura, f32 raio, f32 passo) const {
             // Altura do obstáculo no ponto de contato: abaixo do passo, é chão (degrau, rampa).
             f32 topo = c.tipo == ColisaoBMOD::CAIXA ? c.topo(qx, qz) : c.topo(lx, lz);
             f32 base = c.tipo == ColisaoBMOD::CAIXA ? c.base(qx, qz) : c.base(lx, lz);
-            if (topo <= p.y + passo || base >= p.y + altura) return;
+            // Cápsula (como o personagem do Ventania): a cabeça arredondada escorrega por baixo de
+            // bordas que só pegam os 20 cm de cima (ex.: o patamar da escada empilhada acima do lance 2).
+            if (topo <= p.y + passo || base >= p.y + altura - 0.2f) return;
             f32 ex, ez, pen;
             if (d > 1e-5f) {
                 ex = (lx - qx) / d;
