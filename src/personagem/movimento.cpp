@@ -46,9 +46,59 @@ void mover_horizontal(Personagem& p, f32 dx, f32 dz, const MundoColisao& m) {
 }
 }  // namespace
 
+// Queda livre (rápida, pouco controle) e planador (abre sozinho a 38 m do chão:
+// desce devagar e anda mais). Ao tocar o chão, volta ao movimento normal.
+static void passo_queda(Personagem& p, const ComandoMovimento& c, const MundoColisao& m, f32 dt) {
+    f32 y_chao = -1e9f;
+    bool tem = m.chao(p.pos.x, p.pos.z, mov::RAIO * 0.6f, p.pos.y + 0.01f, &y_chao);
+    if (p.queda == QUEDA_LIVRE && tem && p.pos.y - y_chao < mov::PLANADOR_ALTURA) p.queda = PLANADOR;
+    bool planando = p.queda == PLANADOR;
+    bool mergulho = mergulhando(p.queda, c);
+    f32 mx = c.x, my = c.y, l = sqrtf(mx * mx + my * my);
+    if (l > 1.0f) { mx /= l; my /= l; }
+    f32 v = planando ? mov::PLANADOR_HORIZONTAL : (mergulho ? mov::MERGULHO_HORIZONTAL : mov::QUEDA_HORIZONTAL);
+    f32 cs = cosf(c.yaw), sn = sinf(c.yaw);
+    f32 alvo_x = (cs * mx - sn * my) * v, alvo_z = (-sn * mx - cs * my) * v;
+    f32 hx = p.vel.x, hz = p.vel.z;
+    f32 dx = alvo_x - hx, dz = alvo_z - hz, d = sqrtf(dx * dx + dz * dz), acel = mov::QUEDA_ACEL * dt;
+    if (d <= acel || d < 1e-6f) { hx = alvo_x; hz = alvo_z; }
+    else { hx += dx / d * acel; hz += dz / d * acel; }
+    f32 vy = p.vel.y;
+    auto aproximar = [](f32 a, f32 b, f32 k) { return a < b ? (a + k > b ? b : a + k) : (a - k < b ? b : a - k); };
+    if (planando) {
+        vy = aproximar(vy, -mov::PLANADOR_DESCIDA, mov::GRAVIDADE * dt);
+    } else {
+        f32 terminal = mergulho ? mov::MERGULHO_TERMINAL : mov::QUEDA_TERMINAL;
+        // saindo do mergulho, freia até a terminal normal (sem tranco)
+        vy = vy >= -terminal ? fmaxf(vy - mov::GRAVIDADE * dt, -terminal) : aproximar(vy, -terminal, mov::GRAVIDADE * 1.5f * dt);
+    }
+    p.no_chao = false;
+    mover_horizontal(p, hx * dt, hz * dt, m);
+    f32 novo_y = p.pos.y + vy * dt;
+    tem = m.chao(p.pos.x, p.pos.z, mov::RAIO * 0.6f, p.pos.y + 0.01f, &y_chao);
+    p.vel = Vec3(hx, vy, hz);
+    if (tem && novo_y <= y_chao) {
+        p.pos.y = y_chao;
+        p.queda = NO_CHAO_NORMAL;
+        p.no_chao = true;
+        p.aterrissou = true;
+        p.altura_queda = 0;  // pouso do planador: aterrissagem normal
+        p.vel.y = 0;
+    } else {
+        p.pos.y = novo_y;
+    }
+    p.pico = p.pos.y;
+}
+
 void passo_movimento(Personagem& p, const ComandoMovimento& c, const MundoColisao& m, f32 dt) {
     p.yaw = c.yaw;
     p.pulou = p.aterrissou = false;
+    if (p.queda == NO_ONIBUS) return;  // a posição vem do ônibus (a partida)
+    if (p.queda != NO_CHAO_NORMAL) {
+        p.agachado = p.correndo = false;
+        passo_queda(p, c, m, dt);
+        return;
+    }
     // Agachar / levantar (levantar só se couber em pé).
     if (c.agachar && !p.agachado) p.agachado = true;
     else if (!c.agachar && p.agachado && m.livre(p.pos, mov::ALTURA, mov::RAIO - 0.02f)) p.agachado = false;

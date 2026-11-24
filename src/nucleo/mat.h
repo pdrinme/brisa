@@ -28,6 +28,7 @@ struct alignas(16) Mat4 {
     static Mat4 escala(f32 s);
     static Mat4 rotacao_y(f32 rad);
     static Mat4 rotacao_x(f32 rad);
+    static Mat4 rotacao_z(f32 rad);
     // Translação · rotação (quaternion x,y,z,w) · escala, como os nós do glTF.
     static Mat4 trs(Vec3 t, const f32 q[4], Vec3 s);
     // fovy em radianos; aspecto = largura/altura da imagem NA TELA (4:3 numa TV).

@@ -81,6 +81,19 @@
    "raridades": 6
   },
   {
+   "id": "dados_partida",
+   "arquivo": "assets/dados/partida.bdat",
+   "tipo": "dados",
+   "bytes": 176,
+   "crc32": "11111052",
+   "origem": "data/partida.json (cópia revisada de ventania:game/data/partida.json@7864cd7)",
+   "autor": "Projeto Ventania / Projeto Brisa",
+   "licenca": "Original",
+   "autorizacao": "titular (ASSET_LICENSES.md §2)",
+   "categoria": "dados",
+   "fases_tormenta": 7
+  },
+  {
    "id": "mapa_ilha",
    "arquivo": "assets/mapa/ilha.bmap",
    "tipo": "mapa",

@@ -28,6 +28,7 @@ bool RecursosLutador::iniciar(const Pacote& pak, BibliotecaModelos& b, char* err
     d = pak.arquivo("dados/itens.bdat", &tam);
     if (!d || !itens.carregar(d, tam, e, sizeof e)) { snprintf(erro, ne, "itens: %s", d ? e : "dados/itens.bdat ausente"); return false; }
     if (itens.n_itens() > MAX_ITENS) { snprintf(erro, ne, "itens demais (%d)", itens.n_itens()); return false; }
+    if ((planador = b.carregar("planador_01", erro, ne)) < 0) return false;
     for (int i = 0; i < MAX_ITENS; i++) modelo_item[i] = -1;
     for (int i = 1; i < itens.n_itens(); i++)
         if ((modelo_item[i] = b.carregar(itens.modelo(i), erro, ne)) < 0) return false;
@@ -48,6 +49,7 @@ void Lutador::iniciar(const RecursosLutador* r, u16 i, int t, const char* n) {
     anim.iniciar(r->anims);
     comb.iniciar(&r->itens, i);
     port = Portador();
+    stats = EstatisticasLutador();
     vivo = true;
     reposicionar(Vec3(), 0);
 }
@@ -76,9 +78,14 @@ AlvoCombate Lutador::como_alvo() {
 void Lutador::passo(const ComandoLutador& c, const MundoColisao& m, Loot& loot, AlvoCombate* alvos, int n, u32 tick,
                     EventosCombate& ev, bool com_visual) {
     const f32 dt = 1.0f / 30.0f;
+    quer_saltar = p.queda == NO_ONIBUS && c.mov.pular;
     passo_movimento(p, c.mov, m, dt);
     anim.atualizar(p, c.acenar, dt);
-    comb.passo(c.comb, p, m, loot, alvos, n, tick, ev);
+    // No ônibus e no ar não há combate nem interação (os tempos seguem correndo).
+    comb.passo(p.queda == NO_CHAO_NORMAL ? c.comb : EntradaCombate(), p, m, loot, alvos, p.queda == NO_CHAO_NORMAL ? n : 0, tick, ev);
+    for (int k = 0; k < ev.n_acertos; k++) stats.dano += ev.acertos[k].dano;
+    if (ev.bau_aberto >= 0) stats.baus++;
+    if (ev.usou) stats.curas++;
     const BancoItens& it = r_->itens;
     if (ev.atirou) {
         const char* idi = it.id(comb.inv.atual().item);
@@ -108,9 +115,24 @@ void Lutador::montar(Cena3D& cena, const MundoColisao& m, int lod, bool sombra) 
     static Pose pose;
     lod = lod < 0 ? 0 : (lod > 2 ? 2 : lod);
     const ModeloBrisa& mod = (*r_->bib)[r_->trajes[traje][lod]];
+    if (p.queda == NO_ONIBUS) return;  // dentro do ônibus: invisível
     anim.pose(mod, pose);
     Mat4 mm = matriz(), item;
-    int ii = port.item_na_mao();
+    if (p.queda != NO_CHAO_NORMAL || fabsf(anim.deitar()) > 0.01f || fabsf(anim.rolar()) > 0.01f) {
+        // No ar: de bruços / de cabeça para baixo / planando, girando em torno do centro do corpo.
+        const Vec3 centro(0, 1.0f, 0);
+        mm = Mat4::translacao(p.pos) * Mat4::rotacao_y(p.yaw) * Mat4::translacao(centro) * Mat4::rotacao_x(-anim.deitar()) *
+             Mat4::rotacao_z(anim.rolar()) * Mat4::translacao(Vec3() - centro) * Mat4::rotacao_y(3.14159265f);
+    }
+    if (anim.peso_planador() > 0.05f && r_->planador >= 0) {
+        // Asa delta sobre a cabeça: sai do ombro e cresce (tween TRANS_BACK de 0,35–0,4 s do Ventania).
+        f32 k = fminf(anim.tempo_planador() / 0.38f, 1.0f);
+        f32 e = 1.0f + 2.70158f * (k - 1) * (k - 1) * (k - 1) + 1.70158f * (k - 1) * (k - 1);  // ease out back
+        Vec3 pos = Vec3(0, 1.45f, -0.25f) + (Vec3(0, 2.45f, 0) - Vec3(0, 1.45f, -0.25f)) * e;
+        f32 esc = 0.08f + (1.0f - 0.08f) * e;
+        adicionar_modelo(cena, (*r_->bib)[r_->planador], nullptr, mm * Mat4::translacao(pos) * Mat4::escala(esc));
+    }
+    int ii = p.queda == NO_CHAO_NORMAL ? port.item_na_mao() : 0;
     if (lod < 2 && port.aplicar(mod, pose, &item) && ii > 0 && r_->modelo_item[ii] >= 0)
         adicionar_modelo(cena, (*r_->bib)[r_->modelo_item[ii]], nullptr, mm * item);
     adicionar_modelo(cena, mod, &pose, mm);

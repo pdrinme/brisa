@@ -21,8 +21,14 @@ struct RecursosLutador {
     const BibliotecaModelos* bib = nullptr;
     int trajes[N_TRAJES][3];   // LOD0, LOD1, LOD2
     int modelo_item[MAX_ITENS];
+    int planador = -1;         // planador_01 (Etapa 8)
     bool iniciar(const Pacote& pak, BibliotecaModelos& bib, char* erro, int n_erro);
     int traje_por_id(const char* id) const;  // índice do traje ou 0
+};
+
+// O que um lutador fez na partida (stats do Ventania, para a tela de resultado).
+struct EstatisticasLutador {
+    int dano = 0, baus = 0, curas = 0, eliminacoes = 0;
 };
 
 struct ComandoLutador {
@@ -52,6 +58,8 @@ public:
     bool vivo = true;
     u32 reviver = 0;          // tick para reaparecer (se a partida deixa)
     u32 ultimo_acerto = 0;
+    EstatisticasLutador stats;
+    bool quer_saltar = false;  // no ônibus: pediu para saltar neste passo
     Vec3 cano;                // boca da arma no mundo (último quadro desenhado)
     const RecursosLutador* rec() const { return r_; }
 private:

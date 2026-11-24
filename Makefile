@@ -14,7 +14,7 @@ PS2DEV ?= /opt/ps2dev
 PS2SDK ?= $(PS2DEV)/ps2sdk
 GSKIT ?= $(PS2DEV)/gsKit
 
-NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp) $(wildcard src/conteudo/*.cpp) $(wildcard src/mundo/*.cpp) $(wildcard src/personagem/*.cpp) $(wildcard src/combate/*.cpp) $(wildcard src/ia/*.cpp)
+NUCLEO := $(wildcard src/nucleo/*.cpp) $(wildcard src/jogo/*.cpp) $(wildcard src/render3d/*.cpp) $(wildcard src/conteudo/*.cpp) $(wildcard src/mundo/*.cpp) $(wildcard src/personagem/*.cpp) $(wildcard src/combate/*.cpp) $(wildcard src/ia/*.cpp) $(wildcard src/partida/*.cpp)
 PAK := build/conteudo/BRISA.PAK
 ASSETS := assets/catalogo_brisa.json $(wildcard assets/*/*)
 PS2_SRC := src/main.cpp $(NUCLEO) $(wildcard src/plataforma/ps2/*.cpp)
@@ -52,7 +52,7 @@ VENTANIA ?= ../ventania
 conteudo: $(PAK)
 # Dados de jogo (Etapa 6): data/*.json → assets/dados/*.bdat (+ registro no catálogo).
 dados: assets/dados/itens.bdat
-assets/dados/itens.bdat: data/itens.json data/bots.json data/nomes_jogadores.txt tools/conversor/dados.py
+assets/dados/itens.bdat: data/itens.json data/bots.json data/nomes_jogadores.txt data/partida.json tools/conversor/dados.py
 	python3 tools/conversor/dados.py
 $(PAK): assets/dados/itens.bdat $(ASSETS) tools/conversor/empacotar.py tools/conversor/formatos.py
 	python3 tools/conversor/empacotar.py --saida $@
