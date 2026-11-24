@@ -17,6 +17,7 @@ public:
     f32 sensibilidade = 1.0f;
     bool inverter_y = false;
     bool mirando = false;
+    f32 distancia_extra = 0;  // Etapa 8: mais longe no ônibus e na queda
     // Analógico direito (−1..1, já com zona morta) aplicado por dt segundos.
     void olhar(f32 eixo_x, f32 eixo_y, f32 dt);
     // Segue o personagem (pés) e ajusta o braço contra o mundo.

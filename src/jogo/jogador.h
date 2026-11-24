@@ -34,6 +34,9 @@ public:
     Mat4 matriz() const { return l_.matriz(); }
     int traje() const { return l_.traje; }
     void definir_traje(int t) { l_.traje = ((t % N_TRAJES) + N_TRAJES) % N_TRAJES; }
+    // Espectador: com o jogador eliminado, a câmera segue este lutador (ou fica parada).
+    void espectar(const Lutador* alvo) { espectado_ = alvo; }
+    const Lutador* espectado() const { return espectado_; }
     Lutador& lutador() { return l_; }
     const Lutador& lutador() const { return l_; }
     const RecursosLutador& recursos() const { return rec_; }
@@ -42,4 +45,5 @@ private:
     Lutador l_;
     Camera3P cam_;
     bool agachar_ = false;
+    const Lutador* espectado_ = nullptr;
 };

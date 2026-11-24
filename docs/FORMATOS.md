@@ -140,6 +140,20 @@ blocos (u32 ×4).
 | Nomes | 24 B | UTF-8 com o zero no fim |
 | Trajes | 24 B | id do traje (`recruta_base_01`, `recruta_brisa_01`) |
 
+### BPAR — partida Battle Royale (Etapa 8)
+
+`assets/dados/partida.bdat` (176 bytes), escrito por `tools/conversor/dados.py`
+a partir de `data/partida.json` (cópia revisada do `game/data/partida.json` do
+Ventania: os mesmos tempos e a mesma Tormenta, sem os campos de rede e de lobby);
+lido por `src/partida/dados_partida.h`. O compilador confere os tempos, de 1 a 16
+fases, e que o raio de cada fase não passa do anterior. Cabeçalho de 64 bytes:
+`BPAR`, versão (1), n de fases (u32), `contagem_s`, `fim_s`, `protecao_inicio_s`,
+`raio_inicial`, `margem_terra` (f32) e o offset das fases (u32).
+
+| Bloco | Registro | Campos |
+|---|---|---|
+| Fases da Tormenta | 16 B | `espera_s`, `fechamento_s`, `raio`, `dano` (f32; dano por segundo, só na vida) |
+
 ## BNAV — grafo de navegação dos bots (Etapa 7)
 
 Escrito por `tools/conversor/navegacao.py` (chamado por `mapa.py`), que porta a

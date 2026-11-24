@@ -113,6 +113,13 @@ do Ventania. Os três estão no catálogo com a origem. Nenhum asset novo de
 terceiros: os bots usam os trajes `recruta_base_01` e `recruta_brisa_01` já
 convertidos na Etapa 3.
 
+**Etapa 8 (partida):** `data/partida.json` é uma cópia revisada de
+`game/data/partida.json` do Ventania (mesmos tempos e fases da Tormenta; ficam
+de fora só os campos de rede e de lobby), compilada em `assets/dados/partida.bdat`,
+que está no catálogo com essa origem. O ônibus (`onibus_01`) e o planador
+(`planador_01`) são os modelos do Ventania convertidos na Etapa 3. Nenhum asset
+novo de terceiros.
+
 ## 5. Dependências de código e ferramentas
 
 | Componente | Uso | Licença |

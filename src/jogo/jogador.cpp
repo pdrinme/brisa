@@ -22,10 +22,20 @@ void Jogador::passo(const Controle& c, const MundoColisao& m, Loot& loot, AlvoCo
                     EventosCombate& ev) {
     const f32 dt = 1.0f / 30.0f;
     const EstadoControle& e = c.estado();
-    if (!l_.vivo) {  // eliminado: a câmera fica, nada mais responde
-        cam_.atualizar(l_.p.pos, l_.p.agachado, m, dt);
+    if (!l_.vivo) {  // eliminado: a câmera fica (ou segue quem está sendo assistido)
+        cam_.distancia_extra = 0;
+        if (espectado_) {
+            cam_.olhar(Controle::eixo(e.rx), Controle::eixo(e.ry), dt);
+            cam_.distancia_extra = espectado_->p.queda == NO_ONIBUS ? 9.0f : (espectado_->p.queda != NO_CHAO_NORMAL ? 3.0f : 0.0f);
+            cam_.atualizar(espectado_->p.pos, espectado_->p.agachado, m, dt);
+        } else {
+            cam_.atualizar(l_.p.pos, l_.p.agachado, m, dt);
+        }
         return;
     }
+    // No ônibus a câmera fica bem atrás; na queda e no planador, um pouco mais longe.
+    f32 extra = l_.p.queda == NO_ONIBUS ? 9.0f : (l_.p.queda != NO_CHAO_NORMAL ? 3.0f : 0.0f);
+    cam_.distancia_extra += (extra - cam_.distancia_extra) * fminf(dt * 3.0f, 1.0f);
     if (c.pressionou(BT_R3)) agachar_ = !agachar_;  // R3 alterna (Ventania)
     cam_.mirando = c.segurando(BT_L2) && !bloquear;
     cam_.olhar(Controle::eixo(e.rx), Controle::eixo(e.ry), dt);
@@ -33,6 +43,7 @@ void Jogador::passo(const Controle& c, const MundoColisao& m, Loot& loot, AlvoCo
     k.mov.x = Controle::eixo(e.lx);
     k.mov.y = -Controle::eixo(e.ly);  // analógico para cima = frente
     k.mov.yaw = cam_.yaw_rad();
+    k.mov.pitch = cam_.pitch * 3.14159265f / 180.0f;  // olhar para baixo na queda = mergulho
     k.mov.pular = c.pressionou(BT_XIS);
     k.mov.correr = c.segurando(BT_L3);
     k.mov.agachar = agachar_;

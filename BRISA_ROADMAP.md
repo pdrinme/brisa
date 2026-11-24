@@ -453,8 +453,62 @@ EE), mas a proporção real só o console dá.
 
 **⏳ Falta para o aceite:** jogar contra os bots no console e medir a CPU da IA (`docs/TESTE_NO_CONSOLE.md`, Etapa 7).
 
-### Etapa 8 — Battle Royale ⬜
-Fluxo da partida, Tormenta de 7 fases, zona segura, eliminações, espectador, vitória e resultados. Ônibus e planador se o desempenho permitir. Número de participantes definido por medição (12 → 16).
+### Etapa 8 — Battle Royale 🟡 (pronta e testada no PC e no emulador; ⏳ falta jogar no console)
+**Feito** (detalhes em BRISA_ARCHITECTURE §21):
+- **Dados da partida** (`data/partida.json` → `dados/partida.bdat`, BPAR): os tempos e as 7 fases da Tormenta do Ventania, validados pelo compilador.
+- **Tormenta** (`tormenta.gd` portado): espera → fechamento → próxima, zonas aninhadas com centro em terra e longe do mar, dano por segundo só na vida (o escudo não protege).
+- **Ônibus dos Ventos** (`onibus.gd`): rota sorteada a 120 m, entrando e saindo sobre o mar; portas sobre terra; ✕ salta; quem fica é ejetado. Entram também o ônibus 3D e a câmera atrás dele.
+- **Queda livre, mergulho e planador** (`movement.gd _queda`), com as animações `queda_livre`, `mergulho`, `planador_abrir` e `planador`; o corpo de bruços, de cabeça para baixo, inclinando nas curvas; e a asa delta sobre a cabeça.
+- **Partida** (`partida_br.gd`): contagem de 10 s → ônibus (loot novo, só a picareta) → jogo (3 s de proteção) → fim. Sem reaparecer; colocações, eliminações, vencedor; nenhum tiro acerta no ônibus, no ar ou na proteção.
+- **Espectador** (segue quem eliminou, ✕ troca) e **tela de resultado** (`#N DE 16` ou `VITÓRIA!`, eliminações, tempo vivo, dano, baús e curas; ✕ jogar de novo, ▲ assistir).
+- **Bots:** saltam perto de uma região ou de um baú, guiam a queda até lá, fogem da Tormenta (urgência do Ventania) e exploram e recuam dentro da zona segura.
+- **Tela:**
+  - a parede da Tormenta roxa e translúcida, com faixas animadas (BR-ADR-23), no PS2 e no PC;
+  - a tela roxa e o aviso dentro da Tormenta;
+  - zona atual e próxima no minimapa, a rota tracejada do ônibus;
+  - contagem, fase e tempo da Tormenta;
+  - "SALTAR" com o símbolo ✕ e os avisos da queda.
+- **16 participantes** (BR-ADR-22), medidos. O ELF abre numa partida (BR-ADR-24); `--treino-livre=1` volta ao treino da Etapa 7.
+- **Custo de rota no EE** (BR-ADR-25): componentes conexas do grafo e espera depois de uma rota que falhou. Eram passos de 46 ms no emulador.
+- **Roteiro do autoteste** (`src/jogo/roteiro_partida.h`, o mesmo dos testes no PC): joga uma partida do começo ao fim. Depois, a partida BR só de bots roda sem desenhar.
+
+**Testes executados:**
+- **Aceite**, partida BR só de bots (15) com ônibus e Tormenta:
+  - no PC, 12 sementes: todas terminam com vencedor (de 2,3 a 6,4 min), preso de 0,00% a 0,15%;
+  - no emulador: vencedor em 3,7 min, preso 0,00%, os 15 saltaram.
+- `make testes`: 82 testes, 19.573 verificações, 0 falhas. Os 10 novos cobrem:
+  - os dados da partida com os valores do Ventania;
+  - a Tormenta: fases, zonas aninhadas, determinismo, fechamento interpolado e dano só na vida (porte do `test_tormenta.gd`);
+  - a rota do ônibus em 20 sementes;
+  - queda livre, mergulho sem tranco, planador abrindo perto do chão e pouso (porte do `test_queda.gd`);
+  - as poses e a inclinação no ar;
+  - **a partida inteira jogada pelo roteiro**: proteção, colocação 16 de 16, resultado e "jogar de novo";
+  - o dano da Tormenta fora da zona;
+  - a partida BR só de bots em 3 sementes (vencedor, colocações de 1 a 15, preso < 1%);
+  - as componentes do grafo.
+- `make emulador`: `EMULADOR_OK`, com 8 comparações de imagem PS2 × PC. As 3 novas: no ônibus 1,36%, de frente para a parede da Tormenta 0,75%, cartão do resultado 0,44%.
+- `make emulador-completo`: `EMULADOR_OK`. Os marcos da partida do jogador (posições, alturas da queda, colocação) saem iguais no PC e no PS2.
+
+**Medido** (tempos do emulador, não do console):
+- partida com o jogador: CPU de 2,4 a 3,9 ms por quadro e 3D de 0,8 a 3,7 ms, a 59,8 FPS no emulador; IA de 0,46 a 0,72 ms por passo em média, pior passo de pensar 1,53 ms e de simular 1,0 ms;
+- partida só de bots: 0,39 ms por passo em média, pior 4,9 ms (eram 46 ms antes do BR-ADR-25), nenhum passo acima de 10 ms;
+- parede da Tormenta: até 384 triângulos com alfa;
+- 15,6 MB livres no boot (15,7 MB na Etapa 7); pacote com 235 arquivos (4,5 MB).
+
+**Problemas encontrados e resolvidos:**
+- passos de 46 ms no emulador: bots pousados em telhados sem escada ou na água repetiam A* que esgotavam as 7.000 expansões (BR-ADR-25). Um teste com a partida repetida mostrou que não era o JIT do Play!;
+- a parede da Tormenta quase não aparecia de longe (o perfil de alfa estava errado) e virava um tom uniforme no céu. Ficou com o perfil do Ventania e as faixas animadas;
+- os nomes dos bots dentro do ônibus apareciam no ar;
+- textos do HUD encostados (título no minimapa, fase sobre o feed, botões fora do cartão);
+- a fonte não tinha o "#".
+
+**Limitações conhecidas:**
+- as partidas de bots terminam antes de a Tormenta fechar (de 2 a 7 min): os bots pousam juntos nas regiões e lutam cedo, como no Ventania. Ainda não há dados de quanto dura uma partida com uma pessoa;
+- a parede da Tormenta não tem neblina; um planador só (os cosméticos vêm na Etapa 12);
+- sem construção, coleta e materiais no resultado (Etapa 9); sem XP e passe (Etapa 11); sem lobby e sem "voltar ao lobby" (Etapa 10);
+- a partida dos bots diverge entre PC e PS2 (FPU do EE), como na Etapa 7; o roteiro do jogador continua igual.
+
+**⏳ Falta para o aceite:** jogar uma partida inteira no console e medir a CPU (`docs/TESTE_NO_CONSOLE.md`, Etapa 8).
 
 ### Etapa 9 — Construção ⬜
 Parede, piso, rampa, teto (se possível), materiais, coleta, destruição e desabamento. Limite de peças medido. Edição de ladrilhos como opcional.

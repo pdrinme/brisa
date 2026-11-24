@@ -23,6 +23,9 @@ i32 g_veio[MAX_NOS];
 i16 g_via[MAX_NOS];      // ligação usada para chegar no nó (−1 = nenhuma)
 u16 g_marca[MAX_NOS];
 u16 g_busca = 0;
+// Etapa 8: componente conexa de cada nó (0 = bloqueado), rotulada na carga. Origem e destino
+// em componentes diferentes falham na hora, sem gastar as 7.000 expansões (no EE, ~23 ms cada).
+u16 g_comp[MAX_NOS];
 struct Aberto { f32 f; i32 no; };
 const int MAX_ABERTOS = 16384;
 Aberto g_heap[MAX_ABERTOS];
@@ -86,8 +89,45 @@ bool Navegacao::carregar(const u8* d, u32 t, char* erro, int ne) {
             snprintf(erro, ne, "navegação: ligação %d inválida", i);
             return false;
         }
+    rotular_componentes();
     return true;
 }
+
+// Busca em largura pelas mesmas arestas do A* (vizinhos do chão, dos andares e as ligações).
+void Navegacao::rotular_componentes() {
+    const int total = n_nos();
+    memset(g_comp, 0, sizeof g_comp);
+    i32* fila = g_veio;  // livre fora do A*
+    n_componentes_ = 0;
+    maior_componente_ = 0;
+    int maior = 0;
+    for (int ini = 0; ini < total; ini++) {
+        if (g_comp[ini] || (ini < N * N && bloq_[ini])) continue;
+        u16 r = static_cast<u16>(++n_componentes_);
+        int cab = 0, fim = 0;
+        fila[fim++] = ini;
+        g_comp[ini] = r;
+        while (cab < fim) {
+            int no = fila[cab++];
+            auto visitar = [&](int v) {
+                if (v >= 0 && v < total && !g_comp[v]) { g_comp[v] = r; fila[fim++] = v; }
+            };
+            if (no < N * N) {
+                int ci = no % N, cj = no / N;
+                static const int D[8][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
+                for (auto& dd : D)
+                    if (livre(ci, cj, ci + dd[0], cj + dd[1])) visitar((cj + dd[1]) * N + ci + dd[0]);
+            } else {
+                for (int v : andares_[no - N * N].viz) visitar(v);
+            }
+            for (int l = 0; l < n_lig_; l++)
+                if (lig_[l].a == no) visitar(lig_[l].b);
+        }
+        if (fim > maior) { maior = fim; maior_componente_ = r; }
+    }
+}
+
+int Navegacao::componente(int no) const { return no >= 0 && no < n_nos() ? g_comp[no] : 0; }
 
 Vec3 Navegacao::posicao(int no) const {
     if (no < N * N) {
@@ -184,6 +224,7 @@ bool Navegacao::caminho(Vec3 de, Vec3 para, const u32* evitar, int n_evitar, Cam
             }
         if (pre_lig >= 0) a = lig_[pre_lig].b;
     }
+    if (a != b && (g_comp[a] == 0 || g_comp[a] != g_comp[b])) { sem_ligacao++; return false; }  // ilhas diferentes do grafo
     if (++g_busca == 0) { memset(g_marca, 0, sizeof g_marca); g_busca = 1; }
     g_n_heap = 0;
     g_marca[a] = g_busca;

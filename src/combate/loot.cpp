@@ -28,6 +28,20 @@ void Loot::adicionar_ponto(Vec3 p) {
     if (n_pontos_ < MAX_PONTOS) pontos_[n_pontos_++] = p;
 }
 
+void Loot::reiniciar(u32 semente) {
+    rng_.semear(semente);
+    n_itens_ = 0;
+    proximo_id_ = 1;
+    for (int i = 0; i < n_baus_; i++) {
+        Vec3 p = baus_[i].pos;
+        f32 r = baus_[i].rot;
+        baus_[i] = BauMundo();
+        baus_[i].pos = p;
+        baus_[i].rot = r;
+    }
+    sortear_pontos();
+}
+
 void Loot::sortear_pontos() {
     for (int i = 0; i < n_pontos_; i++)
         if (rng_.unitario() < 0.75f) sortear_chao(pontos_[i]);

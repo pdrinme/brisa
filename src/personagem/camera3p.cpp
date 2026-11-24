@@ -25,7 +25,7 @@ void Camera3P::atualizar(Vec3 pes, bool agachado, const MundoColisao& m, f32 dt)
     Vec3 direita(cosf(y), 0, -sinf(y));
     Vec3 pivo = pes + Vec3(0, altura_, 0);
     Vec3 ombro = pivo + direita * OMBRO;
-    f32 desejado = mirando ? DIST_MIRA : DIST;
+    f32 desejado = (mirando ? DIST_MIRA : DIST) + distancia_extra;
     // Braço de mola: raio do ombro até a câmera; encolhe na hora, estica devagar.
     Vec3 fim = ombro - frente * desejado;
     ImpactoRaio r = m.raio(ombro, fim);

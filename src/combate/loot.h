@@ -43,6 +43,8 @@ public:
     void adicionar_bau(Vec3 pos, f32 rot);
     void adicionar_ponto(Vec3 pos);
     void sortear_pontos();                          // depois de todos os pontos
+    // Partida nova (loot_server.gd reset): tira tudo do chão, fecha os baús e sorteia de novo.
+    void reiniciar(u32 semente);
     int criar_item(int item, int raridade, int qtd, int pente, Vec3 pos, u16 dono = 0, u32 tick = 0);
     int criar_municao(int tipo, Vec3 pos, int qtd = -1, u16 dono = 0, u32 tick = 0);
     void remover(int indice);

@@ -141,3 +141,89 @@ u32 projetar_sombras(const Cena3D& cena, const ConfigTela& tela, SaidaTriangulos
     }
     return n;
 }
+
+namespace {
+struct VAlfa { f32 x, y, z, w, a; };
+VAlfa lerp_alfa(const VAlfa& p, const VAlfa& q, f32 t) {
+    return {p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t, p.z + (q.z - p.z) * t, p.w + (q.w - p.w) * t, p.a + (q.a - p.a) * t};
+}
+// Distância ao plano k (≥ 0 = dentro): perto, e os quatro lados da banda de guarda.
+f32 plano(const VAlfa& v, int k, f32 perto) {
+    switch (k) {
+    case 0: return v.w - perto;
+    case 1: return GUARDA * v.w - v.x;
+    case 2: return GUARDA * v.w + v.x;
+    case 3: return GUARDA * v.w - v.y;
+    default: return GUARDA * v.w + v.y;
+    }
+}
+}  // namespace
+
+u32 projetar_parede(const Cena3D& cena, const ConfigTela& tela, SaidaTriangulos& saida) {
+    const Parede3D& pr = cena.parede;
+    if (!pr.ativa || pr.raio < 0.5f) return 0;
+    const int SEG = 64;
+    const f32 perto = cena.camera.perto;
+    const Vec3 cam = cena.camera.posicao;
+    // faixas com o perfil do storm_visual.gd: entra até 8% da altura, cheia até 75%, sai no topo
+    const f32 H = pr.altura - pr.base;
+    const f32 ys[4] = {pr.base, pr.base + 0.08f * H, pr.base + 0.75f * H, pr.altura};
+    const f32 as[4] = {0.35f, 1.0f, 1.0f, 0.35f};
+    u32 n = 0;
+    for (int s = 0; s < SEG; s++) {
+        f32 a0 = s * 6.2831853f / SEG, a1 = (s + 1) * 6.2831853f / SEG;
+        f32 x0 = pr.cx + cosf(a0) * pr.raio, z0 = pr.cz + sinf(a0) * pr.raio;
+        f32 x1 = pr.cx + cosf(a1) * pr.raio, z1 = pr.cz + sinf(a1) * pr.raio;
+        // perto parece mais denso; longe vai sumindo (a neblina acaba em ~240 m)
+        f32 mx = (x0 + x1) * 0.5f - cam.x, mz = (z0 + z1) * 0.5f - cam.z;
+        f32 d = sqrtf(mx * mx + mz * mz);
+        f32 k_dist = d < 150.0f ? 1.0f : fmaxf(0.5f, 1.0f - (d - 150.0f) / 400.0f);
+        for (int b = 0; b < 3; b++) {
+            VAlfa q[4];
+            const f32 px[4] = {x0, x1, x1, x0}, pz[4] = {z0, z1, z1, z0};
+            const int fy[4] = {b, b, b + 1, b + 1};
+            bool algum = false;
+            for (int k = 0; k < 4; k++) {
+                Vec4 c = transformar(cena.camera.vp, Vec3(px[k], ys[fy[k]], pz[k]));
+                // faixas animadas (sin(UV·k − TIME·2,4)): a parede "corre" e se destaca do céu
+                f32 ang = (k == 0 || k == 3) ? a0 : a1;
+                f32 faixa = sinf(ang * 40.0f + ys[fy[k]] * 0.06f - pr.tempo * 2.4f) * 0.5f + 0.5f;
+                q[k] = {c.x, c.y, c.z, c.w, pr.cor.a * as[fy[k]] * k_dist * (0.55f + 0.9f * faixa)};
+                if (c.w > perto) algum = true;
+            }
+            if (!algum) continue;
+            // Sutherland–Hodgman contra os 5 planos
+            VAlfa poli[12], tmp[12];
+            int np = 4;
+            for (int k = 0; k < 4; k++) poli[k] = q[k];
+            for (int pl = 0; pl < 5 && np >= 3; pl++) {
+                int nt = 0;
+                for (int i = 0; i < np && nt < 11; i++) {
+                    const VAlfa& A = poli[i];
+                    const VAlfa& B = poli[(i + 1) % np];
+                    f32 da = plano(A, pl, perto), db = plano(B, pl, perto);
+                    if (da >= 0) tmp[nt++] = A;
+                    if ((da >= 0) != (db >= 0) && nt < 12) tmp[nt++] = lerp_alfa(A, B, da / (da - db));
+                }
+                np = nt;
+                for (int i = 0; i < np; i++) poli[i] = tmp[i];
+            }
+            if (np < 3) continue;
+            VerticeTela v[12];
+            for (int i = 0; i < np; i++) {
+                f32 iw = 1.0f / poli[i].w;
+                v[i].x = (poli[i].x * iw * 0.5f + 0.5f) * tela.largura;
+                v[i].y = (0.5f - poli[i].y * iw * 0.5f) * tela.altura;
+                v[i].q = iw;
+                v[i].neblina = 255;
+                f32 al = poli[i].a < 0 ? 0 : (poli[i].a > 255 ? 255 : poli[i].a);
+                v[i].cor = Cor{pr.cor.r, pr.cor.g, pr.cor.b, static_cast<u8>(al)};
+            }
+            for (int i = 1; i + 1 < np; i++) {
+                saida.triangulo_alfa(v[0], v[i], v[i + 1]);
+                n++;
+            }
+        }
+    }
+    return n;
+}

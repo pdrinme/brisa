@@ -12,12 +12,16 @@ código, motor, pipeline, build e documentação são próprios.
 
 ## Status
 
-**Etapa 7 (bots): pronta e testada no PC e no emulador; falta jogar no
-console.** A ilha agora tem **15 bots** do Ventania: as 3 dificuldades com os
-mesmos parâmetros, que exploram, saqueiam, abrem baús, lutam, buscam cobertura,
-recuam e se curam, navegando por um grafo calculado no pipeline. O jogador leva
-dano e reaparece em 4 s. Uma partida só de bots termina com um vencedor, e os
-bots ficam presos menos de 1% do tempo.
+**Etapa 8 (Battle Royale): pronta e testada no PC e no emulador; falta jogar no
+console.** O ELF abre numa **partida completa** contra 15 bots: contagem,
+Ônibus dos Ventos (✕ salta), queda livre, mergulho e planador, a Tormenta de 7
+fases com a parede roxa, eliminações sem reaparecer, espectador e a tela de
+resultado com "jogar de novo". Os bots saltam, guiam a queda e fogem da
+Tormenta; uma partida só de bots termina com um vencedor.
+
+Da Etapa 7, os **15 bots** do Ventania: as 3 dificuldades com os mesmos
+parâmetros, que exploram, saqueiam, abrem baús, lutam, buscam cobertura, recuam
+e se curam, navegando por um grafo calculado no pipeline.
 
 Da Etapa 6, o ELF abre na **Ilha Ventania inteira** (Etapa 5) com:
 - loot no chão e baús que abrem;
@@ -26,11 +30,11 @@ Da Etapa 6, o ELF abre na **Ilha Ventania inteira** (Etapa 5) com:
 - a arma nas duas mãos (IK) e o HUD de combate.
 
 O campo de treino (L1 + R1 + START) tem os bonecos de treino para testar o
-combate. Os testes no console das Etapas 1 a 7 continuam pendentes
+combate. Os testes no console das Etapas 1 a 8 continuam pendentes
 ([docs/TESTE_NO_CONSOLE.md](docs/TESTE_NO_CONSOLE.md)). Veja
 [BRISA_ROADMAP.md](BRISA_ROADMAP.md).
 
-![Bots na ilha no emulador, pelo VU1](docs/etapa7/emulador_bots_vu1.png)
+![A parede da Tormenta no emulador, pelo VU1](docs/etapa8/emulador_tormenta_vu1.png)
 
 ## Compilar e testar
 
@@ -125,8 +129,9 @@ brisa-ps2/
 │   ├── personagem/          ✅ movimento, câmera em 3ª pessoa, animador, portador (item na mão, IK)
 │   ├── combate/             ✅ itens, inventário, vida/escudo, tiro, loot
 │   ├── ia/                  ✅ cérebro dos bots (bot_cerebro.gd), dados das dificuldades
-│   └── (planejado) construcao/ partida/ ui/ audio/ progressao/ save/
-├── data/                    ✅ JSON de jogo (itens.json, bots.json, nomes_jogadores.txt; cosméticos, temporadas e loja depois)
+│   ├── partida/             ✅ Tormenta, Ônibus dos Ventos, dados da partida (a partida BR fica em jogo/partida_br)
+│   └── (planejado) construcao/ ui/ audio/ progressao/ save/
+├── data/                    ✅ JSON de jogo (itens.json, bots.json, nomes_jogadores.txt, partida.json; cosméticos, temporadas e loja depois)
 ├── assets/                  ✅ assets convertidos (modelos, animações, texturas) + catalogo_brisa.json
 ├── tools/
 │   ├── ambiente/            ✅ instalar e verificar o toolchain (+ sonda)

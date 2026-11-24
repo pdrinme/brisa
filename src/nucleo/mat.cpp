@@ -42,6 +42,14 @@ Mat4 Mat4::rotacao_x(f32 a) {
     return r;
 }
 
+Mat4 Mat4::rotacao_z(f32 a) {
+    Mat4 r = identidade();
+    f32 c = cosf(a), s = sinf(a);
+    r(0, 0) = c; r(0, 1) = -s;
+    r(1, 0) = s; r(1, 1) = c;
+    return r;
+}
+
 Mat4 Mat4::trs(Vec3 t, const f32 q[4], Vec3 s) {
     f32 x = q[0], y = q[1], z = q[2], w = q[3];
     Mat4 r;

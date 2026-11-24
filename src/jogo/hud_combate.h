@@ -13,6 +13,11 @@
 #include "nucleo/desenho2d.h"
 #include "render3d/cena3d.h"
 
+// Símbolos dos botões do DualShock e linhas (compartilhados com o HUD da partida).
+enum BotaoHud { BOTAO_TRIANGULO, BOTAO_CIRCULO, BOTAO_XIS, BOTAO_QUADRADO };
+void desenhar_botao(ListaDesenho2D& l, f32 x, f32 y, f32 tam, int botao);
+void desenhar_linha(ListaDesenho2D& l, f32 x0, f32 y0, f32 x1, f32 y1, f32 espessura, Cor c);
+
 class HudCombate {
 public:
     bool iniciar(const Pacote& pak, BibliotecaModelos& bib, Arena& arena, const BancoItens& itens, char* erro, int n_erro);

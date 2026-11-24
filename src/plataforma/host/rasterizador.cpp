@@ -251,3 +251,28 @@ bool Rasterizador::salvar_png(const char* caminho) const {
     fclose(f);
     return true;
 }
+
+// Gouraud com alfa e teste Z (sem gravar Z), como o GS com ABE e ZTST = GEQUAL.
+void Rasterizador::triangulo_alfa(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c) {
+    const VerticeTela* v[3] = {&a, &b, &c};
+    f32 xs[3] = {a.x, b.x, c.x}, ys[3] = {a.y, b.y, c.y};
+    f32 area = aresta(xs[0], ys[0], xs[1], ys[1], xs[2], ys[2]);
+    if (fabsf(area) < 1e-6f) return;
+    int x0 = static_cast<int>(floorf(fminf(xs[0], fminf(xs[1], xs[2])))), x1 = static_cast<int>(ceilf(fmaxf(xs[0], fmaxf(xs[1], xs[2]))));
+    int y0 = static_cast<int>(floorf(fminf(ys[0], fminf(ys[1], ys[2])))), y1 = static_cast<int>(ceilf(fmaxf(ys[0], fmaxf(ys[1], ys[2]))));
+    x0 = x0 < 0 ? 0 : x0; y0 = y0 < 0 ? 0 : y0; x1 = x1 > L ? L : x1; y1 = y1 > A ? A : y1;
+    f32 zs[3];
+    for (int i = 0; i < 3; i++) zs[i] = static_cast<f32>(gs3d::z_de(v[i]->q, perto_));
+    for (int y = y0; y < y1; y++)
+        for (int x = x0; x < x1; x++) {
+            f32 px = x + 0.5f, py = y + 0.5f;
+            f32 w0 = aresta(xs[1], ys[1], xs[2], ys[2], px, py) / area;
+            f32 w1 = aresta(xs[2], ys[2], xs[0], ys[0], px, py) / area;
+            f32 w2 = 1.0f - w0 - w1;
+            if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+            u32 zp = static_cast<u32>(w0 * zs[0] + w1 * zs[1] + w2 * zs[2]);
+            if (zp < z_[y * L + x]) continue;
+            misturar(x, y, w0 * a.cor.r + w1 * b.cor.r + w2 * c.cor.r, w0 * a.cor.g + w1 * b.cor.g + w2 * c.cor.g,
+                     w0 * a.cor.b + w1 * b.cor.b + w2 * c.cor.b, w0 * a.cor.a + w1 * b.cor.a + w2 * c.cor.a);
+        }
+}

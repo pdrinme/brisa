@@ -583,3 +583,78 @@ propriedades (vencedor, tempo preso), não o resultado exato.
 - 15 bots com o jogador, desenhando a ilha: IA de 0,69 a 0,77 ms por passo em média (pensar até 1,34 ms, simular até 1,40 ms);
 - partida só de bots, sem desenhar: 0,33 ms por passo em média, pior 5,2 ms (um passo com dois A* longos); 359 caminhos;
 - memória: livres no boot 15,7 MB (16,4 MB na Etapa 6); `bots.bdat` 24 KB, `ilha.bnav` 121 KB; estado estático do A* de ~430 KB (custos, origem e marcas de 23.524 nós, mais o heap de 16.384 abertos).
+
+## 21. Partida Battle Royale (Etapa 8, implementado)
+
+| Peça | Arquivo | Papel (no Ventania) |
+|---|---|---|
+| Dados | `data/partida.json` → `assets/dados/partida.bdat` | `game/data/partida.json`: contagem 10 s, fim 15 s, proteção 3 s, Tormenta de 7 fases |
+| Tormenta | `src/partida/tormenta.*` | `tormenta.gd`: espera → fechamento → próxima; a próxima zona cabe inteira na atual, centro em terra e longe do mar |
+| Ônibus | `src/partida/onibus.*` | `onibus.gd`: rota reta a 120 m, 20 m/s, passa a até 80 m do centro; portas sobre terra |
+| Queda | `src/personagem/movimento.*` | `movement.gd _queda`: queda livre 26 m/s, mergulho 38 m/s (olhando para baixo, −45°), planador abre a 38 m do chão (6,5 m/s, 12 m/s na horizontal) |
+| Visual da queda | `src/personagem/animador.*`, `src/jogo/lutador.*` | `pawn_visual.gd _entrada/air_tilt`: queda_livre, mergulho, planador_abrir → planador; de bruços, de cabeça para baixo, inclina nas curvas; a asa delta sobre a cabeça |
+| Partida | `src/jogo/partida_br.*` | `partida_br.gd`: estados, assentos, salto/ejeção, dano da Tormenta, colocações, vitória, resultado |
+| Bots | `src/ia/cerebro.*` | `bot_cerebro.gd _no_onibus/_caindo/_urgencia_tormenta`: salto perto de um POI ou baú, queda guiada, fuga da Tormenta |
+| Tela | `src/jogo/ilha.cpp`, `src/render3d/pipeline_sw.*` | `match_hud.gd`, `storm_visual.gd`, `tela_resultado.gd`, o espectador do `game.gd` |
+
+**Fluxo:** CONTAGEM (10 s, cada um num ponto de início) → ÔNIBUS (loot novo,
+inventários só com a picareta, vida cheia; todos nos assentos; ✕ salta com as
+portas abertas; quem não salta é ejetado quando elas fecham) → JOGO (a Tormenta
+nasce quando o ônibus sai; 3 s de proteção) → FIM (vencedor; o resultado em
+15 s). No ônibus, no ar e na proteção nenhum tiro acerta (`GrupoBots::alvos`
+devolve zero alvos). O dano da Tormenta é de segundo em segundo, só na vida, do
+menos para o mais vivo; se eliminaria todos os que restam, o último é o vencedor.
+
+**Eliminação e espectador:** sem reaparecer. A câmera passa a seguir quem
+eliminou o jogador (ou o próximo vivo; ✕ troca). A tela de resultado abre 2 s
+depois da eliminação ou no fim: colocação (`#N DE 16` ou `VITÓRIA!`), eliminações,
+tempo vivo, dano causado, baús abertos e curas usadas (as estatísticas de cada
+`Lutador`). ✕ joga de novo (outra semente), ▲ volta a assistir. Materiais e
+construções entram na Etapa 9; XP e passe, na 11.
+
+**HUD:** contagem e ônibus no meio da tela; "SALTAR" com o símbolo ✕ e os
+avisos da queda; a fase e o tempo da Tormenta abaixo do minimapa; a zona atual
+(roxa) e a próxima (branca) no minimapa e a rota tracejada do ônibus; a tela
+roxa e "VOCÊ ESTÁ NA TORMENTA! (-N/S)" fora da zona; "ASSISTINDO X".
+
+**BR-ADR-22: 16 participantes (o jogador + 15 bots).** O BR-ADR-6 começava com
+12 e mirava 16, a decidir por medição. Na Etapa 7, a IA dos 15 bots custou de
+0,7 a 0,8 ms por passo no emulador, desenhando a ilha. A Etapa 8 confirma
+com a partida inteira (§21, "Medido"). Fica 16, o mesmo número com que o Ventania
+completa as partidas. O teste no console pode baixar esse número, se o custo
+real passar do orçamento.
+
+**BR-ADR-23: parede da Tormenta translúcida, sem textura e sem neblina.** O
+`storm_visual.gd` usa um shader com faixas animadas. O Brisa desenha um
+cilindro de 64 segmentos em três faixas, com alfa por vértice (o perfil do
+shader: entra até 8% da altura, cheio até 75%, sai no topo; e um pouco mais
+fraco de longe), recortado contra o plano perto e a banda de guarda, por
+último e com teste Z (`projetar_parede`). São no máximo 384 triângulos com
+alfa: no PS2, pelo caminho das sombras blob; no PC, pelo rasterizador. A
+parede passa da neblina de propósito, para ser vista de longe.
+
+**BR-ADR-24: a ilha abre numa partida.** Até o lobby (Etapa 10), o ELF começa
+direto numa partida BR com 15 bots, e "Jogar de novo" começa outra com outra
+semente. O treino livre da Etapa 7 (bots que reaparecem, sem Tormenta) continua
+com `--treino-livre=1`. O roteiro do autoteste joga uma partida do começo ao fim
+(`src/jogo/roteiro_partida.h`, o mesmo dos testes no PC). Como atalho, a
+Tormenta elimina o jogador 3 s depois de nascer, para chegar ao espectador e ao
+resultado sem esperar minutos.
+
+**BR-ADR-25: A* recusa na hora um destino sem ligação, e o bot espera para
+replanejar.** Os bots pousam de planador em telhados e andares sem escada (65
+dos 111 andares do grafo estão fora da componente principal) e, às vezes, na
+água rasa. No Ventania, cada tentativa de rota dali esgota as 7.000 expansões,
+e o bot tenta de novo no passo seguinte. No emulador isso deu passos de 46 ms
+(dois A* esgotados, ~23 ms cada). Mudanças:
+1. A carga rotula as componentes conexas do grafo uma vez (busca em largura pelas mesmas arestas do A*). Uma rota cuja origem e destino estão em componentes diferentes falha sem expandir nada (`Navegacao::sem_ligacao`).
+2. Depois de uma rota que falhou, o cérebro espera meio segundo antes do próximo A* e anda direto para o alvo, o que tira o bot do telhado ou da água.
+
+Nas 12 sementes do PC, o pior passo caiu de 7.006 para 1.941 expansões. A
+decisão dos bots é a mesma do Ventania; só o custo de uma falha mudou.
+
+**Medido** (emulador Play!; os tempos de CPU são do emulador, não do console):
+- partida com o jogador e 15 bots: CPU de 2,4 a 3,9 ms por quadro, 3D de 0,8 a 3,7 ms, 59,8 FPS;
+- IA de 0,46 a 0,72 ms por passo em média (pior passo de pensar 1,53 ms, de simular 1,0 ms);
+- partida só de bots, sem desenhar: 0,39 ms por passo, pior 4,9 ms;
+- livres no boot: 15,6 MB; `partida.bdat`: 176 bytes; componentes do grafo: 46 KB estáticos.

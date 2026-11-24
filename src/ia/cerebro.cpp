@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "jogo/partida_br.h"
 #include "plataforma/plataforma.h"
 
 namespace {
@@ -30,7 +31,7 @@ f32 distancia_preferida(const char* id) {
     return 18;
 }
 const char* const NOMES_ESTADO[N_ESTADOS_BOT] = {"explorar", "combater", "recuar", "cobertura", "perseguir",
-                                                 "investigar", "curar", "bau", "saquear", "ordem"};
+                                                 "investigar", "curar", "bau", "saquear", "tormenta", "ordem"};
 }  // namespace
 
 bool Cerebro::depurar = false;
@@ -104,7 +105,11 @@ ComandoLutador Cerebro::pensar(ContextoBots& c) {
     if (!eu_->vivo) return out;
     u64 t0 = plataforma::tempo_us();
     i32 t = static_cast<i32>(c.tick);
-    if (tem_ordem()) {
+    if (eu_->p.queda == NO_ONIBUS) {
+        no_onibus(c, k);
+    } else if (eu_->p.queda == QUEDA_LIVRE || eu_->p.queda == PLANADOR) {
+        caindo(c, k);
+    } else if (tem_ordem()) {
         if (estado_ != EB_ORDEM || !tem_alvo_ || dist3(alvo_, ordem) > 0.01f) {
             estado_ = EB_ORDEM;
             alvo_ = ordem;
@@ -122,8 +127,10 @@ ComandoLutador Cerebro::pensar(ContextoBots& c) {
     } else {
         executar(c, k);
     }
-    est.ticks_estado[estado_]++;
-    est.vivo_ticks++;
+    if (eu_->p.queda == NO_CHAO_NORMAL) {  // no ônibus e no ar não conta (nem como preso)
+        est.ticks_estado[estado_]++;
+        est.vivo_ticks++;
+    }
     est.tempo_us += static_cast<u32>(plataforma::tempo_us() - t0);
     yaw_ = k.yaw;
     pitch_ = k.pitch;
@@ -174,7 +181,8 @@ void Cerebro::decidir(ContextoBots& c) {
     int util = consumivel_util();
     if (vida < dif_->cura_abaixo && util >= 0 && !(visivel && dist_ini < 22.0f))
         notas[EB_CURAR] = 0.8f - vida / 400.0f + (estado_ == EB_COBERTURA ? 0.12f : 0);
-    // (Tormenta: Etapa 8)
+    f32 urg = urgencia_tormenta(c);
+    if (urg > 0) notas[EB_TORMENTA] = 0.45f + urg * 0.55f;
     if (arma < 0 || inv.livres() >= 1) {
         int l = loot_perto(c);
         if (l) {
@@ -221,7 +229,7 @@ void Cerebro::perceber(ContextoBots& c) {
     Vec3 melhor_pos;
     for (int i = 0; i < c.n; i++) {
         const Lutador* o = c.lutadores[i];
-        if (o == eu_ || !o->vivo) continue;
+        if (o == eu_ || !o->vivo || o->p.queda == NO_ONIBUS) continue;
         Vec3 p = o->p.pos;
         f32 d = dist3(meu, p);
         if (d > melhor_d) continue;
@@ -275,6 +283,18 @@ void Cerebro::definir_alvo(ContextoBots& c) {
     case EB_EXPLORAR:
         if (!tem_alvo_ || dist3(pos, alvo_) < 3.0f) { alvo_ = ponto_explorar(c); tem_alvo_ = true; }
         break;
+    case EB_TORMENTA: {
+        f32 zx, zz, zr;
+        zona(c, &zx, &zz, &zr);
+        f32 dx = alvo_.x - zx, dz = alvo_.z - zz;
+        if (!tem_alvo_ || sqrtf(dx * dx + dz * dz) > zr * 0.6f) {
+            f32 ox = faixa(rng_, -1, 1) * zr * 0.35f, oz = faixa(rng_, -1, 1) * zr * 0.35f;
+            alvo_ = Vec3(zx + ox, 0, zz + oz);
+            alvo_3d_ = false;
+        }
+        tem_alvo_ = true;
+        break;
+    }
     case EB_PERSEGUIR: tem_alvo_ = tem_memoria_; alvo_ = memoria_pos_; break;
     case EB_INVESTIGAR: tem_alvo_ = tem_ouviu_; alvo_ = ouviu_pos_; break;
     case EB_COBERTURA:
@@ -285,7 +305,9 @@ void Cerebro::definir_alvo(ContextoBots& c) {
     case EB_RECUAR: {
         Vec3 fuga = pos - inimigo_pos_;
         fuga.y = 0;
-        Vec3 dz = Vec3(0, 0, 0) - pos;  // centro da zona (sem Tormenta: a ilha toda)
+        f32 zx, zz, zr;
+        zona(c, &zx, &zz, &zr);
+        Vec3 dz = Vec3(zx, 0, zz) - pos;  // foge puxando para o centro da zona segura
         dz.y = 0;
         f32 lf = sqrtf(ponto(fuga, fuga)), lz = sqrtf(ponto(dz, dz));
         Vec3 nz = lz > 1e-3f ? dz * (1.0f / lz) : Vec3(1, 0, 0);
@@ -371,7 +393,7 @@ void Cerebro::andar(ContextoBots& c, Cmd& k, bool correr) {
     if (!tem_alvo_) return;
     i32 t = static_cast<i32>(c.tick);
     Vec3 pos = eu_->p.pos;
-    if (precisa_caminho_ && c.planejamentos > 0 && c.nav) {
+    if (precisa_caminho_ && c.planejamentos > 0 && c.nav && t >= replanejar_apos_) {
         c.planejamentos--;
         precisa_caminho_ = false;
         int n = 0;  // tira as arestas evitadas que venceram
@@ -394,10 +416,13 @@ void Cerebro::andar(ContextoBots& c, Cmd& k, bool correr) {
         }
         if (!ok || caminho_.vazio()) {
             caminho_.n = 0;
+            // Etapa 8 (custo no EE): meio segundo até o próximo A*; enquanto isso anda direto para o
+            // alvo, o que tira do grafo quem pousou num telhado ou na água.
+            replanejar_apos_ = t + TR / 2;
             if (depurar)
                 printf("SEMROTA %s estado=%s pos=%.1f,%.1f,%.1f alvo=%.1f,%.1f,%.1f\n", eu_->nome, nome_estado_bot(estado_), pos.x, pos.y,
                        pos.z, alvo_.x, alvo_.y, alvo_.z);
-            if (estado_ == EB_EXPLORAR || estado_ == EB_RECUAR || estado_ == EB_COBERTURA) {
+            if (estado_ == EB_EXPLORAR || estado_ == EB_RECUAR || estado_ == EB_COBERTURA || estado_ == EB_TORMENTA) {
                 // destino de movimento sem rota (água, área fechada): escolhe outro, sem "abandono"
                 est.sem_rota++;
                 tem_alvo_ = tem_rota_ = tem_cobertura_ = false;
@@ -727,8 +752,8 @@ int Cerebro::bau_perto(const ContextoBots& c) const {
 Vec3 Cerebro::ponto_explorar(ContextoBots& c) {
     Vec3 pos = eu_->p.pos;
     const Relevo* r = c.mundo->relevo();
-    // sem Tormenta (Etapa 8), a "zona" é a ilha toda: centro (0, 0)
-    const f32 raio_zona = 1e6f;
+    f32 zx, zz, raio_zona;  // a zona que importa (sem partida: a ilha toda)
+    zona(c, &zx, &zz, &raio_zona);
     // prefere cômodos de edifícios ainda não explorados, não muito longe
     if (c.nav && c.nav->n_comodos() > 0 && rng_.unitario() < dif_->explora_predios) {
         int melhor = -1;
@@ -738,6 +763,8 @@ Vec3 Cerebro::ponto_explorar(ContextoBots& c) {
             int i = rng_.ate(nc);
             if (i < 256 && (visitados_[i / 8] & (1 << (i % 8)))) continue;
             Vec3 cc = c.nav->comodo(i);
+            f32 ex = cc.x - zx, ez = cc.z - zz;
+            if (sqrtf(ex * ex + ez * ez) > raio_zona * 0.9f) continue;
             f32 d = dist3(pos, cc);
             if (d < 4.0f || d > 140.0f) continue;
             if (d < nota) { nota = d; melhor = i; }
@@ -750,11 +777,11 @@ Vec3 Cerebro::ponto_explorar(ContextoBots& c) {
     for (int i = 0; i < 12; i++) {
         f32 ang = rng_.unitario() * 2 * PI;
         f32 rr = sqrtf(rng_.unitario()) * fminf(raio_zona, 160.0f) * 0.8f;
-        f32 x = cosf(ang) * rr, z = sinf(ang) * rr;
+        f32 x = zx + cosf(ang) * rr, z = zz + sinf(ang) * rr;
         f32 h = r->altura(x, z);
         if (h > 1.0f) return Vec3(x, h, z);
     }
-    return Vec3(0, r->altura(0, 0), 0);
+    return Vec3(zx, r->altura(zx, zz), zz);
 }
 
 // Ponto de cobertura perto: alcançável a 3–9 m, em que o inimigo NÃO enxerga.
@@ -785,4 +812,60 @@ Vec3 Cerebro::achar_cobertura(ContextoBots& c) {
         melhor.y = r->altura(melhor.x, melhor.z);
     }
     return melhor;
+}
+
+// ---------------- ônibus, queda e Tormenta (Etapa 8) ----------------
+
+void Cerebro::zona(const ContextoBots& c, f32* cx, f32* cz, f32* r) const {
+    if (c.partida) { c.partida->zona_segura(cx, cz, r); return; }
+    *cx = 0; *cz = 0; *r = 1e6f;
+}
+
+// 0 (seguro) .. 1 (urgente): fora da zona que importa, pior longe e se já está na Tormenta.
+f32 Cerebro::urgencia_tormenta(const ContextoBots& c) const {
+    if (!c.partida || !c.partida->tem_tormenta()) return 0;
+    f32 zx, zz, zr;
+    zona(c, &zx, &zz, &zr);
+    Vec3 p = eu_->p.pos;
+    f32 fora = sqrtf((p.x - zx) * (p.x - zx) + (p.z - zz) * (p.z - zz)) - zr * 0.85f;
+    if (fora <= 0) return 0;
+    bool dentro_agora = !c.partida->tormenta().fora(p);
+    return clampf(0.35f + fora / 120.0f + (dentro_agora ? 0 : 0.4f), 0, 1);
+}
+
+Vec3 Cerebro::escolher_destino_salto(ContextoBots& c) {
+    const MapaBrisa* m = c.mapa;
+    f32 r = rng_.unitario();
+    if (m && m->n_pois() > 0 && r < 0.65f) {
+        const PoiMapa& poi = m->poi(rng_.ate(m->n_pois()));
+        f32 ox = faixa(rng_, -1, 1) * poi.raio * 0.6f, oz = faixa(rng_, -1, 1) * poi.raio * 0.6f;
+        return Vec3(poi.x + ox, poi.y, poi.z + oz);
+    }
+    if (c.loot && c.loot->n_baus() > 0) return c.loot->bau(rng_.ate(c.loot->n_baus())).pos;
+    return Vec3();
+}
+
+// No ônibus: salta perto do destino, ou quando o ônibus começa a se afastar dele.
+void Cerebro::no_onibus(ContextoBots& c, Cmd& k) {
+    if (!c.partida) return;
+    if (!tem_destino_) { destino_salto_ = escolher_destino_salto(c); tem_destino_ = true; }
+    const Onibus& o = c.partida->onibus();
+    if (!o.portas_abertas(c.tick)) return;
+    Vec3 p = o.posicao(c.tick);
+    f32 d = sqrtf((p.x - destino_salto_.x) * (p.x - destino_salto_.x) + (p.z - destino_salto_.z) * (p.z - destino_salto_.z));
+    bool afastando = d > dist_onibus_ + 0.5f;
+    dist_onibus_ = fminf(dist_onibus_, d);
+    if (d < 55.0f * (1.0f + dif_->salto_cedo) || (afastando && rng_.unitario() < 0.08f)) k.pular = true;
+}
+
+// Caindo / planando: vira para o destino e vai para a frente até chegar em cima dele.
+void Cerebro::caindo(ContextoBots& c, Cmd& k) {
+    if (!tem_destino_) { destino_salto_ = escolher_destino_salto(c); tem_destino_ = true; }
+    Vec3 d = destino_salto_ - eu_->p.pos;
+    k.yaw = atan2f(-d.x, -d.z);
+    k.pitch = 0;
+    k.my = sqrtf(d.x * d.x + d.z * d.z) > 6.0f ? 1.0f : 0.0f;
+    k.mx = 0;
+    tem_alvo_ = false;  // ao pousar, decide do zero
+    prox_decisao_ = static_cast<i32>(c.tick);
 }

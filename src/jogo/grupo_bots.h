@@ -7,6 +7,8 @@
 #include "lutador.h"
 #include "mundo/mapa.h"
 
+class PartidaBR;
+
 struct Eliminacao {
     char quem[24], vitima[24];
     int arma;      // índice do item (0 = picareta/desconhecido)
@@ -20,6 +22,9 @@ public:
     static const int FEED = 5;
     static const u32 REAPARECER = 4 * 30;  // RESPAWN_TICKS do Ventania (fora da partida BR)
     bool reaparecer = true;                 // treino livre; a partida (Etapa 8) e o teste de aceite: não
+    PartidaBR* partida = nullptr;           // Etapa 8: a partida BR em andamento (ou nullptr)
+    // A Tormenta eliminou `v` (feed "TORMENTA > v").
+    void eliminar_pela_tormenta(Lutador& v, u32 tick);
     bool iniciar(const Pacote& pak, const RecursosLutador* rec, const MapaBrisa* mapa, Navegacao* nav, char* erro, int n_erro);
     // Cria `n` bots (≤ MAX_BOTS) nos pontos de início do mapa, a partir de `primeiro_spawn`.
     void povoar(int n, u32 semente, int primeiro_spawn);
@@ -46,7 +51,8 @@ public:
     // Diagnóstico do passo (CPU): pensar e simular, em µs.
     u32 us_pensar = 0, us_simular = 0;
 private:
-    void eliminar(Lutador& vitima, const Lutador& quem, int arma, Loot& loot, u32 tick);
+    void eliminar(Lutador& vitima, Lutador& quem, int arma, Loot& loot, u32 tick);
+    Loot* loot_ = nullptr;
     void reviver(Lutador& l, u32 tick);
     Vec3 ponto_inicio(u32 k) const;
     const RecursosLutador* rec_ = nullptr;

@@ -21,6 +21,10 @@ public:
     virtual void triangulo_textura(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c, int textura) {
         (void)a; (void)b; (void)c; (void)textura;
     }
+    // Triângulo Gouraud com alfa por vértice (cor.a 0..255), Z testado, sem neblina (parede da Tormenta).
+    virtual void triangulo_alfa(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c) {
+        (void)a; (void)b; (void)c;
+    }
 };
 
 struct ConfigTela {
@@ -48,3 +52,7 @@ void pipeline_cena(const Cena3D& cena, const ConfigTela& tela, SaidaTriangulos& 
 // Sombras blob: cada uma vira 2 triângulos com s,t. Pula as que cruzam o plano
 // perto. Devolve quantos triângulos saíram.
 u32 projetar_sombras(const Cena3D& cena, const ConfigTela& tela, SaidaTriangulos& saida);
+
+// Parede da Tormenta: faixas do cilindro recortadas contra o frustum (perto e a
+// banda de guarda), com o perfil de alfa do Ventania e uma atenuação leve com a distância. Devolve os triângulos.
+u32 projetar_parede(const Cena3D& cena, const ConfigTela& tela, SaidaTriangulos& saida);

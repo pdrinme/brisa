@@ -73,6 +73,9 @@ void botao(ListaDesenho2D& l, f32 x, f32 y, f32 t, Botao b) {
 }
 }  // namespace
 
+void desenhar_botao(ListaDesenho2D& l, f32 x, f32 y, f32 t, int b) { botao(l, x, y, t, static_cast<decltype(B_XIS)>(b)); }
+void desenhar_linha(ListaDesenho2D& l, f32 x0, f32 y0, f32 x1, f32 y1, f32 e, Cor c) { linha(l, x0, y0, x1, y1, e, c); }
+
 bool HudCombate::iniciar(const Pacote& pak, BibliotecaModelos& bib, Arena& arena, const BancoItens& itens, char* erro, int ne) {
     itens_ = &itens;
     // Ícones do inventário do Ventania (convertidos na Etapa 3), uma vez só na VRAM.

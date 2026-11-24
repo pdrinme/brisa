@@ -15,6 +15,7 @@ public:
     void iniciar_3d(Cor fundo, Cor neblina, f32 perto);
     void triangulo(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c) override;
     void triangulo_textura(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c, int textura) override;
+    void triangulo_alfa(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c) override;
     u32 z(int x, int y) const { return z_[y * L + x]; }
     // Texturas registradas (a plataforma do PC preenche).
     static const int MAX_TEXTURAS = 64;

@@ -6,12 +6,17 @@
 // trava), mirar com o erro da dificuldade (a mira assenta com o tempo de visada),
 // rajadas, recarregar, curar. Percepção: cone de visão com raio de visibilidade
 // (orçamento de raios por passo), audição de tiros e reação ao levar dano.
-// Ficam para depois: ônibus/queda e Tormenta (Etapa 8), coleta e construção (Etapa 9).
+// Etapa 8: salta do ônibus perto de um destino (POI ou baú), guia a queda até ele e
+// foge da Tormenta (urgência pela distância, pelo tempo e por já estar fora).
+// Fica para depois: coleta e construção (Etapa 9).
 #pragma once
 #include "combate/loot.h"
 #include "dados_bots.h"
 #include "jogo/lutador.h"
+#include "mundo/mapa.h"
 #include "mundo/navegacao.h"
+
+class PartidaBR;
 
 // O que o cérebro enxerga do mundo (montado pela partida a cada passo).
 struct ContextoBots {
@@ -25,11 +30,13 @@ struct ContextoBots {
     int raios = 0;                   // orçamento de raios de percepção neste passo
     int planejamentos = 0;           // orçamento de A* neste passo
     bool tem_humano = true;          // há um jogador humano (LOD de IA)
+    const PartidaBR* partida = nullptr;  // Etapa 8: ônibus, queda e Tormenta
+    const MapaBrisa* mapa = nullptr;     // POIs (destino do salto)
     Vec3 humano;
 };
 
 enum EstadoBot { EB_EXPLORAR, EB_COMBATER, EB_RECUAR, EB_COBERTURA, EB_PERSEGUIR, EB_INVESTIGAR, EB_CURAR, EB_BAU,
-                 EB_SAQUEAR, EB_ORDEM, N_ESTADOS_BOT };
+                 EB_SAQUEAR, EB_TORMENTA, EB_ORDEM, N_ESTADOS_BOT };
 const char* nome_estado_bot(int e);
 
 struct EstatisticasBot {
@@ -77,6 +84,11 @@ private:
     int bau_perto(const ContextoBots& c) const;
     f32 valor_loot(const ItemChao& l) const;
     Vec3 ponto_explorar(ContextoBots& c);
+    void no_onibus(ContextoBots& c, Cmd& k);
+    void caindo(ContextoBots& c, Cmd& k);
+    Vec3 escolher_destino_salto(ContextoBots& c);
+    void zona(const ContextoBots& c, f32* cx, f32* cz, f32* r) const;
+    f32 urgencia_tormenta(const ContextoBots& c) const;
     Vec3 achar_cobertura(ContextoBots& c);
     const Lutador* lutador(const ContextoBots& c, u16 id) const;
     bool ignorado(u32 chave) const;
@@ -122,4 +134,8 @@ private:
     f32 yaw_ = 0, pitch_ = 0, desvio_ = 0;
     bool alterna_ = false, recarga_ant_ = false;
     int segurar_ = 0, tentando_ = 0;
+    Vec3 destino_salto_;
+    bool tem_destino_ = false;
+    f32 dist_onibus_ = 1e9f;
+    i32 replanejar_apos_ = -99999;  // depois de uma rota que falhou: espera (anda direto) antes do próximo A*
 };

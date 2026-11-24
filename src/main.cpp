@@ -10,6 +10,7 @@
 #include "jogo/cena_teste.h"
 #include "jogo/ilha.h"
 #include "jogo/roteiro_ilha.h"
+#include "jogo/roteiro_partida.h"
 #include "jogo/roteiro_treino.h"
 #include "jogo/treino.h"
 #include "jogo/vitrine.h"
@@ -163,11 +164,17 @@ int main(int argc, char** argv) {
     if (argumento(argc, argv, "--sem-hud=", 0) && modo == ILHA) g_ilha.mostrar_hud(false);
     if (argumento(argc, argv, "--mapa-cheio=", 0)) g_ilha.mostrar_mapa(true);
     if (modo == BENCH && argumento(argc, argv, "--bench=", 0)) g_cena_teste.iniciar_bench();
-    // Etapa 7: 15 bots na ilha (treino livre: reaparecem em 4 s). O roteiro liga os bots só na fase dele.
-    if (tem_ilha && !roteiro && !argumento(argc, argv, "--sem-bots=", 0))
-        g_ilha.ativar_bots(GrupoBots::MAX_BOTS, argumento(argc, argv, "--semente=", 1), true, true);
-    int fase_bots = 0;        // roteiro: 0 antes, 1 com o jogador (desenhando), 2 terminou
-    u32 passos_bots = 0, bots_max_pensar = 0, bots_max_simular = 0;
+        // Etapa 8: a ilha abre numa partida Battle Royale (o jogador + 15 bots); --treino-livre=1
+    // volta ao treino da Etapa 7 (bots que reaparecem, sem Tormenta).
+    if (tem_ilha && !roteiro && !argumento(argc, argv, "--sem-bots=", 0)) {
+        if (argumento(argc, argv, "--treino-livre=", 0))
+            g_ilha.ativar_bots(GrupoBots::MAX_BOTS, argumento(argc, argv, "--semente=", 1), true, true);
+        else
+            g_ilha.comecar_partida(argumento(argc, argv, "--semente=", 1), true);
+    }
+    int fase_bots = 0;        // roteiro: 0 antes, 1 partida BR com o jogador (desenhando), 2 terminou
+    static RoteiroPartida roteiro_br;
+    u32 bots_max_pensar = 0, bots_max_simular = 0;
     u64 bots_soma = 0;
 
     Controle controle;
@@ -200,7 +207,7 @@ int main(int argc, char** argv) {
                 bruto = EstadoControle();
                 bruto.modo = ModoControle::ANALOGICO;
                 if (fase_bots > 0) {
-                    // fase dos bots: o jogador fica parado
+                    roteiro_br.controle(g_ilha, bruto);  // a partida BR do roteiro
                 } else if (vista < 0 || (!caminhando && passo_vista >= PASSOS_POR_VISTA)) {
                     vista++;
                     passo_vista = 0;
@@ -280,50 +287,46 @@ int main(int argc, char** argv) {
             plataforma::log("BRISA_ILHA_OK\n");
             caminhando = false;
             passos_caminhada = 0;
-            // Etapa 7: fase dos bots. O jogador fica parado atrás do primeiro bot, olhando para ele.
+            // Etapa 8: uma partida BR jogada pelo roteiro (src/jogo/roteiro_partida.h).
             fase_bots = 1;
-            g_ilha.ativar_bots(GrupoBots::MAX_BOTS, 1, true, true);
-            Vec3 b0 = g_ilha.bots().bot(0).p.pos;
-            Vec3 s1 = g_ilha.mapa().spawn(1);
-            f32 dx = -s1.x, dz = -s1.z, dl = sqrtf(dx * dx + dz * dz) + 1e-3f;
-            dx /= dl; dz /= dl;   // do início 1 para o centro da ilha
-            g_ilha.ir_para(b0.x - dx * 7.0f, b0.z - dz * 7.0f, atan2f(-dx, -dz) * 57.29578f, -8.0f);
-            snprintf(msg, sizeof msg, "BRISA_BOTS_INICIO bots=15 semente=1 quadro=%u\n", static_cast<unsigned>(quadro));
+            roteiro_br.comecar(g_ilha, 1);
+            snprintf(msg, sizeof msg, "BRISA_BR_INICIO jogadores=%d semente=1 quadro=%u\n", g_ilha.partida().total(), static_cast<unsigned>(quadro));
             plataforma::log(msg);
         }
         if (roteiro && fase_bots == 1 && modo == ILHA) {
+            // CPU da IA durante a partida com o jogador (desenhando), registrada a cada 5 s.
             const GrupoBots& g = g_ilha.bots();
-            passos_bots = g_ilha.passos();
-            static u32 primeiro = 0, ultimo_log = 0, n_amostras = 0;
-            if (primeiro == 0) primeiro = passos_bots;
-            u32 k = passos_bots - primeiro;
+            static u32 ultimo_log = 0, n_amostras = 0;
             if (g.us_pensar > bots_max_pensar) bots_max_pensar = g.us_pensar;
             if (g.us_simular > bots_max_simular) bots_max_simular = g.us_simular;
             bots_soma += g.us_pensar + g.us_simular;
             n_amostras++;
-            if (k >= ultimo_log + PASSOS_BOTS_LOG || k >= PASSOS_BOTS_JOGADOR) {
-                ultimo_log = k;
-                const Lutador& j = g_ilha.jogador().lutador();
-                snprintf(msg, sizeof msg, "BRISA_BOTS passo=%u vivos=%d elims=%u jogador_vida=%d escudo=%d us_ia_medio=%u us_pensar_max=%u "
-                         "us_simular_max=%u quadro_us=%u\n", static_cast<unsigned>(k), g.vivos(&j), static_cast<unsigned>(g.eliminacoes()),
-                         j.comb.vit.vida, j.comb.vit.escudo, static_cast<unsigned>(bots_soma / (n_amostras ? n_amostras : 1)),
-                         static_cast<unsigned>(bots_max_pensar), static_cast<unsigned>(bots_max_simular),
-                         static_cast<unsigned>(est.media_quadro_us()));
+            if (g_ilha.passos() >= ultimo_log + PASSOS_BOTS_LOG || roteiro_br.terminou()) {
+                ultimo_log = g_ilha.passos();
+                const PartidaBR& p = g_ilha.partida();
+                snprintf(msg, sizeof msg, "BRISA_BOTS passo=%u estado=%d vivos=%d elims=%u us_ia_medio=%u us_pensar_max=%u us_simular_max=%u "
+                         "quadro_us=%u\n", static_cast<unsigned>(g_ilha.passos()), p.estado(), p.vivos(), static_cast<unsigned>(g.eliminacoes()),
+                         static_cast<unsigned>(bots_soma / (n_amostras ? n_amostras : 1)), static_cast<unsigned>(bots_max_pensar),
+                         static_cast<unsigned>(bots_max_simular), static_cast<unsigned>(est.media_quadro_us()));
                 plataforma::log(msg);
                 registrar_3d = true;
             }
-            if (k >= PASSOS_BOTS_JOGADOR) {
-                // Critério de aceite (GAME_DESIGN §8) no próprio console: partida só de bots, sem desenhar.
+            if (roteiro_br.terminou()) {
+                plataforma::log(roteiro_br.marcos == RoteiroPartida::TODOS ? "BRISA_PARTIDA_OK\n" : "BRISA_PARTIDA_FALHOU\n");
+                // Critério de aceite (GAME_DESIGN §8) no próprio console: partida BR só de bots, sem desenhar.
                 fase_bots = 2;
-                g_ilha.ativar_bots(GrupoBots::MAX_BOTS, 1, false, false);
+                g_ilha.comecar_partida(2, false);
                 GrupoBots& gb = g_ilha.bots();
+                const PartidaBR& p = g_ilha.partida();
                 u64 t0 = plataforma::tempo_us();
-                u32 pior = 0, n = 0;
-                for (; n < PASSOS_BOTS_PARTIDA && gb.vivos(nullptr) > 1; n++) {
+                u32 pior = 0, n = 0, n_pior = 0, acima_10ms = 0;
+                int est_pior = 0;
+                for (; n < PASSOS_BOTS_PARTIDA && p.estado() != PART_FIM; n++) {
                     u64 a = plataforma::tempo_us();
                     g_ilha.passo_sem_jogador();
                     u32 d = static_cast<u32>(plataforma::tempo_us() - a);
-                    if (d > pior) pior = d;
+                    if (d > 10000) acima_10ms++;
+                    if (d > pior) { pior = d; n_pior = n; est_pior = p.estado(); }
                 }
                 u64 total = plataforma::tempo_us() - t0;
                 u32 vivo = 0, preso = 0, man = 0, ab = 0, caminhos = 0, ticks[N_ESTADOS_BOT] = {};
@@ -332,18 +335,21 @@ int main(int argc, char** argv) {
                     vivo += e.vivo_ticks; preso += e.preso_ticks; man += e.manobras; ab += e.abandonos; caminhos += e.caminhos;
                     for (int q = 0; q < N_ESTADOS_BOT; q++) ticks[q] += e.ticks_estado[q];
                 }
-                const char* venc = "-";
-                for (int i = 0; i < gb.n_bots(); i++) if (gb.bot(i).vivo) venc = gb.bot(i).nome;
-                int kk = snprintf(msg, sizeof msg, "BRISA_BOTS_PARTIDA vivos=%d elims=%u vencedor=%s minutos=%.2f preso_pct=%.2f manobras=%u "
-                         "abandonos=%u caminhos=%u us_passo_medio=%u us_passo_pior=%u estados=", gb.vivos(nullptr),
-                         static_cast<unsigned>(gb.eliminacoes()), venc, static_cast<double>(n / 1800.0f),
-                         static_cast<double>(100.0f * preso / (vivo ? vivo : 1)), static_cast<unsigned>(man), static_cast<unsigned>(ab),
-                         static_cast<unsigned>(caminhos), static_cast<unsigned>(total / (n ? n : 1)), static_cast<unsigned>(pior));
+                int kk = snprintf(msg, sizeof msg, "BRISA_BR_PARTIDA estado=%d vivos=%d/%d vencedor=%s minutos=%.2f saltaram=%d ejetados=%d "
+                         "tormenta=%d fase=%d preso_pct=%.2f manobras=%u abandonos=%u caminhos=%u us_passo_medio=%u us_passo_pior=%u estados=",
+                         p.estado(), p.vivos(), p.total(), p.nome_vencedor()[0] ? p.nome_vencedor() : "-", static_cast<double>(n / 1800.0f),
+                         p.saltaram, p.ejetados, p.mortes_tormenta, p.tormenta().fase, static_cast<double>(100.0f * preso / (vivo ? vivo : 1)),
+                         static_cast<unsigned>(man), static_cast<unsigned>(ab), static_cast<unsigned>(caminhos),
+                         static_cast<unsigned>(total / (n ? n : 1)), static_cast<unsigned>(pior));
                 for (int q = 0; q < N_ESTADOS_BOT && kk < static_cast<int>(sizeof msg) - 24; q++)
                     if (ticks[q]) kk += snprintf(msg + kk, sizeof msg - kk, "%s:%u,", nome_estado_bot(q), static_cast<unsigned>(100u * ticks[q] / (vivo ? vivo : 1)));
                 snprintf(msg + kk, sizeof msg - kk, "\n");
                 plataforma::log(msg);
-                plataforma::log(gb.vivos(nullptr) == 1 && 100.0f * preso < 1.0f * (vivo ? vivo : 1) ? "BRISA_BOTS_OK\n" : "BRISA_BOTS_FALHOU\n");
+                snprintf(msg, sizeof msg, "BRISA_BR_CPU passos=%u pior_passo=%u pior_estado=%d acima_10ms=%u\n", static_cast<unsigned>(n),
+                         static_cast<unsigned>(n_pior), est_pior, static_cast<unsigned>(acima_10ms));
+                plataforma::log(msg);
+                bool ok = p.estado() == PART_FIM && p.vivos() == 1 && p.vencedor() != 0 && 100.0f * preso < 1.0f * (vivo ? vivo : 1);
+                plataforma::log(ok ? "BRISA_BR_OK\n" : "BRISA_BR_FALHOU\n");
                 break;
             }
         }

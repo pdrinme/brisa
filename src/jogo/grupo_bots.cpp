@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "partida_br.h"
 #include "plataforma/plataforma.h"
 
 bool GrupoBots::iniciar(const Pacote& pak, const RecursosLutador* rec, const MapaBrisa* mapa, Navegacao* nav, char* erro, int ne) {
@@ -64,6 +65,7 @@ int GrupoBots::vivos(const Lutador* j) const {
 
 int GrupoBots::alvos(const Lutador* a, Lutador* j, AlvoCombate* s) {
     int n = 0;
+    if (partida && partida->ativa() && !partida->dano_ativo()) return 0;  // contagem, ônibus, proteção
     if (j && j != a && j->vivo) s[n++] = j->como_alvo();
     for (int i = 0; i < n_bots_; i++)
         if (&lut_[i] != a && lut_[i].vivo) s[n++] = lut_[i].como_alvo();
@@ -84,6 +86,8 @@ void GrupoBots::pensar(Lutador* j, const MundoColisao& m, const Loot& loot, u32 
     ctx_.cfg = &cfg_;
     ctx_.raios = cfg_.raios_visao_por_tick;
     ctx_.planejamentos = 2;
+    ctx_.partida = partida;
+    ctx_.mapa = mapa_;
     ctx_.tem_humano = j && j->vivo;
     if (j) ctx_.humano = j->p.pos;
     for (int i = 0; i < n_bots_; i++) cmd_[i] = lut_[i].vivo ? cer_[i].pensar(ctx_) : ComandoLutador();
@@ -92,6 +96,7 @@ void GrupoBots::pensar(Lutador* j, const MundoColisao& m, const Loot& loot, u32 
 
 void GrupoBots::simular(Lutador* j, const MundoColisao& m, Loot& loot, u32 tick) {
     u64 t1 = plataforma::tempo_us();
+    loot_ = &loot;
     AlvoCombate al[MAX_LUTADORES];
     for (int i = 0; i < n_bots_; i++) {
         ev_[i] = EventosCombate();
@@ -129,9 +134,11 @@ void GrupoBots::processar(Lutador& a, const EventosCombate& ev, Lutador* j, Loot
     }
 }
 
-void GrupoBots::eliminar(Lutador& v, const Lutador& quem, int arma, Loot& loot, u32 tick) {
+void GrupoBots::eliminar(Lutador& v, Lutador& quem, int arma, Loot& loot, u32 tick) {
     if (!v.vivo) return;
     v.vivo = false;
+    if (&quem != &v) quem.stats.eliminacoes++;
+    if (partida) partida->eliminado(v.id, quem.id, tick);
     v.reviver = tick + REAPARECER;
     loot.largar_inventario(v.comb.inv, v.p.pos);  // a picareta fica com ele
     Eliminacao& e = feed_[n_feed_ % FEED];
@@ -145,6 +152,25 @@ void GrupoBots::eliminar(Lutador& v, const Lutador& quem, int arma, Loot& loot, 
         quem_eliminou_jogador = quem.id;
         snprintf(nome_quem_eliminou, sizeof nome_quem_eliminou, "%s", quem.nome);
     }
+}
+
+void GrupoBots::eliminar_pela_tormenta(Lutador& v, u32 tick) {
+    if (!v.vivo) return;
+    v.vivo = false;
+    v.reviver = tick + REAPARECER;
+    if (loot_) loot_->largar_inventario(v.comb.inv, v.p.pos);
+    Eliminacao& e = feed_[n_feed_ % FEED];
+    snprintf(e.quem, sizeof e.quem, "TORMENTA");
+    snprintf(e.vitima, sizeof e.vitima, "%s", v.nome);
+    e.arma = 0;
+    e.tick = tick;
+    n_feed_++;
+    eliminacoes_++;
+    if (v.id == 1) {
+        quem_eliminou_jogador = v.id;
+        snprintf(nome_quem_eliminou, sizeof nome_quem_eliminou, "A TORMENTA");
+    }
+    if (partida) partida->eliminado(v.id, v.id, tick);
 }
 
 void GrupoBots::reviver(Lutador& l, u32 tick) {

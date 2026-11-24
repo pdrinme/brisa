@@ -35,6 +35,10 @@ public:
     // A* de `de` até `para`, sem as arestas em `evitar`. Devolve false se não achou no orçamento.
     bool caminho(Vec3 de, Vec3 para, const u32* evitar, int n_evitar, Caminho& saida);
     u32 caminhos = 0, expansoes = 0;  // diagnóstico
+    u32 sem_ligacao = 0;              // caminhos recusados na hora (origem e destino desconectados)
+    int componente(int no) const;     // componente conexa (0 = bloqueado)
+    int n_componentes() const { return n_componentes_; }
+    int componente_principal() const { return maior_componente_; }
 private:
     struct Andar { f32 x, y, z; i16 i, j, nivel, _; i32 viz[4]; };
     struct Ligacao { i32 a, b; f32 custo; u16 ponto, n_pontos; };
@@ -42,6 +46,8 @@ private:
     bool porta_entre(int a, int b) const;
     int ligacao(int a, int b) const;   // índice da ligação a→b ou −1
     int livre_perto(int i, int j) const;
+    void rotular_componentes();
+    int n_componentes_ = 0, maior_componente_ = 0;
     const i16* alt_ = nullptr;
     const u8* bloq_ = nullptr;
     const u8* arestas_ = nullptr;

@@ -37,12 +37,21 @@ struct Sombra3D {
     f32 raio;
 };
 
+// Parede da Tormenta (storm_visual.gd): cilindro aberto translúcido no círculo seguro.
+struct Parede3D {
+    bool ativa = false;
+    f32 cx = 0, cz = 0, raio = 0, base = -20.0f, altura = 220.0f;
+    f32 tempo = 0;                   // s: as faixas correm (o TIME do shader)
+    Cor cor = {140, 64, 242, 96};    // roxo do Ventania (0,55; 0,25; 0,95), alfa 0,42 × ~0,9 das faixas
+};
+
 struct Cena3D {
     static const int MAX_OBJETOS = 4096;
     static const int MAX_SOMBRAS = 64;
     Sombra3D sombras[MAX_SOMBRAS];
     int n_sombras = 0;
     int textura_sombra = -1;  // id registrado na plataforma
+    Parede3D parede;           // Etapa 8: desenhada por último, com alfa
     Camera3D camera;
     LuzToon luz;
     Neblina neblina;

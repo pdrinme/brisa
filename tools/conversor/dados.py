@@ -164,6 +164,38 @@ def compilar_bots(d, nomes):
     return cab + corpo
 
 
+def validar_partida(d):
+    erros = []
+    for c in ("contagem_s", "fim_s", "protecao_inicio_s"):
+        if not isinstance(d.get(c), (int, float)) or d[c] < 0:
+            erros.append(f"partida: '{c}' ausente ou negativo")
+    t = d.get("tormenta", {})
+    fases = t.get("fases", [])
+    if not fases or len(fases) > 16:
+        erros.append("partida: a Tormenta precisa de 1 a 16 fases")
+    raio = float(t.get("raio_inicial", 0))
+    if raio <= 0 or float(t.get("margem_terra", -1)) < 0:
+        erros.append("partida: raio_inicial e margem_terra")
+    for i, f in enumerate(fases):
+        for c in ("espera_s", "fechamento_s", "raio", "dano"):
+            if not isinstance(f.get(c), (int, float)) or f[c] < 0:
+                erros.append(f"partida: fase {i + 1} sem '{c}'")
+        if f.get("raio", 0) > raio:
+            erros.append(f"partida: fase {i + 1} com raio maior que o anterior")
+        raio = float(f.get("raio", 0))
+    if erros:
+        raise ErroDados("; ".join(erros))
+
+
+def compilar_partida(d):
+    t = d["tormenta"]
+    fases = b"".join(struct.pack("<4f", f["espera_s"], f["fechamento_s"], f["raio"], f["dano"]) for f in t["fases"])
+    cab = b"BPAR" + struct.pack("<II5fI", 1, len(t["fases"]), d["contagem_s"], d["fim_s"], d["protecao_inicio_s"],
+                                t["raio_inicial"], t["margem_terra"], 64)
+    cab += b"\0" * (64 - len(cab))
+    return cab + fases
+
+
 def registrar_dados(cat, id_, arquivo, dados, origem, extra):
     cat["assets"] = [x for x in cat["assets"] if x["id"] != id_]
     cat["assets"].append(dict({"id": id_, "arquivo": arquivo, "tipo": "dados", "bytes": len(dados), "crc32": "%08x" % zlib.crc32(dados),
@@ -200,8 +232,17 @@ def main():
     registrar_dados(cat, "dados_bots", "assets/dados/bots.bdat", dados_b,
                     f"data/bots.json + data/nomes_jogadores.txt (cópias de ventania:game/data/@{cat.get('ventania_commit', '')})",
                     {"dificuldades": len(db["dificuldades"]), "nomes": len(nomes)})
+    # Partida BR (Etapa 8): data/partida.json.
+    dp = json.load(open(os.path.join(RAIZ, "data/partida.json"), encoding="utf-8"))
+    validar_partida(dp)
+    dados_p = compilar_partida(dp)
+    open(os.path.join(RAIZ, "assets/dados/partida.bdat"), "wb").write(dados_p)
+    registrar_dados(cat, "dados_partida", "assets/dados/partida.bdat", dados_p,
+                    f"data/partida.json (cópia revisada de ventania:game/data/partida.json@{cat.get('ventania_commit', '')})",
+                    {"fases_tormenta": len(dp["tormenta"]["fases"])})
     cat["assets"].sort(key=lambda x: x["arquivo"])
     json.dump(cat, open(cat_p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print(f"partida.bdat {len(dados_p)} bytes ({len(dp['tormenta']['fases'])} fases da Tormenta)")
     print(f"DADOS_OK itens.bdat {len(dados)} bytes ({len(d['armas'])} armas, {len(d['consumiveis'])} consumíveis); "
           f"bots.bdat {len(dados_b)} bytes ({len(db['dificuldades'])} dificuldades, {len(nomes)} nomes)")
 

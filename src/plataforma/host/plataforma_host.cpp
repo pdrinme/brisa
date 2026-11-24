@@ -82,6 +82,7 @@ void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D
         g_rast.iniciar_3d(cena.ceu, cena.neblina.cor, cena.camera.perto);
         pipeline_cena(cena, tela, g_rast, est);
         projetar_sombras(cena, tela, g_rast);
+        projetar_parede(cena, tela, g_rast);
         g_rast.desenhar(hud, false);
     } else {
         pipeline_cena(cena, tela, contador, est);

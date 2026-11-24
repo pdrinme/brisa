@@ -276,3 +276,37 @@ e você também (ainda não é a partida Battle Royale, que vem na Etapa 8).
 **Valores do emulador** (só referência): IA de 15 bots de 0,69 a 0,77 ms por
 passo com o jogador; partida só de bots com 0,33 ms por passo, pior 5,2 ms;
 vencedor em 4,8 min, preso 0,00%; 15,7 MB livres no boot.
+
+---
+
+# Etapa 8 — Partida Battle Royale
+
+O ELF abre direto numa **partida**: você e 15 bots. Não há lobby ainda (Etapa 10).
+
+| Botão | Efeito |
+|---|---|
+| ✕ no ônibus | Saltar (com as portas abertas, sobre a ilha) |
+| Analógico esquerdo no ar | Guiar a queda e o planador |
+| Olhar para baixo + frente no ar | Mergulho (cai mais rápido) |
+| ✕ eliminado | Assistir o próximo jogador |
+| ✕ no resultado | Jogar de novo |
+| ▲ no resultado | Voltar a assistir |
+
+**Conferir e me mandar:**
+1. **Contagem:** "A PARTIDA COMEÇA EM 10…" e a rota tracejada do ônibus no minimapa.
+2. **Ônibus dos Ventos:** a câmera atrás do ônibus, o ônibus atravessando a ilha. Ao passar sobre a terra, aparece "✕ SALTAR". Se você não saltar, é ejetado antes de o ônibus sair da ilha.
+3. **Queda:**
+   - o personagem de bruços;
+   - olhando para baixo e indo para a frente, ele vira de cabeça para baixo e cai mais rápido;
+   - a 38 m do chão, a asa delta abre sobre a cabeça e ele plana até pousar.
+4. **Tormenta:**
+   - a parede roxa translúcida no horizonte;
+   - no minimapa, a zona atual (roxa) e a próxima (branca);
+   - "FASE 1/7 · TORMENTA FECHA EM 0:45" abaixo do minimapa;
+   - fora da zona, a tela fica roxa, aparece "VOCÊ ESTÁ NA TORMENTA!" e a vida cai (o escudo não protege).
+5. **Bots:** eles saltam espalhados, pousam perto das regiões e dos baús, lutam e fogem da Tormenta.
+6. **Eliminado:** a câmera segue quem te eliminou, e ✕ troca. Depois de 2 s, a tela de resultado mostra a colocação, eliminações, tempo vivo, dano, baús e curas. Confira se ✕ (jogar de novo) e ▲ (assistir) funcionam.
+7. **Vitória:** se você for o último, "VITÓRIA!" no resultado.
+8. **Desempenho:**
+   - o FPS e a "CPU" do painel em três momentos: no ônibus, planando sobre a Vila Brisa, e perto da parede da Tormenta;
+   - se der, rode o ELF de autoteste pelo ps2link e me mande as linhas `BRISA_BOTS ...` e `BRISA_BR_PARTIDA ...`. A última é a partida só de bots, que roda sem desenhar por alguns segundos.

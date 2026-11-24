@@ -49,7 +49,7 @@ bool Ilha::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
     if (!d || !mapa_.carregar(d, tam, e, sizeof e)) { snprintf(erro, ne, "mapa: %s", d ? e : "mapa/ilha.bmap ausente"); return false; }
     if (mapa_.n_modelos() > MAX_MODELOS) { snprintf(erro, ne, "mapa com %d modelos (máximo %d)", mapa_.n_modelos(), MAX_MODELOS); return false; }
     if (mapa_.n_instancias() > MAX_INSTANCIAS) { snprintf(erro, ne, "mapa com instâncias demais"); return false; }
-    if (!bib_.iniciar(&pak, arena, mapa_.n_modelos() + Jogador::N_TRAJES * 3 + Jogador::MAX_ITENS + 4)) { snprintf(erro, ne, "sem memória para os modelos do mapa"); return false; }
+    if (!bib_.iniciar(&pak, arena, mapa_.n_modelos() + Jogador::N_TRAJES * 3 + Jogador::MAX_ITENS + 8)) { snprintf(erro, ne, "sem memória para os modelos do mapa"); return false; }
     for (int i = 0; i < mapa_.n_modelos(); i++) {
         int k = bib_.carregar(mapa_.modelo(i).nome, erro, ne);
         if (k < 0) return false;
@@ -60,6 +60,8 @@ bool Ilha::iniciar(const Pacote& pak, Arena& arena, char* erro, int ne) {
     d = pak.arquivo("mapa/ilha.bnav", &tam);
     if (!d || !nav_.carregar(d, tam, e, sizeof e)) { snprintf(erro, ne, "navegação: %s", d ? e : "mapa/ilha.bnav ausente"); return false; }
     if (!grupo_.iniciar(pak, &jogador_.recursos(), &mapa_, &nav_, erro, ne)) return false;
+    if (!partida_.iniciar(pak, &mapa_, erro, ne)) return false;
+    if ((modelo_onibus_ = bib_.carregar("onibus_01", erro, ne)) < 0) return false;
     // Loot da partida (loot_server.gd): os baús do mapa e os pontos de loot; sem reabastecer.
     loot_.iniciar(&jogador_.itens(), 20261116);  // a semente da ilha do Ventania
     loot_.reabastecer = false;
@@ -132,19 +134,31 @@ void Ilha::passo(const Controle& c) {
     }
     if (atalho && c.pressionou(BT_CIRCULO)) jogador_.definir_traje(jogador_.traje() + 1);
     if (c.pressionou(BT_CIMA) && !hc_.inventario_aberto()) mapa_cheio_ = !mapa_cheio_;
-    bool bloquear = (!atalho && hc_.controlar_inventario(c, jogador_, loot_, mundo_)) || hc_.inventario_aberto() || mapa_cheio_;
+    bool bloquear = (!atalho && !resultado_ && hc_.controlar_inventario(c, jogador_, loot_, mundo_)) || hc_.inventario_aberto() ||
+                    mapa_cheio_;
+    if (partida_.ativa()) controlar_partida(c);
+    // Com a tela de resultado aberta, o personagem não recebe o controle.
+    Controle parado;
+    if (resultado_) {
+        EstadoControle e;
+        e.modo = ModoControle::ANALOGICO;
+        parado.ler(e);
+        parado.iniciar_passo();
+    }
+    const Controle& cj = resultado_ ? parado : c;
     ev_ = EventosCombate();
     if (bots_ativos_) grupo_.pensar(&jogador_.lutador(), mundo_, loot_, passos_);
     AlvoCombate alvos[GrupoBots::MAX_LUTADORES];
     int na = bots_ativos_ ? grupo_.alvos(&jogador_.lutador(), nullptr, alvos) : 0;
-    jogador_.passo(c, mundo_, loot_, alvos, na, passos_, bloquear, ev_);
+    jogador_.passo(cj, mundo_, loot_, alvos, na, passos_, bloquear, ev_);
     if (bots_ativos_) {
         grupo_.processar(jogador_.lutador(), ev_, &jogador_.lutador(), loot_, passos_);
         grupo_.simular(&jogador_.lutador(), mundo_, loot_, passos_);
+        partida_.passo(passos_);
         // o jogador eliminado reaparece em 4 s (fora da partida BR, como no treino do Ventania)
         Lutador& j = jogador_.lutador();
         if (!j.vivo && jogador_reviver_ == 0) jogador_reviver_ = passos_ + GrupoBots::REAPARECER;
-        if (!j.vivo && grupo_.reaparecer && passos_ >= jogador_reviver_) {
+        if (!j.vivo && grupo_.reaparecer && !partida_.ativa() && passos_ >= jogador_reviver_) {
             jogador_reviver_ = 0;
             j.vivo = true;
             j.comb.iniciar(&jogador_.itens(), Jogador::ID);
@@ -156,13 +170,18 @@ void Ilha::passo(const Controle& c) {
     hc_.registrar(ev_, jogador_);
     hc_.passo();
     // Caiu para fora do mundo (não deveria): volta para o início.
-    if (jogador_.personagem().pos.y < mapa_.nivel_mar() - 30.0f) {
+    if (jogador_.personagem().queda == NO_CHAO_NORMAL && jogador_.personagem().pos.y < mapa_.nivel_mar() - 30.0f) {
         Vec3 s = mapa_.spawn(0);
         ir_para(s.x, s.z, 0);
     }
 }
 
 void Ilha::ativar_bots(int n, u32 semente, bool reaparecer, bool com_jogador) {
+    partida_.encerrar();  // treino livre (ou teste): sem partida BR
+    grupo_.partida = nullptr;
+    resultado_ = resultado_fim_ = false;
+    jogador_.espectar(nullptr);
+    jogador_.lutador().p.queda = NO_CHAO_NORMAL;
     grupo_.reaparecer = reaparecer;
     grupo_.povoar(n, semente, 1);
     bots_ativos_ = n > 0;
@@ -179,7 +198,56 @@ void Ilha::passo_sem_jogador() {
     passos_++;
     grupo_.pensar(nullptr, mundo_, loot_, passos_);
     grupo_.simular(nullptr, mundo_, loot_, passos_);
+    partida_.passo(passos_);
     loot_.atualizar(passos_, 1.0f / 30.0f);
+}
+
+void Ilha::comecar_partida(u32 semente, bool com_jogador, int n_bots) {
+    semente_partida_ = semente;
+    ativar_bots(n_bots, semente, false, com_jogador);
+    grupo_.partida = &partida_;
+    Lutador* todos[PartidaBR::MAX];
+    int n = 0;
+    if (com_jogador) {
+        Vec3 s = mapa_.spawn(0);
+        ir_para(s.x, s.z, atan2f(s.x, s.z) / GRAUS);
+        todos[n++] = &jogador_.lutador();
+    }
+    for (int i = 0; i < grupo_.n_bots() && n < PartidaBR::MAX; i++) todos[n++] = &grupo_.bot(i);
+    partida_.comecar(semente, todos, n, passos_, loot_, &grupo_);
+    eliminado_em_ = 0;
+}
+
+// Espectador, resultado e "jogar de novo" (tela_resultado.gd / game.gd _assistir).
+void Ilha::controlar_partida(const Controle& c) {
+    Lutador& j = jogador_.lutador();
+    if (!com_jogador_) return;
+    if (!j.vivo && eliminado_em_ == 0) eliminado_em_ = passos_;
+    // resultado: 2 s depois de ser eliminado, ou no fim da partida (depois de fim_s)
+    if (!resultado_ && !resultado_fim_ && partida_.acabou()) { resultado_ = true; resultado_fim_ = true; }
+    if (!resultado_ && eliminado_em_ && passos_ == eliminado_em_ + 60) resultado_ = true;
+    if (resultado_) {
+        if (c.pressionou(BT_XIS)) { comecar_partida(semente_partida_ + 1); return; }
+        if (c.pressionou(BT_TRIANGULO) && partida_.estado() != PART_FIM) resultado_ = false;  // ASSISTIR
+        return;
+    }
+    if (j.vivo) { jogador_.espectar(nullptr); return; }
+    // Assistindo: quem eliminou (se vivo) ou o próximo vivo; ✕ troca.
+    const Lutador* e = jogador_.espectado();
+    bool trocar = c.pressionou(BT_XIS);
+    if (e && e->vivo && !trocar) return;
+    const Lutador* novo = nullptr;
+    if (!e && grupo_.quem_eliminou_jogador > 1)
+        for (int i = 0; i < grupo_.n_bots(); i++)
+            if (grupo_.bot(i).id == grupo_.quem_eliminou_jogador && grupo_.bot(i).vivo) novo = &grupo_.bot(i);
+    int ini = 0;
+    for (int i = 0; i < grupo_.n_bots(); i++)
+        if (&grupo_.bot(i) == e) ini = i + 1;
+    for (int k = 0; k < grupo_.n_bots() && !novo; k++) {
+        const Lutador& b = grupo_.bot((ini + k) % grupo_.n_bots());
+        if (b.vivo) novo = &b;
+    }
+    jogador_.espectar(novo);
 }
 
 void Ilha::montar_bots(Cena3D& cena) {
@@ -201,7 +269,7 @@ void Ilha::hud_bots(ListaDesenho2D& l, const Camera3D& cam) const {
     if (!bots_ativos_) return;
     for (int i = 0; i < grupo_.n_bots(); i++) {
         const Lutador& b = grupo_.bot(i);
-        if (!b.vivo) continue;
+        if (!b.vivo || b.p.queda == NO_ONIBUS) continue;
         Vec3 p = b.p.pos + Vec3(0, 2.05f, 0), d = p - cam.posicao;
         if (ponto(d, d) > 30.0f * 30.0f) continue;
         Vec4 c = transformar(cam.vp, p);
@@ -278,6 +346,7 @@ void Ilha::montar(Cena3D& cena, ListaDesenho2D& l, const EstatisticasQuadro& est
     jogador_.montar(cena, bib_, mundo_, &loot_, 4.0f / 3.0f);
     montar_mapa(cena);
     montar_bots(cena);
+    montar_partida(cena);
     hc_.montar_loot(cena, loot_, bib_, jogador_, passos_ / 30.0f);
     est_.cpu_corte_us = static_cast<u32>(plataforma::tempo_us() - t0);
     l.limpar(cena.ceu);
@@ -293,26 +362,30 @@ void Ilha::montar(Cena3D& cena, ListaDesenho2D& l, const EstatisticasQuadro& est
     if (hud_) hud(l, est, e3d, info);
     if (!mapa_cheio_) {
         hud_bots(l, cena.camera);
-        hc_.desenhar(l, jogador_, loot_, cena.camera);
+        // eliminado (assistindo ou no resultado): sem a barra de itens e a vida
+        if (jogador_.lutador().vivo || !partida_.ativa()) hc_.desenhar(l, jogador_, loot_, cena.camera);
     }
+    if (partida_.ativa()) hud_partida(l);
     if (bots_ativos_ && hud_) {
         // vivos e o feed de eliminações (canto direito, abaixo do minimapa)
         char t[64];
-        snprintf(t, sizeof t, "%d VIVOS", grupo_.vivos(com_jogador_ ? &jogador_.lutador() : nullptr));
-        fonte::desenhar_adesivo(l, 624 - fonte::largura(t, 2), 240, 2, BRANCO, TINTA, 1, 1, t);
+        snprintf(t, sizeof t, "%d VIVOS", partida_.ativa() ? partida_.vivos() : grupo_.vivos(com_jogador_ ? &jogador_.lutador() : nullptr));
+        f32 yv = partida_.ativa() ? 250.0f : 240.0f;
+        fonte::desenhar_adesivo(l, 624 - fonte::largura(t, 2), yv, 2, BRANCO, TINTA, 1, 1, t);
         for (int i = 0; i < grupo_.n_feed(); i++) {
             const Eliminacao& f = grupo_.feed(i);
             if (passos_ - f.tick > 30 * 8) continue;
             char linha[80];
             snprintf(linha, sizeof linha, "%s > %s", f.quem, f.vitima);
-            fonte::desenhar_adesivo(l, 624 - fonte::largura(linha, 1), 262 + i * 12, 1, BRANCO, TINTA, 1, 0, linha);
+            fonte::desenhar_adesivo(l, 624 - fonte::largura(linha, 1), yv + 22 + i * 12, 1, BRANCO, TINTA, 1, 0, linha);
         }
     }
-    if (bots_ativos_ && com_jogador_ && !jogador_.lutador().vivo) {
+    if (resultado_) { tela_resultado(l); return; }
+    if (bots_ativos_ && com_jogador_ && !jogador_.lutador().vivo && !(partida_.ativa() && jogador_.espectado())) {
         char t[64];
         snprintf(t, sizeof t, "ELIMINADO POR %s", grupo_.nome_quem_eliminou);
         fonte::desenhar_adesivo(l, 320 - fonte::largura(t, 3) * 0.5f, 180, 3, rgb(0xff6b6b), TINTA, 2, 2, t);
-        if (grupo_.reaparecer) {
+        if (grupo_.reaparecer && !partida_.ativa()) {
             snprintf(t, sizeof t, "VOLTA EM %u S", static_cast<unsigned>((jogador_reviver_ > passos_ ? jogador_reviver_ - passos_ : 0) / 30 + 1));
             fonte::desenhar_adesivo(l, 320 - fonte::largura(t, 2) * 0.5f, 214, 2, BRANCO, TINTA, 1, 1, t);
         }
@@ -321,12 +394,49 @@ void Ilha::montar(Cena3D& cena, ListaDesenho2D& l, const EstatisticasQuadro& est
 
 // Minimapa (norte para cima): a textura de 600 m recortada em volta do jogador.
 void Ilha::minimapa(ListaDesenho2D& l, f32 x, f32 y, f32 tam, f32 raio) const {
-    const Personagem& p = jogador_.personagem();
+    const Lutador* foco = !jogador_.lutador().vivo && jogador_.espectado() ? jogador_.espectado() : &jogador_.lutador();
+    const Personagem& p = foco->p;
     f32 o = mapa_.origem();
     // Centro da janela preso para ela não sair da textura.
     f32 cx = fminf(fmaxf(p.pos.x, o + raio), o + 600 - raio), cz = fminf(fmaxf(p.pos.z, o + raio), o + 600 - raio);
     f32 u0 = (cx - raio - o) / 600.0f, v0 = (cz - raio - o) / 600.0f, u1 = (cx + raio - o) / 600.0f, v1 = (cz + raio - o) / 600.0f;
     if (tex_minimapa_ >= 0) l.sprite_uv(x, y, tam, tam, tex_minimapa_, u0, v0, u1, v1);
+    // Etapa 8: a rota do ônibus, a zona segura atual (roxo) e a próxima (branco), recortadas na janela.
+    auto para_tela = [&](f32 wx, f32 wz, f32* sx, f32* sy) {
+        *sx = x + (wx - (cx - raio)) / (2 * raio) * tam;
+        *sy = y + (wz - (cz - raio)) / (2 * raio) * tam;
+        return *sx >= x && *sy >= y && *sx <= x + tam && *sy <= y + tam;
+    };
+    auto anel = [&](f32 zx, f32 zz, f32 zr, f32 e, Cor cor) {
+        const int SEG = 64;
+        for (int k = 0; k < SEG; k++) {
+            f32 a0 = k * 6.2831853f / SEG, a1 = (k + 1) * 6.2831853f / SEG, sx0, sy0, sx1, sy1;
+            bool d0 = para_tela(zx + cosf(a0) * zr, zz + sinf(a0) * zr, &sx0, &sy0);
+            bool d1 = para_tela(zx + cosf(a1) * zr, zz + sinf(a1) * zr, &sx1, &sy1);
+            if (d0 && d1) desenhar_linha(l, sx0, sy0, sx1, sy1, e, cor);
+        }
+    };
+    if (partida_.ativa()) {
+        int est = partida_.estado();
+        if (est == PART_CONTAGEM || est == PART_ONIBUS) {
+            const Onibus& ob = partida_.onibus();
+            const int N = 48;
+            for (int k = 0; k < N; k++) {
+                if (k % 2) continue;  // tracejada
+                Vec3 a = ob.inicio + (ob.fim - ob.inicio) * (static_cast<f32>(k) / N);
+                Vec3 b = ob.inicio + (ob.fim - ob.inicio) * (static_cast<f32>(k + 1) / N);
+                f32 sx0, sy0, sx1, sy1;
+                if (para_tela(a.x, a.z, &sx0, &sy0) && para_tela(b.x, b.z, &sx1, &sy1)) desenhar_linha(l, sx0, sy0, sx1, sy1, 2, rgb(0xffd27a));
+            }
+            Vec3 bp = ob.posicao(passos_);
+            f32 bx, by;
+            if (est == PART_ONIBUS && para_tela(bp.x, bp.z, &bx, &by)) l.retangulo(bx - 3, by - 3, 6, 6, rgb(0xffd27a));
+        } else if (partida_.tem_tormenta()) {
+            const Tormenta& tm = partida_.tormenta();
+            if (!tm.terminou) anel(tm.para_x, tm.para_z, tm.r_para, 1.5f, BRANCO);
+            anel(tm.cx(), tm.cz(), tm.raio(), 2.5f, rgb(0xa45cff));
+        }
+    }
     f32 px = x + (p.pos.x - (cx - raio)) / (2 * raio) * tam, py = y + (p.pos.z - (cz - raio)) / (2 * raio) * tam;
     seta(l, px, py, jogador_.camera().yaw_rad(), tam > 200 ? 9.0f : 7.0f, TINTA);
     seta(l, px, py, jogador_.camera().yaw_rad(), tam > 200 ? 6.0f : 4.5f, AMARELO);
@@ -355,5 +465,137 @@ void Ilha::hud(ListaDesenho2D& l, const EstatisticasQuadro& est, const Estatisti
     if (!mapa_cheio_) {
         card(l, 484, 92, 140, 140);
         minimapa(l, 486, 94, 136, 110.0f);
+    }
+}
+
+// ---------------- partida BR (Etapa 8) ----------------
+
+void Ilha::montar_partida(Cena3D& cena) {
+    cena.parede.ativa = false;
+    if (!partida_.ativa()) return;
+    int est = partida_.estado();
+    if (est == PART_ONIBUS && modelo_onibus_ >= 0) {
+        const Onibus& o = partida_.onibus();
+        Vec3 d = o.direcao();
+        // o modelo olha para +z: gira para a direção da rota, com um balanço leve
+        f32 yaw = atan2f(d.x, d.z);
+        f32 bal = sinf(passos_ * 0.07f) * 0.6f;
+        adicionar_modelo(cena, bib_[modelo_onibus_], nullptr, Mat4::translacao(o.posicao(passos_) + Vec3(0, bal, 0)) * Mat4::rotacao_y(yaw));
+    }
+    if (partida_.tem_tormenta()) {
+        const Tormenta& t = partida_.tormenta();
+        cena.parede.ativa = true;
+        cena.parede.cx = t.cx();
+        cena.parede.cz = t.cz();
+        cena.parede.raio = t.raio();
+        cena.parede.tempo = passos_ / 30.0f;
+    }
+}
+
+namespace {
+void tempo_mmss(char* s, int n, int ticks) {
+    int seg = (ticks + 29) / 30;
+    snprintf(s, n, "%d:%02d", seg / 60, seg % 60);
+}
+}  // namespace
+
+// Estado da partida (match_hud.gd): contagem, ônibus, fase e tempo da Tormenta, aviso e tela roxa.
+void Ilha::hud_partida(ListaDesenho2D& l) const {
+    char topo[96] = "", sub[96] = "", entrada[96] = "", tt[16];
+    const Lutador& j = jogador_.lutador();
+    int est = partida_.estado();
+    int resta = partida_.ticks_restantes(passos_);
+    tempo_mmss(tt, sizeof tt, resta);
+    switch (est) {
+    case PART_CONTAGEM:
+        snprintf(topo, sizeof topo, "A PARTIDA COMEÇA EM %d", (resta + 29) / 30);
+        snprintf(sub, sizeof sub, "ÔNIBUS DOS VENTOS · %d JOGADORES", partida_.total());
+        break;
+    case PART_ONIBUS:
+        snprintf(topo, sizeof topo, "ÔNIBUS DOS VENTOS · %d JOGADORES", partida_.total());
+        snprintf(sub, sizeof sub, "SALTE SOBRE A ILHA · AS PORTAS FECHAM EM %s", tt);
+        break;
+    case PART_JOGO: {
+        const Tormenta& t = partida_.tormenta();
+        if (t.terminou) snprintf(sub, sizeof sub, "TORMENTA: ZONA FINAL");
+        else snprintf(sub, sizeof sub, "FASE %d/%d · %s %s", t.fase + 1, t.n_fases(), t.fechando ? "TORMENTA FECHANDO:" : "TORMENTA FECHA EM", tt);
+        break;
+    }
+    case PART_FIM:
+        snprintf(topo, sizeof topo, "VITÓRIA DE %s!", partida_.nome_vencedor());
+        break;
+    default: break;
+    }
+    if (com_jogador_ && j.vivo) {
+        if (j.p.queda == NO_ONIBUS) snprintf(entrada, sizeof entrada, partida_.onibus().portas_abertas(passos_) ? "SALTAR" : "AS PORTAS ABREM SOBRE A ILHA");
+        else if (j.p.queda == QUEDA_LIVRE) snprintf(entrada, sizeof entrada, "QUEDA LIVRE · OLHE PARA BAIXO PARA MERGULHAR");
+        else if (j.p.queda == PLANADOR) snprintf(entrada, sizeof entrada, "PLANANDO");
+    }
+    // tela roxa e aviso dentro da Tormenta
+    bool na_tormenta = com_jogador_ && j.vivo && partida_.tem_tormenta() && partida_.tormenta().fora(j.p.pos);
+    if (na_tormenta) {
+        l.retangulo(0, 0, 640, 448, rgb(0x7326d9, 46));
+        char av[64];
+        snprintf(av, sizeof av, "VOCÊ ESTÁ NA TORMENTA! (-%d/S)", partida_.tormenta().dano_por_segundo());
+        fonte::desenhar_adesivo(l, 320 - fonte::largura(av, 2) * 0.5f, 280, 2, rgb(0xe2b8ff), TINTA, 1, 1, av);
+    }
+    if (topo[0]) {
+        int e = fonte::largura(topo, 3) <= 430 ? 3 : 2;  // não invade o minimapa
+        fonte::desenhar_adesivo(l, 290 - fonte::largura(topo, e) * 0.5f, 104, e, BRANCO, TINTA, 2, 2, topo);
+    }
+    if (sub[0]) {
+        f32 y = topo[0] ? 136.0f : 236.0f;
+        f32 x = topo[0] ? 290 - fonte::largura(sub, 1) * 0.5f : 624 - fonte::largura(sub, 1);
+        fonte::desenhar_adesivo(l, x, y, 1, BRANCO, TINTA, 1, 0, sub);
+    }
+    if (entrada[0]) {
+        bool botao = j.p.queda == NO_ONIBUS && partida_.onibus().portas_abertas(passos_);
+        f32 w = fonte::largura(entrada, 2) + (botao ? 24 : 0), x = 320 - w * 0.5f;
+        if (botao) desenhar_botao(l, x, 304, 18, BOTAO_XIS);
+        fonte::desenhar_adesivo(l, x + (botao ? 24 : 0), 306, 2, rgb(0xffd27a), TINTA, 1, 1, entrada);
+    }
+    if (com_jogador_ && !j.vivo && jogador_.espectado() && !resultado_) {
+        char a[80];
+        snprintf(a, sizeof a, "ASSISTINDO %s", jogador_.espectado()->nome);
+        f32 w = fonte::largura(a, 2) + fonte::largura("PRÓXIMO", 1) + 44, x = 320 - w * 0.5f;
+        fonte::desenhar_adesivo(l, x, 400, 2, BRANCO, TINTA, 1, 1, a);
+        x += fonte::largura(a, 2) + 14;
+        desenhar_botao(l, x, 399, 16, BOTAO_XIS);
+        fonte::desenhar_adesivo(l, x + 20, 404, 1, BRANCO, TINTA, 1, 0, "PRÓXIMO");
+    }
+}
+
+// Tela de resultado (tela_resultado.gd): título, colocação e as estatísticas.
+void Ilha::tela_resultado(ListaDesenho2D& l) const {
+    ResultadoPartida r = partida_.resultado(Jogador::ID);
+    l.retangulo(0, 0, 640, 448, rgb(0x101c33, 150));
+    card(l, 150, 70, 340, 300);
+    char t[96];
+    if (r.venceu) snprintf(t, sizeof t, "VITÓRIA!");
+    else snprintf(t, sizeof t, "#%d DE %d", r.colocacao, r.total);
+    fonte::desenhar_adesivo(l, 320 - fonte::largura(t, 4) * 0.5f, 88, 4, r.venceu ? AMARELO : BRANCO, TINTA, 2, 2, t);
+    if (r.venceu) snprintf(t, sizeof t, "%s É O ÚLTIMO DE PÉ ENTRE %d JOGADORES", jogador_.lutador().nome, r.total);
+    else if (r.vencedor[0]) snprintf(t, sizeof t, "%s · VENCEDOR: %s", jogador_.lutador().nome, r.vencedor);
+    else snprintf(t, sizeof t, "%s · A PARTIDA CONTINUA", jogador_.lutador().nome);
+    fonte::desenhar(l, 320 - fonte::largura(t, 1) * 0.5f, 132, 1, BRANCO, t);
+    char v[24];
+    struct { const char* nome; int valor; } linhas[] = {
+        {"ELIMINAÇÕES", r.eliminacoes}, {"TEMPO VIVO", -1}, {"DANO CAUSADO", r.dano}, {"BAÚS ABERTOS", r.baus}, {"CURAS USADAS", r.curas}};
+    for (int i = 0; i < 5; i++) {
+        f32 y = 160 + i * 28;
+        l.retangulo(176, y - 4, 288, 22, rgb(0x15161c, 120));
+        fonte::desenhar(l, 186, y + 1, 2, BRANCO, linhas[i].nome);
+        if (linhas[i].valor < 0) snprintf(v, sizeof v, "%d:%02d", r.tempo_s / 60, r.tempo_s % 60);
+        else snprintf(v, sizeof v, "%d", linhas[i].valor);
+        fonte::desenhar(l, 454 - fonte::largura(v, 2), y + 1, 2, AMARELO, v);
+    }
+    f32 y = 318;
+    bool assistir = partida_.estado() != PART_FIM;
+    f32 x = assistir ? 166.0f : 320.0f - (24 + fonte::largura("JOGAR DE NOVO", 2)) * 0.5f;
+    desenhar_botao(l, x, y, 18, BOTAO_XIS);
+    fonte::desenhar_adesivo(l, x + 24, y + 2, 2, BRANCO, TINTA, 1, 1, "JOGAR DE NOVO");
+    if (assistir) {
+        desenhar_botao(l, 360, y, 18, BOTAO_TRIANGULO);
+        fonte::desenhar_adesivo(l, 384, y + 2, 2, BRANCO, TINTA, 1, 1, "ASSISTIR");
     }
 }

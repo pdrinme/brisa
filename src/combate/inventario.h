@@ -96,5 +96,11 @@ struct Vitais {
         escudo += k;
         return k;
     }
+    // Tormenta (vitals.gd: take_storm_damage): só na vida, o escudo não protege. true = eliminou.
+    bool dano_tormenta(int n) {
+        if (!vivo() || n <= 0) return false;
+        vida = vida > n ? vida - n : 0;
+        return vida <= 0;
+    }
     void reiniciar() { vida = VIDA_MAX; escudo = 0; }
 };

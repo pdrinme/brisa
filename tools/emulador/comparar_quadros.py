@@ -5,7 +5,7 @@ Ignora o painel de cima e o de baixo (textos diferentes: PS2/HOST, tempos) e
 conta os pixels cuja diferença em algum canal passa de `--limiar`. Falha se a
 fração passar de `--max`. Pega o caso "o VU1 não desenhou nada" (que a contagem
 de lotes não pega) e erros grosseiros de geometria ou cor.
-Uso: comparar_quadros.py emulador.png pc.png [--max 0.04] [--limiar 48]
+Uso: comparar_quadros.py emulador.png pc.png [--max 0.04] [--limiar 48] [--x0 --x1 --y0 --y1]
 """
 import argparse
 import struct
@@ -59,6 +59,8 @@ def main():
     ap.add_argument("--limiar", type=int, default=48)
     ap.add_argument("--y0", type=int, default=92)
     ap.add_argument("--y1", type=int, default=384)
+    ap.add_argument("--x0", type=int, default=0)
+    ap.add_argument("--x1", type=int, default=640)  # região (ex.: só o cartão do resultado)
     a = ap.parse_args()
     w1, h1, b1, l1 = ler_png(a.emulador)
     w2, h2, b2, l2 = ler_png(a.pc)
@@ -68,7 +70,7 @@ def main():
     dif = tot = 0
     for y in range(a.y0, min(a.y1, h1)):
         r1, r2 = l1[y], l2[y]
-        for x in range(w1):
+        for x in range(a.x0, min(a.x1, w1)):
             tot += 1
             p, q = x * b1, x * b2
             if max(abs(r1[p] - r2[q]), abs(r1[p + 1] - r2[q + 1]), abs(r1[p + 2] - r2[q + 2])) > a.limiar:

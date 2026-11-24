@@ -20,7 +20,9 @@ bool Animador::iniciar(const BancoAnimacoes& b) {
     ag_ = b.achar("agachado"); ag_andar_ = b.achar("agachado_andar");
     pular_ = b.achar("pular"); queda_ = b.achar("queda"); aterrissar_ = b.achar("aterrissar");
     pesado_ = b.achar("aterrissar_pesado"); acenar_ = b.achar("acenar");
-    return idle_ >= 0 && andar_ >= 0 && correr_ >= 0 && ag_ >= 0 && ag_andar_ >= 0 && pular_ >= 0 && queda_ >= 0 &&
+    queda_livre_ = b.achar("queda_livre"); mergulho_ = b.achar("mergulho");
+    abrir_ = b.achar("planador_abrir"); planador_ = b.achar("planador");
+    return queda_livre_ >= 0 && mergulho_ >= 0 && abrir_ >= 0 && planador_ >= 0 && idle_ >= 0 && andar_ >= 0 && correr_ >= 0 && ag_ >= 0 && ag_andar_ >= 0 && pular_ >= 0 && queda_ >= 0 &&
            aterrissar_ >= 0 && pesado_ >= 0 && acenar_ >= 0;
 }
 
@@ -51,6 +53,35 @@ void Animador::atualizar(const Personagem& p, bool acenar, f32 dt) {
     }
     if (t_aterr_ >= 0) { t_aterr_ += dt; if (t_aterr_ > b_->duracao(aterrissar_)) t_aterr_ = -1; }
     if (t_pesado_ >= 0) { t_pesado_ += dt; if (t_pesado_ > b_->duracao(pesado_)) t_pesado_ = -1; }
+    // Entrada na partida: pose pela fase da queda e pela velocidade (fall_pose do Ventania).
+    bool no_ar = p.queda == QUEDA_LIVRE || p.queda == PLANADOR;
+    bool merg = p.queda == QUEDA_LIVRE && -p.vel.y > mov::QUEDA_TERMINAL + 2.0f;
+    w_ent_ = aproximar(w_ent_, no_ar ? 1.0f : 0.0f, dt * (no_ar ? 6.0f : 3.0f));
+    w_merg_ = aproximar(w_merg_, merg ? 1.0f : 0.0f, dt * 2.5f);
+    w_plan_ = aproximar(w_plan_, p.queda == PLANADOR ? 1.0f : 0.0f, dt * 5.0f);
+    t_ent_ = no_ar ? t_ent_ + dt : 0;
+    t_plan_ = p.queda == PLANADOR ? t_plan_ + dt : 0;
+    if (no_ar) { w_ar_ = 0; t_pulo_ = -1; }
+    // Inclinação: de bruços na queda livre, de cabeça para baixo no mergulho, quase em pé
+    // no planador; rola nas curvas pela velocidade lateral (air_tilt), com uma oscilação leve.
+    f32 cs = cosf(p.yaw), sn = sinf(p.yaw);
+    f32 lx = cs * p.vel.x - sn * p.vel.z, lz = sn * p.vel.x + cs * p.vel.z;
+    f32 lado = fmaxf(-1.0f, fminf(1.0f, lx / mov::QUEDA_HORIZONTAL));
+    f32 frente = fmaxf(-1.0f, fminf(1.0f, -lz / mov::QUEDA_HORIZONTAL));
+    f32 a_deitar = 0, a_rolar = 0;
+    const f32 G = 0.01745329f;
+    if (p.queda == QUEDA_LIVRE) {
+        f32 base = (72.0f + 10.0f * frente) * G;
+        a_deitar = base + (158.0f * G - base) * w_merg_;
+        a_rolar = -lado * 28.0f * G;
+    } else if (p.queda == PLANADOR) {
+        a_deitar = (6.0f + 8.0f * frente) * G;
+        a_rolar = -lado * 20.0f * G;
+    }
+    if (no_ar) a_rolar += sinf(t_ent_ * (p.queda == PLANADOR ? 1.7f : 2.3f)) * (p.queda == PLANADOR ? 2.0f : 3.0f) * G;
+    f32 k = fminf(dt * 5.0f, 1.0f);
+    deitar_ += (a_deitar - deitar_) * k;
+    rolar_ += (a_rolar - rolar_) * k;
     if (acenar && t_acenar_ < 0) t_acenar_ = 0;
     if (t_acenar_ >= 0) { t_acenar_ += dt; if (t_acenar_ > b_->duracao(acenar_)) t_acenar_ = -1; }
 }
@@ -85,6 +116,21 @@ void Animador::pose(const ModeloBrisa& m, Pose& saida) const {
         }
         misturar_trs(base, ar, N, w_ar_);
     }
+    if (w_ent_ > 0) {
+        TRSLocal ent[ModeloBrisa::MAX_NOS];
+        b_->amostrar_local(queda_livre_, t_ent_, m, ent);
+        if (w_merg_ > 0) {
+            b_->amostrar_local(mergulho_, t_ent_, m, tmp);
+            misturar_trs(ent, tmp, N, w_merg_);
+        }
+        if (w_plan_ > 0) {
+            f32 da = b_->duracao(abrir_);
+            if (t_plan_ < da) b_->amostrar_local(abrir_, t_plan_, m, tmp);
+            else b_->amostrar_local(planador_, t_plan_ - da, m, tmp);
+            misturar_trs(ent, tmp, N, w_plan_);
+        }
+        misturar_trs(base, ent, N, w_ent_);
+    }
     if (t_aterr_ >= 0) {
         b_->amostrar_local(aterrissar_, t_aterr_, m, tmp);
         misturar_trs(base, tmp, N, peso_oneshot(t_aterr_, b_->duracao(aterrissar_), 0.04f, 0.22f));
@@ -101,6 +147,7 @@ void Animador::pose(const ModeloBrisa& m, Pose& saida) const {
 }
 
 const char* Animador::estado() const {
+    if (w_ent_ > 0.5f) return w_plan_ > 0.5f ? "planador" : (w_merg_ > 0.5f ? "mergulho" : "queda_livre");
     if (t_pesado_ >= 0) return "aterrissar_pesado";
     if (t_aterr_ >= 0) return "aterrissar";
     if (w_ar_ > 0.5f) return t_pulo_ >= 0 ? "pular" : "queda";

@@ -50,6 +50,12 @@ struct SaidaSombras : SaidaTriangulos {
         }
         gsKit_prim_list_triangle_goraud_texture_stq_3d(g_gs, &g_tex[tex], 3, v);
     }
+    static u64 rgbaq(Cor k) { return GS_SETREG_RGBAQ(k.r, k.g, k.b, (k.a + 1) >> 1, 0x00); }
+    void triangulo_alfa(const VerticeTela& a, const VerticeTela& b, const VerticeTela& c) override {
+        int za = static_cast<int>(gs3d::z_de(a.q, perto)), zb = static_cast<int>(gs3d::z_de(b.q, perto)),
+            zc = static_cast<int>(gs3d::z_de(c.q, perto));
+        gsKit_prim_triangle_gouraud_3d(g_gs, a.x, a.y, za, b.x, b.y, zb, c.x, c.y, zc, rgbaq(a.cor), rgbaq(b.cor), rgbaq(c.cor));
+    }
 };
 bool g_pad_modo_pedido = false;
 int g_pad_ultimo_estado = -1;
@@ -291,6 +297,7 @@ void desenhar_quadro(const Cena3D& cena, Caminho3D caminho, const ListaDesenho2D
     SaidaSombras sombras;
     sombras.perto = cena.camera.perto;
     projetar_sombras(cena, ConfigTela(), sombras);
+    projetar_parede(cena, ConfigTela(), sombras);  // Etapa 8: parede da Tormenta, por último
     gsKit_set_test(g_gs, GS_ZTEST_OFF);
     desenhar_2d(hud);
     gsKit_queue_exec(g_gs);

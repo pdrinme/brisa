@@ -9,6 +9,7 @@
 #include "hud_combate.h"
 #include "mundo/navegacao.h"
 #include "jogador.h"
+#include "partida_br.h"
 #include "mundo/mapa.h"
 #include "mundo/terreno.h"
 #include "nucleo/estatisticas.h"
@@ -55,6 +56,12 @@ public:
     GrupoBots& bots() { return grupo_; }
     const GrupoBots& bots() const { return grupo_; }
     Navegacao& navegacao() { return nav_; }
+    // Etapa 8: partida Battle Royale (o jogador + `n_bots`): contagem, ônibus, Tormenta, fim.
+    void comecar_partida(u32 semente, bool com_jogador = true, int n_bots = GrupoBots::MAX_BOTS);
+    PartidaBR& partida() { return partida_; }
+    const PartidaBR& partida() const { return partida_; }
+    bool resultado_visivel() const { return resultado_; }
+    u32 semente_partida() const { return semente_partida_; }
     // Teste de aceite: passo só dos bots (sem desenhar), o jogador de fora.
     void passo_sem_jogador();
     u32 passos() const { return passos_; }
@@ -78,11 +85,18 @@ private:
     bool bots_ativos_ = false, com_jogador_ = true;
     u32 jogador_reviver_ = 0;
     void passo_bots(bool com_jogador);
+    void controlar_partida(const Controle& c);
+    void hud_partida(ListaDesenho2D& l) const;
+    void tela_resultado(ListaDesenho2D& l) const;
+    void montar_partida(Cena3D& cena);
+    PartidaBR partida_;
+    bool resultado_ = false, resultado_fim_ = false;
+    u32 eliminado_em_ = 0, semente_partida_ = 1;
     void montar_bots(Cena3D& cena);
     void hud_bots(ListaDesenho2D& l, const Camera3D& cam) const;
     i16 bau_da_inst_[MAX_INSTANCIAS];
     EstatisticasIlha est_;
-    int tex_minimapa_ = -1, tex_sombra_ = -1;
+    int tex_minimapa_ = -1, tex_sombra_ = -1, modelo_onibus_ = -1;
     Caminho3D caminho_ = Caminho3D::VU1;
     bool hud_ = true, mapa_cheio_ = false;
     u32 passos_ = 0;
